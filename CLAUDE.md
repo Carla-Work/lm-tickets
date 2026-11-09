@@ -16,13 +16,13 @@ usuarios de las empresas cliente abren y siguen incidencias y el equipo de Ling 
 4. Un agente lo ve en la bandeja, se lo asigna y cambia su estado.
 5. El agente responde al cliente (o deja una nota interna).
 6. El usuario recibe aviso (email y panel), responde y el hilo continúa.
-7. El ticket se cierra (agente o cliente) y puede reabrirse.
+7. Un agente (o el cliente, explicando cómo) lo pasa a resuelto y un agente lo cierra. Nadie reabre: se crea uno nuevo relacionado.
 
 ## Antes de tocar nada, leer
 
 | Documento | Qué resuelve |
 |---|---|
-| `docs/plan/00-encuadre.md` | Alcance, exclusiones, roles, reglas R1–R10, plan P0/P1. **Manda sobre cualquier suposición.** |
+| `docs/plan/00-encuadre.md` | Alcance, exclusiones, roles, reglas R1–R19, plan P0/P1. **Manda sobre cualquier suposición.** |
 | `docs/plan/conservacion-datos.md` | Plazos de conservación (provisional 2 años; sin cerrar). |
 | `docs/plan/bitacoras/` | Qué se hizo, decidió y qué queda; leer el último día. |
 | `ONBOARDING.md` | Estado actual y cómo verificarlo. |
@@ -34,10 +34,19 @@ Detalle y origen en `docs/plan/00-encuadre.md`. Cada una lleva test; no se «sim
 - **R1** un usuario nunca ve tickets de otra empresa.
 - **R2** las notas internas nunca llegan al cliente (ni panel ni email).
 - **R3** los adjuntos solo se descargan con autorización; almacenamiento privado fuera de `public/`.
-- **R4** un ticket cerrado no admite respuestas sin reabrir.
+- **R4** un ticket resuelto o cerrado no admite mensajes del cliente ni lo puede reabrir; debe abrir uno nuevo.
 - **R5** cada cambio de estado o asignación queda registrado.
-- **R6/R7** producto: validado en servidor y solo asignable por un supervisor.
-- **R8/R9/R10** administrador: único, no se elimina sin traspasar el rol, y ve tickets en solo lectura.
+- **R6/R7** producto: validado en servidor y solo asignable por el administrador.
+- **R8/R9/R10** administrador: único (el jefe; absorbe al antiguo supervisor), no se elimina sin traspasar el rol, ve todos los tickets y puede reasignarlos, pero no responder ni cambiar estado **salvo en «Otros»**, donde gestiona todo.
+- **R11** los agentes ven todos los tickets salvo «Otros»; agentes y administrador asignan cualquiera a cualquier agente, también del otro equipo; cada reasignación queda registrada.
+- **R12** cualquier agente puede corregir el departamento de un ticket; queda registrado y se avisa al cliente.
+- **R13** los tickets de «Otros» solo los ven y responden el administrador y el cliente que los abrió; los agentes no los ven por ninguna vía. Sin suplente en la aplicación: si el administrador falta, los avisa él a los clientes (teléfono o correo).
+- **R14** cuando el cliente responde en un ticket «Pendiente de cliente», el estado pasa solo a «En curso».
+- **R15** nadie reabre un ticket resuelto o cerrado; desde resuelto solo se pasa a cerrado (lo hace un agente). Misma incidencia = ticket nuevo relacionado.
+- **R16** pasar un ticket a resuelto (cliente o agente) exige explicar cómo se resolvió. Solo el cliente puede abrir uno nuevo relacionado; agentes y administrador no clonan.
+- **R17** el error de acceso es genérico y la recuperación de contraseña responde igual exista o no el correo; el enlace caduca y es de un solo uso.
+- **R18** no hay registro libre: toda cuenta se crea por invitación por correo.
+- **R19** un producto asignado a alguna empresa no se borra, solo se desactiva.
 
 ## Stack
 
