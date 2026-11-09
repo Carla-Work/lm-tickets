@@ -1,0 +1,16 @@
+# .gitignore inicial (Fase 1). Se ampliará al crear la aplicación Laravel.
+# Por qué existe: se crea ANTES del primer `git add` para que nunca entren secretos ni basura del sistema.
+
+# Sistema operativo y editores
+.DS_Store
+.idea/
+.vscode/
+
+# Secretos y configuración local: nunca al repositorio
+.env
+.env.*
+!.env.example
+
+# Dependencias y artefactos de compilación (se regeneran con composer/npm)
+/vendor/
+/node_modules/
