@@ -95,7 +95,7 @@ da NULL. Al escribir un `CHECK` sobre columnas que admiten NULL, hay que decir `
 - Preferencias de notificación: no son configurables (decidido).
 - Plazos de conservación: pendientes de decidir; cuando se decidan se añadirá lo que haga falta
   (p. ej. anonimización) con su migración.
-- Segundo factor del administrador (R21): método decidido (TOTP a mano), pero **las columnas no están**: se añadirán con su migración (secreto cifrado, fecha de confirmación y códigos de recuperación con hash) cuando se validen los mockups y se implemente.
+- (Hecho) Segundo factor del administrador (R21): columnas `two_factor_*` en `users` (migración `add_two_factor_columns_to_users_table`): clave CIFRADA, fecha de confirmación, códigos de recuperación con HASH y último intervalo usado (anti-reutilización).
 
 ## Pendiente de comprobar en IONOS
 

@@ -222,6 +222,8 @@ Decisiones que salen de ellos, **todas pendientes de validar** salvo lo marcado:
 - **Mensaje de bloqueo:** «Demasiados intentos fallidos. Vuelve a intentarlo dentro de N minutos.» (el mockup no lo dibujó).
 - **Correos con la plantilla por defecto de Laravel:** no hay mockup de correos. ❓ Falta decidir su aspecto y la **dirección y dominio de envío** (hoy `hello@example.com`; para producción hace falta un remitente real de lingmarco.es con SPF/DKIM).
 - **Panel provisional** tras entrar («Has entrado como…»): se sustituye en el paso 4 por Mis tickets / Bandeja.
+- **2FA (decisiones de Claude, pendientes de validar):** el «acceso a medias» caduca a los **10 minutos**; los fallos de código cuentan para el bloqueo de 5 intentos y **no se reinician al volver a poner la contraseña**; no se acepta dos veces el mismo código; se avisa por correo (plantilla por defecto) cada vez que se usa un código de recuperación.
+- ❓ **Hueco del 2FA sin resolver:** si el administrador cierra la pestaña antes de pulsar «Continuar» en la pantalla de códigos de recuperación, **pierde los códigos** (el 2FA ya está activado y los códigos solo se ven una vez). Hace falta una pantalla para **regenerar los códigos** (en «Mis datos» del administrador): dibujada en `mis-datos-c-administrador` y `mis-datos-d-administrador-codigos-nuevos`, **pendientes de validar**. Mientras no exista, la salida de último recurso es el comando de recuperación en el servidor.
 
 ## Flujo crítico (7 pasos)
 
