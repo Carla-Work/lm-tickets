@@ -33,7 +33,10 @@ return [
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),
-            'serve' => true,
+            // R3: FALSE a propósito. Con `true` Laravel registra GET y PUT en /storage/{path} sobre este
+            // disco PRIVADO (pensadas para URLs firmadas temporales, que no usamos). Los adjuntos solo
+            // se descargan por un controlador que comprueba permisos (AttachmentPolicy). NO volver a true.
+            'serve' => false,
             'throw' => false,
             'report' => false,
         ],

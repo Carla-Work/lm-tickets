@@ -7,6 +7,11 @@ includes:
 
 parameters:
     level: 5
+    # Sin esto Larastan NO lee el cuerpo de `casts()` de los modelos (solo su tipo de retorno declarado) y
+    # ve todas las columnas como `string`, también las enumeraciones y las fechas. Con ella, `$ticket->status`
+    # es un TicketStatus. (Descubierto al implementar las policies; antes se creyó, erróneamente, que el
+    # culpable era un PHPDoc `@return array<string, string>`.)
+    parseModelCastsMethod: true
     paths:
         - app
         - routes
