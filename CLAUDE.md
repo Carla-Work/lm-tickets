@@ -124,6 +124,11 @@ El trabajo se hace en la rama del hito en curso; cada rama sale de la anterior, 
 - **No usar `php artisan dev` ni `npx`** — el comando de Laravel 13 descarga `@laravel/multiplex` de npm (se descubrió al probarlo). Usar `composer dev`, que va por `scripts/dev.sh`.
 - **Las copias de la base de datos van en `storage/backups/` (ignorado por git)** — contienen datos de clientes. Nunca al repositorio.
 - **No excluir los `.gitignore` de `storage/` ni `bootstrap/cache/`** — protegen registros y cachés (que pueden llevar datos de clientes). Si se vuelve a copiar un esqueleto: `--exclude '/.gitignore'`, solo el de la raíz.
+- **Autorización: toda lista de tickets, mensajes, eventos o adjuntos pasa por su ámbito `visibleTo($user)`** (`Ticket::visibleTo`, `TicketMessage::visibleTo`, `TicketEvent::visibleTo`, `Attachment::visibleTo`). Una consulta suelta (`Ticket::where(...)`) entrega tickets ajenos y notas internas (R1, R2, R13). El ámbito y la policy `view` deben dar lo MISMO: `TicketVisibilityTest` lo vigila.
+- **Las policies deniegan por defecto** (matriz en `docs/plan/autorizacion.md`; `TicketActionsTest` comprueba TODAS las habilidades de TODOS los roles: lo que no figura está denegado). Un permiso nuevo exige cambiar la matriz Y el test. `Gate::before` deniega a cuentas de baja y **nunca concede**.
+- **R3: `'serve' => false` en el disco `local`** (`config/filesystems.php`): con `true` Laravel registra GET y PUT en `/storage/{path}` sobre el disco privado de los adjuntos. NO volver a `true`. Los adjuntos van por un controlador con `AttachmentPolicy::download`.
+- **Larastan necesita `parseModelCastsMethod: true`** (`phpstan.neon`) para leer los `casts()` de los modelos; sin ello ve todo como `string`. No lo desactives ni lo «arregles» con PHPDoc.
+- **PHP: `"«$var»"` con comillas dobles es un ERROR** (`$var»` se lee como una variable inexistente). Escribir `"«{$var}»"`. `SourceHygieneTest` lo detecta.
 - **Acceso (R17): un ÚNICO mensaje para cualquier fallo** (`lang/es/auth.php` `failed`, `passwords.php` `invalid_link`): contraseña mala, correo inexistente, cuenta de baja, invitación sin aceptar, empresa de baja, enlace caducado o usado. Distinguirlos delata qué cuentas existen. En la recuperación se IGNORA el estado que devuelve Laravel (`throttled` delata).
 - **R18: no hay ruta de registro** y `NoRegistrationTest` lo vigila. `NewPasswordController` es el ÚNICO sitio que activa cuentas (`activated_at`).
 - **2FA: el administrador NO queda autenticado tras la contraseña** (`Auth::check()` es falso hasta pasar el código; mientras tanto solo hay un «acceso a medias» en sesión, `PendingLogin`, que caduca a los 10 min). Los fallos de código usan la MISMA clave de bloqueo que la contraseña y NO se borran al acertar la contraseña (si no, quien la conoce reiniciaría el contador a voluntad).
@@ -148,6 +153,7 @@ El trabajo se hace en la rama del hito en curso; cada rama sale de la anterior, 
 app/Actions/Users/   InviteUser: única vía por la que nace una cuenta (R18)
 app/Http/Controllers/Auth/  entrar, recuperar contraseña, crear contraseña (invitación y recuperación)
 app/Notifications/   correos de recuperación e invitación
+app/Policies/        quién puede hacer qué (TicketPolicy, UserPolicy, CompanyPolicy…); la matriz está en docs/plan/autorizacion.md
 app/Support/         LoginThrottle (bloqueo, R20), Totp (2FA, R21), RecoveryCodes, PendingLogin (acceso a medias)
 app/Http/Middleware/ EnsurePendingLogin (pantallas del 2FA), RequireAdminTwoFactor (admin sin 2FA no pasa)
 config/access.php    números de R17-R21 (intentos, bloqueo, longitud mínima)

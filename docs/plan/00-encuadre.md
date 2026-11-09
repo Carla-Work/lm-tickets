@@ -225,6 +225,18 @@ Decisiones que salen de ellos, **todas pendientes de validar** salvo lo marcado:
 - **2FA (decisiones de Claude, pendientes de validar):** el «acceso a medias» caduca a los **10 minutos**; los fallos de código cuentan para el bloqueo de 5 intentos y **no se reinician al volver a poner la contraseña**; no se acepta dos veces el mismo código; se avisa por correo (plantilla por defecto) cada vez que se usa un código de recuperación.
 - ❓ **Hueco del 2FA sin resolver:** si el administrador cierra la pestaña antes de pulsar «Continuar» en la pantalla de códigos de recuperación, **pierde los códigos** (el 2FA ya está activado y los códigos solo se ven una vez). Hace falta una pantalla para **regenerar los códigos** (en «Mis datos» del administrador): dibujada en `mis-datos-c-administrador` y `mis-datos-d-administrador-codigos-nuevos`, **pendientes de validar**. Mientras no exista, la salida de último recurso es el comando de recuperación en el servidor.
 
+### Decisiones de Claude en el paso 3 (autorización), pendientes de validar por la usuaria
+
+Matriz completa en `docs/plan/autorizacion.md`. Lo implementado como **lo más restrictivo** ante una duda sin decidir:
+- **El administrador de empresa lee todos los tickets de su empresa pero NO responde en los de sus compañeros** (la propuesta nº 6 de las decisiones abiertas).
+- **Cierra un ticket Resuelto el agente que lo lleva** (la usuaria dijo «un agente»; aquí: el asignado, o el administrador en «Otros»).
+- **Transiciones de estado:** de «Abierto» a En curso / Pendiente de cliente / Resuelto; de En curso a Pendiente o Resuelto; de Pendiente a En curso o Resuelto; de Resuelto solo a Cerrado; de Cerrado a nada. «Abierto» es solo el estado inicial.
+- **Nadie puede «asignar» un ticket de «Otros»** (no tiene asignado: lo lleva el administrador).
+- **Solo el cliente abre tickets** (agentes y administrador no los abren en nombre de nadie).
+- **El administrador de empresa NO cambia los productos de su empresa**, solo los ve.
+- **El administrador invita únicamente agentes y al primer administrador de una empresa**; los demás usuarios los invita el administrador de empresa.
+- **Cuenta de baja o empresa de baja:** pierde TODO, incluida la sesión abierta, en la siguiente petición.
+
 ## Flujo crítico (7 pasos)
 
 1. Un usuario de la empresa inicia sesión en su panel.

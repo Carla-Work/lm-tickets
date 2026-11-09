@@ -27,7 +27,7 @@ Nada de la Fase 1.
 Pendientes que quedan fuera de la fase: zona horaria de presentación (hoy UTC), retirar la copia duplicada de `docs/` en `/Volumes/Proyectos Lingmarco/Publico/lingmarco/` (decide la usuaria) y subir a GitHub (lo ejecuta la usuaria).
 
 ### Fase 2 (en curso): plan aprobado el 2026-11-09
-Pasos: 0 cierre de Fase 1 (**hecho**) · 1 modelo de datos (**hecho**) · 2 acceso (**hecho**: entrar, bloqueo, recuperar, invitaciones y 2FA del administrador; el 2FA **sin commitear**)  · 2 acceso · 3 autorización (antes que pantallas) · 4 flujo del ticket · 5 avisos · 6 test de integración. Sin dependencias nuevas.
+Pasos: 0 cierre de Fase 1 (**hecho**) · 1 modelo de datos (**hecho**) · 2 acceso (**hecho**: entrar, bloqueo, recuperar, invitaciones y 2FA del administrador; el 2FA **sin commitear**)  · 2 acceso · 3 autorización (**hecho y commiteado**; 239 tests) · 4 flujo del ticket · 5 avisos · 6 test de integración. Sin dependencias nuevas.
 
 Decidido para el acceso: 2FA solo del administrador, sin «Recordarme», bloqueo a los 5 intentos, enlace de 60 min, 12 caracteres.
 **2FA del administrador:** implementado (TOTP a mano, sin librerías, con códigos de recuperación). Pendiente: **regenerar los códigos** (mockups `mis-datos-c` y `mis-datos-d`, **pendientes de validar**; sin implementar) y el traspaso del rol, que deberá llamar a `User::clearTwoFactor()`.
