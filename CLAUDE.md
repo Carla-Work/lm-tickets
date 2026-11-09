@@ -123,6 +123,10 @@ El trabajo se hace en la rama del hito en curso; cada rama sale de la anterior, 
 - **Nada de dependencias nuevas sin visto bueno** — aprobadas hasta ahora: Laravel (con las del esqueleto) y Larastan. Sin Node: no hay `package.json`; añadirlo requiere decisión.
 - **No usar `php artisan dev` ni `npx`** — el comando de Laravel 13 descarga `@laravel/multiplex` de npm (se descubrió al probarlo). Usar `composer dev`, que va por `scripts/dev.sh`.
 - **Las copias de la base de datos van en `storage/backups/` (ignorado por git)** — contienen datos de clientes. Nunca al repositorio.
+- **No excluir los `.gitignore` de `storage/` ni `bootstrap/cache/`** — protegen registros y cachés (que pueden llevar datos de clientes). Si se vuelve a copiar un esqueleto: `--exclude '/.gitignore'`, solo el de la raíz.
+- **Acceso (R17): un ÚNICO mensaje para cualquier fallo** (`lang/es/auth.php` `failed`, `passwords.php` `invalid_link`): contraseña mala, correo inexistente, cuenta de baja, invitación sin aceptar, empresa de baja, enlace caducado o usado. Distinguirlos delata qué cuentas existen. En la recuperación se IGNORA el estado que devuelve Laravel (`throttled` delata).
+- **R18: no hay ruta de registro** y `NoRegistrationTest` lo vigila. `NewPasswordController` es el ÚNICO sitio que activa cuentas (`activated_at`).
+- **El bloqueo (R20) se comprueba ANTES de mirar la contraseña** y se cuenta por correo + IP (solo por correo, cualquiera bloquearía a otros a propósito).
 - **El rol, la empresa y el equipo de un usuario NO se asignan en masa** (no están en `#[Fillable]`) — si un formulario pudiera rellenarlos, cualquiera se haría administrador. Los fija el código de servidor.
 - **Notas internas (R2): todo lo que ve el cliente pasa por `TicketMessage::public()`** — un listado sin filtrar le entrega las notas.
 - **El historial de tickets solo se añade** (`ticket_events`, sin `updated_at`): no hay UPDATE ni DELETE de eventos (R5).
@@ -137,6 +141,13 @@ El trabajo se hace en la rama del hito en curso; cada rama sale de la anterior, 
 ## Estructura relevante
 
 ```
+app/Actions/Users/   InviteUser: única vía por la que nace una cuenta (R18)
+app/Http/Controllers/Auth/  entrar, recuperar contraseña, crear contraseña (invitación y recuperación)
+app/Notifications/   correos de recuperación e invitación
+app/Support/         LoginThrottle (bloqueo por intentos, R20)
+config/access.php    números de R17-R21 (intentos, bloqueo, longitud mínima)
+lang/es/             textos en español (auth, passwords, validation): sin ellos salen las claves en crudo
+public/img/          logos copiados de docs/marca lingmarco/ (la fuente de verdad es esa carpeta)
 app/Enums/           roles, equipos, departamentos, estados (valores repetidos en CHECK de la BD)
 app/Models/          User, Company, Product, Category, Ticket, TicketMessage, TicketEvent, Attachment, TicketSequence
 database/migrations/ esquema; docs/plan/modelo-de-datos.md explica el porqué de cada decisión

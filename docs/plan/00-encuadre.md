@@ -214,6 +214,15 @@ Decisiones que salen de ellos, **todas pendientes de validar** salvo lo marcado:
 8. Qué ve un usuario normal en «Mi empresa» (propuesta: solo productos).
 9. Confirmación extra al dar de baja una empresa.
 
+### Decisiones de Claude en el paso 2 (acceso), pendientes de validar por la usuaria
+
+- **Bloqueo de 15 minutos** tras los 5 intentos (la usuaria fijó los 5, no la duración). En `config/access.php`.
+- **Invitación válida 7 días** (la de recuperación, 60 minutos, ya estaba decidida). En `config/auth.php`.
+- **Bloqueo por correo + IP**, no solo por correo, para que nadie pueda bloquear a otro a propósito.
+- **Mensaje de bloqueo:** «Demasiados intentos fallidos. Vuelve a intentarlo dentro de N minutos.» (el mockup no lo dibujó).
+- **Correos con la plantilla por defecto de Laravel:** no hay mockup de correos. ❓ Falta decidir su aspecto y la **dirección y dominio de envío** (hoy `hello@example.com`; para producción hace falta un remitente real de lingmarco.es con SPF/DKIM).
+- **Panel provisional** tras entrar («Has entrado como…»): se sustituye en el paso 4 por Mis tickets / Bandeja.
+
 ## Flujo crítico (7 pasos)
 
 1. Un usuario de la empresa inicia sesión en su panel.
