@@ -24,7 +24,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 #[Fillable(['name', 'email', 'password', 'phone'])]
-#[Hidden(['password', 'remember_token'])]
+#[Hidden(['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
@@ -40,6 +40,10 @@ class User extends Authenticatable
             'team' => Team::class,
             'activated_at' => 'datetime',
             'deactivated_at' => 'datetime',
+            // La clave del segundo factor se guarda CIFRADA; los códigos de recuperación, con hash (ver la migración).
+            'two_factor_secret' => 'encrypted',
+            'two_factor_confirmed_at' => 'datetime',
+            'two_factor_recovery_codes' => 'array',
         ];
     }
 
@@ -68,6 +72,40 @@ class User extends Authenticatable
     public function assignedTickets(): HasMany
     {
         return $this->hasMany(Ticket::class, 'assigned_to');
+    }
+
+    /** R21: solo el administrador entra con segundo factor. */
+    public function requiresTwoFactor(): bool
+    {
+        // getAttribute(): dentro del propio modelo Larastan ve `role` como string (el cast a enumeración
+        // solo lo reconoce desde fuera); el valor real SÍ es un UserRole.
+        return $this->getAttribute('role') === UserRole::Admin;
+    }
+
+    /** El segundo factor está ACTIVADO: la persona demostró que su app genera códigos válidos. */
+    public function hasTwoFactorEnabled(): bool
+    {
+        return $this->two_factor_confirmed_at !== null;
+    }
+
+    /** Cuántos códigos de recuperación sin usar le quedan. */
+    public function remainingRecoveryCodes(): int
+    {
+        return count($this->two_factor_recovery_codes ?? []);
+    }
+
+    /**
+     * Borra todo rastro del segundo factor. Se usa cuando se traspasa el rol de administrador: el que
+     * deja de serlo ya no lo necesita, y el nuevo activará el suyo en su siguiente acceso (R9, R21).
+     */
+    public function clearTwoFactor(): void
+    {
+        $this->forceFill([
+            'two_factor_secret' => null,
+            'two_factor_confirmed_at' => null,
+            'two_factor_recovery_codes' => null,
+            'two_factor_last_step' => null,
+        ])->save();
     }
 
     /** Cuenta dada de baja: no puede acceder. */

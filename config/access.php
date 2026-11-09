@@ -19,6 +19,17 @@ return [
         'lockout_seconds' => 15 * 60,
     ],
 
+    // R21: segundo factor del administrador (TOTP, RFC 6238). Sin código QR ni librerías.
+    'two_factor' => [
+        'issuer' => 'Ling Marco Tickets', // el nombre que ve la persona en su app de autenticación
+        'digits' => 6,
+        'period' => 30,                   // segundos de vida de cada código
+        'window' => 1,                    // intervalos tolerados a cada lado por desfase del reloj
+        'recovery_codes' => 8,            // cuántos códigos de recuperación se entregan
+        // Tiempo máximo entre acertar la contraseña y completar el segundo factor. Propuesta de Claude.
+        'pending_seconds' => 10 * 60,
+    ],
+
     'password' => [
         // Longitud mínima. Sin más exigencias (mayúsculas, símbolos): se prefiere una frase larga.
         'min_length' => 12,

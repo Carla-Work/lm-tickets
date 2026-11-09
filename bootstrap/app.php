@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Middleware\EnsurePendingLogin;
+use App\Http\Middleware\RequireAdminTwoFactor;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -14,6 +16,11 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // Quien ya ha iniciado sesión y abre /acceso va directo al panel.
         $middleware->redirectUsersTo(fn () => route('panel'));
+
+        $middleware->alias([
+            'login.pending' => EnsurePendingLogin::class,   // pantallas del segundo factor
+            'admin.2fa' => RequireAdminTwoFactor::class,    // un administrador sin 2FA no pasa (R21)
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
