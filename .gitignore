@@ -41,3 +41,6 @@ Thumbs.db
 
 # Adjuntos de tickets (R3): datos de clientes, jamás al repositorio
 /storage/app/private/
+
+# Copias de seguridad de la base de datos: contienen DATOS DE CLIENTES, jamás al repositorio
+/storage/backups/
