@@ -204,7 +204,7 @@ Decisiones que salen de ellos, **todas pendientes de validar** salvo lo marcado:
 - **«Mis datos»:** el correo no se cambia desde ahí; no se cita el plazo de conservación al cliente mientras sea provisional.
 
 **Mockups validados el 2026-11-09.** Siguen SIN decidir (declarado en los propios HTML); cada uno hay que cerrarlo antes de implementar lo que afecta:
-1. ~~2FA~~ **Decidido 2026-11-09:** segundo factor **solo para el administrador** (R21). Falta decidir el método (código por correo, o app de autenticación, que exige una dependencia) y dibujar su pantalla: **no se implementa hasta tenerlo**.
+1. ~~2FA~~ **Decidido 2026-11-09:** segundo factor **solo para el administrador** (R21), método **TOTP** (app de autenticación, RFC 6238) **implementado a mano, sin librerías nuevas** (decisión delegada por la usuaria en la recomendación de Claude). 8 códigos de recuperación de un solo uso, guardados con hash. **Sin código QR** (exigiría una librería): clave para escribir a mano y enlace otpauth. Mockups: `acceso-f` a `acceso-i`. **No se implementa hasta que la usuaria los valide.**
 2. ~~Recordarme~~ **Decidido:** no hay «Recordarme en este equipo» en el MVP.
 3. ~~Bloqueo por intentos~~ **Decidido:** bloqueo temporal tras 5 intentos fallidos (R20).
 4. ~~Caducidad del enlace y mínimo~~ **Decidido:** enlace de 60 minutos de un solo uso y contraseña de 12 caracteres como mínimo.
@@ -248,7 +248,7 @@ Decisiones que salen de ellos, **todas pendientes de validar** salvo lo marcado:
 | R18 | No hay registro libre: toda cuenta (empresa, usuario de empresa, empleado) se crea por invitación por correo y quien la recibe elige su contraseña | Test de que no existe ruta de registro público |
 | R19 | Un producto asignado a alguna empresa no se borra, solo se desactiva; los tickets antiguos conservan su producto | Test |
 | R20 | Tras 5 intentos fallidos de acceso se bloquea el acceso un tiempo | Test (el sexto intento, aun con la contraseña buena, se rechaza) |
-| R21 | La cuenta de administrador exige un segundo factor para entrar | Test; pendiente de decidir el método |
+| R21 | La cuenta de administrador exige un segundo factor TOTP (RFC 6238) para entrar; el código sirve una vez por ventana de tiempo y los códigos de recuperación se usan una sola vez | Tests contra los vectores oficiales del RFC 6238, de bloqueo (R20) y de un solo uso |
 
 Fuente: requisitos de la usuaria y RGPD (R1–R3 por confidencialidad de datos de clientes).
 

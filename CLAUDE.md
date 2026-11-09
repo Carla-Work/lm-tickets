@@ -48,7 +48,7 @@ Detalle y origen en `docs/plan/00-encuadre.md`. Cada una lleva test; no se «sim
 - **R18** no hay registro libre: toda cuenta se crea por invitación por correo.
 - **R19** un producto asignado a alguna empresa no se borra, solo se desactiva.
 - **R20** tras 5 intentos fallidos de acceso se bloquea el acceso un tiempo.
-- **R21** el administrador entra con segundo factor (método por decidir; no se implementa hasta tener mockup y decisión).
+- **R21** el administrador entra con segundo factor TOTP (RFC 6238) implementado a mano, sin librerías; con 8 códigos de recuperación de un solo uso. Se prueba contra los vectores del RFC. No se implementa hasta que la usuaria valide los mockups `acceso-f` a `acceso-i`.
 
 ## Stack
 
@@ -123,6 +123,12 @@ El trabajo se hace en la rama del hito en curso; cada rama sale de la anterior, 
 - **Nada de dependencias nuevas sin visto bueno** — aprobadas hasta ahora: Laravel (con las del esqueleto) y Larastan. Sin Node: no hay `package.json`; añadirlo requiere decisión.
 - **No usar `php artisan dev` ni `npx`** — el comando de Laravel 13 descarga `@laravel/multiplex` de npm (se descubrió al probarlo). Usar `composer dev`, que va por `scripts/dev.sh`.
 - **Las copias de la base de datos van en `storage/backups/` (ignorado por git)** — contienen datos de clientes. Nunca al repositorio.
+- **El rol, la empresa y el equipo de un usuario NO se asignan en masa** (no están en `#[Fillable]`) — si un formulario pudiera rellenarlos, cualquiera se haría administrador. Los fija el código de servidor.
+- **Notas internas (R2): todo lo que ve el cliente pasa por `TicketMessage::public()`** — un listado sin filtrar le entrega las notas.
+- **El historial de tickets solo se añade** (`ticket_events`, sin `updated_at`): no hay UPDATE ni DELETE de eventos (R5).
+- **Nada se borra en cascada** — las claves foráneas son RESTRICT; las bajas son `deactivated_at`/`active`.
+- **No quitar el índice único de `users.admin_slot`** aunque nadie lo lea: es lo que impide dos administradores activos (R9).
+- **En un `CHECK` sobre columnas con NULL, escribir `IS NOT NULL` explícito** — con NULL el CHECK no falla.
 - **Los tests no usan SQLite** — MySQL en `lm_tickets_testing`, para que un test verde valga en producción. No apuntar nunca los tests a `lm_tickets`.
 - **Nada con diseño se implementa sin mockup validado** en `docs/plan/mockups/`.
 - **Los adjuntos van en `storage/app/private/`, que está en `.gitignore`** — son datos de clientes.
@@ -131,7 +137,12 @@ El trabajo se hace en la rama del hito en curso; cada rama sale de la anterior, 
 ## Estructura relevante
 
 ```
-app/                 código de la aplicación (aún el del esqueleto)
+app/Enums/           roles, equipos, departamentos, estados (valores repetidos en CHECK de la BD)
+app/Models/          User, Company, Product, Category, Ticket, TicketMessage, TicketEvent, Attachment, TicketSequence
+database/migrations/ esquema; docs/plan/modelo-de-datos.md explica el porqué de cada decisión
+database/factories/  datos de prueba (cada estado cumple las restricciones de la BD)
+database/seeders/    CatalogSeeder (productos y categorías acordados; idempotente)
+tests/Feature/Schema tests de integridad de la base de datos
 config/app.php       idioma, zona horaria, nombre
 public/css/app.css   hoja de estilos base (CSS propio)
 scripts/             dev.sh (entorno de desarrollo), db-backup.sh y db-restore.sh (copias)

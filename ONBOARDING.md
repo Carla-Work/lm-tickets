@@ -27,10 +27,10 @@ Nada de la Fase 1.
 Pendientes que quedan fuera de la fase: zona horaria de presentación (hoy UTC), retirar la copia duplicada de `docs/` en `/Volumes/Proyectos Lingmarco/Publico/lingmarco/` (decide la usuaria) y subir a GitHub (lo ejecuta la usuaria).
 
 ### Fase 2 (en curso): plan aprobado el 2026-11-09
-Pasos: 0 cierre de Fase 1 (**hecho**) · 1 modelo de datos (esquema **aprobado**, por escribir) · 2 acceso · 3 autorización (antes que pantallas) · 4 flujo del ticket · 5 avisos · 6 test de integración. Sin dependencias nuevas.
+Pasos: 0 cierre de Fase 1 (**hecho**) · 1 modelo de datos (**hecho, sin commitear**; 41 tests) · 2 acceso · 3 autorización (antes que pantallas) · 4 flujo del ticket · 5 avisos · 6 test de integración. Sin dependencias nuevas.
 
 Decidido para el acceso: 2FA solo del administrador, sin «Recordarme», bloqueo a los 5 intentos, enlace de 60 min, 12 caracteres.
-**Bloqueo del 2FA:** falta mockup y decidir el método (por correo, o app de autenticación que exige una librería). No se implementa hasta entonces.
+**2FA del administrador:** método decidido (TOTP a mano, sin librerías, con códigos de recuperación); mockups `acceso-f` a `acceso-i` **pendientes de validar**. No se implementa hasta entonces.
 
 ### Decisiones abiertas
 Aviso de ticket nuevo, administrador de empresa respondiendo en tickets ajenos, varios administradores por empresa, «Mi empresa» del usuario normal, confirmación al dar de baja una empresa, plazos de conservación definitivos, plan de IONOS y cómo encaja el panel en la web pública.
