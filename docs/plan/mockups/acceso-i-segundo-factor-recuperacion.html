@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<!--
+  MOCKUP — Pantalla "Usar un código de recuperación" al entrar (administrador).
+
+  Qué es: referencia visual de la pantalla, con datos de mentira realistas. NO es código de
+  producción y no se borra al implementar: es lo que se aprobó.
+  Cómo verlo: doble clic. Un solo archivo, CSS dentro, sin servidor ni conexión, sin JavaScript.
+  Única dependencia externa: el logo, por ruta relativa (../../marca lingmarco/logo-LM.svg).
+  Hereda marco y paleta de los mockups ya validados (mis-tickets-a-lista-tabla.html).
+
+  Estado: PENDIENTE DE VALIDAR por la usuaria.
+
+  ESTILO: adaptado a la pantalla de acceso de referencia (onePULSE) que aportó la usuaria el
+  2026-11-09: pantalla partida, panel oscuro de marca a la izquierda con titular y descripción, y
+  formulario sobrio a la derecha. Colores de Ling Marco (guía de lingmarco.es). Sobre el panel
+  oscuro se usa la VERSIÓN BLANCA del logo (../../marca lingmarco/logo-LM-b.svg); es la segunda
+  dependencia externa de estas cinco pantallas, junto a logo-LM.svg. El lienzo de ese SVG es más
+  alto que el logo, así que se recorta por CSS para no dejar hueco. En móvil el panel de marca
+  se reduce a una franja superior.
+  DECIDIDO 2026-11-09 (la usuaria delegó en la recomendación de Claude): el segundo factor es
+  TOTP (código de 6 dígitos de una app de autenticación, RFC 6238), SOLO para el administrador
+  (R21), implementado sin librerías nuevas. Se prueba contra los vectores oficiales del RFC.
+  Sin código QR: un QR exigiría una librería, así que se muestra la clave para escribirla a mano
+  y un enlace otpauth:// (con un solo administrador es un coste aceptable).
+
+  Alternativa a la pantalla de verificación cuando el administrador no tiene su app.
+
+  SUPUESTOS a confirmar:
+   1. Cada código sirve una sola vez; la pantalla dice cuántos quedan (cifra de ejemplo).
+   2. Al usar uno, se recomienda generar códigos nuevos cuando queden pocos (aviso en el panel).
+   3. Se avisa por correo al administrador cada vez que se usa un código de recuperación (propuesta
+      de seguridad; no se había hablado de ello).
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Código de recuperación · Ling Marco Tickets</title>
+<style>
+/* ---------- Paleta (misma que el mockup de Nuevo ticket) ---------- */
+:root {
+    --texto: #040f24;
+    --titulo: #3c1d6f;
+    --principal: #742bba;
+    --principal-claro: #9e4af0;
+    --gris: #ededed;
+    --blanco: #ffffff;
+    --texto-suave: #4a5568;
+
+    /* Departamentos: "marca" para bordes/puntos, "texto" más oscuro para rótulos (contraste). */
+    --dep-apps: #7eba28;     --dep-apps-texto: #486330;   --dep-apps-fondo: #f1f8e4;
+    --dep-webs: #e6318a;     --dep-webs-texto: #a00860;   --dep-webs-fondo: #fdecf4;
+    --dep-soporte: #3c76ba;  --dep-soporte-texto: #1f4f8c; --dep-soporte-fondo: #e8f0fa;
+    --dep-otros: #ffe90b;    --dep-otros-texto: #6b5a00;  --dep-otros-fondo: #fffbd1;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--texto); background: #f7f7f8; line-height: 1.5; }
+h1, h2 { color: var(--titulo); line-height: 1.2; margin: 0; }
+a { color: var(--principal); }
+:focus-visible { outline: 3px solid var(--principal-claro); outline-offset: 2px; }
+
+/* ---------- Marco ---------- */
+.cabecera { background: var(--blanco); border-bottom: 1px solid var(--gris); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: .75rem 1.5rem; gap: .5rem 1rem; }
+.cabecera img { height: 34px; width: auto; max-width: 60vw; }
+.cabecera .usuario { display: flex; align-items: center; gap: 1rem; font-size: .9rem; }
+.campana { text-decoration: none; color: var(--texto); padding: .35rem .6rem; border: 1px solid var(--gris); border-radius: 999px; background: var(--blanco); }
+.campana b { background: var(--principal); color: #fff; border-radius: 999px; padding: 0 .45rem; font-size: .75rem; margin-left: .3rem; }
+.marco { display: grid; grid-template-columns: 220px minmax(0, 1fr); min-height: calc(100vh - 62px); }
+.menu { background: var(--blanco); border-right: 1px solid var(--gris); padding: 1.25rem 1rem; }
+.menu a { display: block; padding: .6rem .8rem; border-radius: 8px; color: var(--texto); text-decoration: none; margin-bottom: .2rem; }
+.menu a:hover { background: var(--gris); }
+.menu a[aria-current="page"] { background: var(--principal); color: #fff; font-weight: 600; }
+.menu .empresa { font-size: .8rem; color: var(--texto-suave); margin: 0 .8rem 1rem; }
+main { padding: 1.75rem; max-width: 1200px; }
+.titulo-fila { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+
+/* ---------- Botones ---------- */
+.boton { font: inherit; font-weight: 600; padding: .65rem 1.3rem; border-radius: 8px; cursor: pointer; border: 2px solid transparent; text-decoration: none; display: inline-block; }
+.boton.principal { background: linear-gradient(135deg, var(--principal), var(--principal-claro)); color: #fff; }
+.boton.secundario { background: var(--blanco); color: var(--principal); border-color: var(--principal); }
+
+/* ---------- Resumen por estado ---------- */
+.resumen { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; margin-bottom: 1.25rem; }
+.resumen a { display: block; background: var(--blanco); border: 1px solid var(--gris); border-radius: 12px; padding: .8rem 1rem; text-decoration: none; color: var(--texto); }
+.resumen a:hover { border-color: var(--principal); }
+.resumen strong { display: block; font-size: 1.6rem; color: var(--titulo); line-height: 1.1; }
+.resumen .atencion { border: 2px solid var(--principal); background: #f6f0fd; }
+
+/* ---------- Filtros (formulario GET normal: funciona sin JavaScript) ---------- */
+.filtros { background: var(--blanco); border: 1px solid var(--gris); border-radius: 12px; padding: 1rem; display: flex; flex-wrap: wrap; gap: .75rem 1rem; align-items: end; margin-bottom: 1rem; }
+.filtros label { display: block; font-size: .85rem; font-weight: 600; margin-bottom: .2rem; }
+.filtros input, .filtros select { font: inherit; color: var(--texto); padding: .5rem .7rem; border: 1px solid #b8bcc6; border-radius: 8px; background: var(--blanco); min-width: 0; }
+.filtros .buscar { flex: 1 1 220px; }
+.filtros .buscar input { width: 100%; }
+
+/* ---------- Tabla ---------- */
+.tabla-caja { background: var(--blanco); border: 1px solid var(--gris); border-radius: 12px; overflow: hidden; }
+table { width: 100%; border-collapse: collapse; }
+caption { text-align: left; padding: .8rem 1rem; font-weight: 600; color: var(--titulo); border-bottom: 1px solid var(--gris); }
+th { text-align: left; font-size: .8rem; text-transform: uppercase; letter-spacing: .03em; color: var(--texto-suave); padding: .6rem 1rem; background: #fafafa; border-bottom: 1px solid var(--gris); }
+td { padding: .8rem 1rem; border-bottom: 1px solid var(--gris); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+tbody tr:hover { background: #fcfaff; }
+td.num { white-space: nowrap; color: var(--texto-suave); font-variant-numeric: tabular-nums; }
+td .asunto { font-weight: 600; color: var(--texto); text-decoration: none; }
+td .asunto:hover { color: var(--principal); text-decoration: underline; }
+.nuevo { display: inline-block; margin-left: .5rem; font-size: .75rem; font-weight: 700; color: #fff; background: var(--principal); border-radius: 999px; padding: 0 .55rem; vertical-align: middle; }
+tr.sin-leer td .asunto { font-weight: 800; }
+
+/* Departamento: punto del color del logo + nombre en tono oscuro. Nunca solo color. */
+.dep { display: inline-flex; align-items: center; gap: .45rem; font-weight: 600; font-size: .9rem; white-space: nowrap; }
+.dep::before { content: ""; width: .8rem; height: .8rem; border-radius: 50%; flex: none; }
+.dep.apps { color: var(--dep-apps-texto); }     .dep.apps::before { background: var(--dep-apps); }
+.dep.webs { color: var(--dep-webs-texto); }     .dep.webs::before { background: var(--dep-webs); }
+.dep.soporte { color: var(--dep-soporte-texto); } .dep.soporte::before { background: var(--dep-soporte); }
+.dep.otros { color: var(--dep-otros-texto); }   .dep.otros::before { background: var(--dep-otros); box-shadow: inset 0 0 0 1px #c9b800; }
+
+/* Estado: forma + texto, en neutros y morados (los 4 colores de departamento están reservados). */
+.estado { display: inline-block; font-size: .8rem; font-weight: 700; padding: .15rem .65rem; border-radius: 999px; white-space: nowrap; border: 1.5px solid transparent; }
+.estado.abierto { background: #fff; color: var(--titulo); border-color: var(--titulo); }
+.estado.curso { background: #efe5fb; color: var(--titulo); }
+.estado.pendiente { background: var(--principal); color: #fff; }
+.estado.resuelto { background: var(--gris); color: var(--texto); }
+.estado.resuelto::before { content: "✓ "; }
+.estado.cerrado { background: var(--gris); color: var(--texto-suave); }
+
+.paginacion { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .75rem; padding-top: 1rem; font-size: .9rem; color: var(--texto-suave); }
+.paginacion nav a, .paginacion nav span { display: inline-block; min-width: 2.2rem; text-align: center; padding: .35rem .6rem; border: 1px solid var(--gris); border-radius: 8px; background: var(--blanco); text-decoration: none; margin-left: .2rem; }
+.paginacion nav span[aria-current="page"] { background: var(--principal); color: #fff; border-color: var(--principal); font-weight: 700; }
+
+/* ---------- Móvil: cada fila de la tabla pasa a ser una tarjeta ---------- */
+@media (max-width: 860px) {
+    .marco { grid-template-columns: minmax(0, 1fr); }
+    .menu { border-right: 0; border-bottom: 1px solid var(--gris); display: flex; flex-wrap: wrap; align-content: flex-start; gap: .25rem; padding: .75rem 1rem; }
+    .menu .empresa { width: 100%; margin: 0 0 .25rem; }
+    main { padding: 1rem; }
+    .cabecera .usuario span { display: none; }
+    .resumen { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    table, thead, tbody, tr, td, caption { display: block; }
+    thead { position: absolute; left: -9999px; } /* cabecera oculta a la vista pero no a lectores de pantalla */
+    tr { padding: .8rem 1rem; border-bottom: 1px solid var(--gris); }
+    tr:last-child { border-bottom: 0; }
+    td { border: 0; padding: .15rem 0; }
+    td::before { content: attr(data-etiqueta) ": "; font-size: .8rem; color: var(--texto-suave); }
+    td.asunto-celda::before, td.num::before { content: ""; }
+    td.asunto-celda { order: -1; }
+}
+
+/* Móvil: la fila de la cuadrícula no debe estirarse hasta la altura mínima de la página (dejaba un hueco bajo el menú) */
+@media (max-width: 860px) { .marco { align-content: start; } }
+/* ---------- Propio del detalle del ticket ---------- */
+.migas { font-size: .85rem; margin-bottom: .75rem; color: var(--texto-suave); }
+.migas a { color: var(--texto-suave); }
+.cabecera-ticket { background: var(--blanco); border: 1px solid var(--gris); border-left: 8px solid var(--dep-apps); border-radius: 12px; padding: 1.1rem 1.4rem; margin-bottom: 1.25rem; }
+.cabecera-ticket .num { color: var(--texto-suave); font-variant-numeric: tabular-nums; font-size: .9rem; }
+.cabecera-ticket h1 { font-size: 1.5rem; margin: .15rem 0 .6rem; }
+.cabecera-ticket .chips { display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: center; }
+.dos { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 1.5rem; align-items: start; }
+.tarjeta { background: var(--blanco); border: 1px solid var(--gris); border-radius: 12px; padding: 1.25rem 1.4rem; }
+.tarjeta h2 { font-size: 1.05rem; margin-bottom: .75rem; }
+
+/* Hilo */
+.hilo { list-style: none; margin: 0; padding: 0; }
+.hilo > li { margin-bottom: 1rem; }
+.mensaje { border: 1px solid var(--gris); border-radius: 12px; padding: 1rem 1.2rem; background: var(--blanco); }
+.mensaje.equipo { border-left: 6px solid var(--principal); }
+.mensaje.mio { background: #f6f0fd; }
+.mensaje header { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .25rem 1rem; margin-bottom: .5rem; font-size: .9rem; }
+.mensaje header strong { color: var(--titulo); }
+.mensaje header .rol { font-size: .75rem; font-weight: 700; color: #fff; background: var(--principal); border-radius: 999px; padding: 0 .55rem; margin-left: .4rem; }
+.mensaje header time { color: var(--texto-suave); }
+.mensaje p { margin: 0 0 .6rem; }
+.mensaje p:last-of-type { margin-bottom: 0; }
+.adjuntos { list-style: none; margin: .8rem 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: .5rem; }
+.adjuntos a { display: inline-block; text-decoration: none; background: var(--gris); color: var(--texto); border-radius: 8px; padding: .3rem .7rem; font-size: .85rem; }
+.adjuntos a:hover { background: #e0d6ef; }
+.adjuntos small { color: var(--texto-suave); }
+.evento { text-align: center; font-size: .85rem; color: var(--texto-suave); display: flex; align-items: center; gap: .75rem; }
+.evento::before, .evento::after { content: ""; flex: 1; height: 1px; background: var(--gris); }
+.evento span { max-width: 80%; }
+
+/* Responder */
+.responder h2 { margin-bottom: .25rem; }
+.responder .ayuda { font-size: .9rem; color: var(--texto-suave); margin: 0 0 .75rem; }
+.responder label { display: block; font-weight: 600; margin-bottom: .3rem; }
+.responder textarea { width: 100%; min-height: 130px; padding: .65rem .8rem; font: inherit; color: var(--texto); border: 1px solid #b8bcc6; border-radius: 8px; resize: vertical; }
+.responder input[type=file] { width: 100%; padding: .7rem; border: 2px dashed #b8bcc6; border-radius: 8px; background: #fafafa; font: inherit; margin-top: .75rem; }
+.acciones { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 1rem; align-items: center; }
+.cierre { margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--gris); font-size: .9rem; color: var(--texto-suave); }
+.cierre p { margin: 0 0 .6rem; }
+
+/* Lateral */
+.detalles { margin: 0; }
+.detalles dt { font-size: .8rem; text-transform: uppercase; letter-spacing: .03em; color: var(--texto-suave); margin-top: .8rem; }
+.detalles dt:first-child { margin-top: 0; }
+.detalles dd { margin: .1rem 0 0; font-weight: 600; }
+.detalles dd small { display: block; font-weight: 400; color: var(--texto-suave); }
+.aviso { background: #f6f0fd; border-left: 4px solid var(--principal); padding: .75rem 1rem; border-radius: 6px; font-size: .9rem; margin-top: 1rem; }
+
+@media (max-width: 860px) {
+    .dos { grid-template-columns: minmax(0, 1fr); }
+    .cabecera-ticket { padding: 1rem; }
+    .cabecera-ticket h1 { font-size: 1.25rem; }
+}
+
+/* ---------- Propio del detalle INTERNO ---------- */
+.etiqueta-panel { display: inline-block; background: var(--titulo); color: #fff; font-size: .72rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; border-radius: 6px; padding: .1rem .5rem; margin: 0 .8rem .4rem; }
+.cabecera-ticket .meta { display: flex; flex-wrap: wrap; gap: .25rem 1.5rem; margin-top: .6rem; font-size: .95rem; color: var(--texto-suave); }
+.cabecera-ticket .meta strong { color: var(--texto); }
+
+/* Nota interna: fondo rayado gris + candado. Nunca colores de departamento (reservados) ni verde/rosa/azul/amarillo. */
+.mensaje.nota { border: 2px dashed #8a8f9c; background: repeating-linear-gradient(135deg, #f4f4f6, #f4f4f6 10px, #ececf0 10px, #ececf0 20px); }
+.mensaje.nota header .rol { background: #4a5568; }
+.mensaje.nota .solo-equipo { display: inline-block; font-size: .78rem; font-weight: 700; color: #4a5568; margin-bottom: .4rem; }
+.evento.interno span { font-style: italic; }
+.evento.interno span::before { content: "🔒 "; font-style: normal; }
+.evento.visible-cliente span::before { content: "👁 "; font-style: normal; }
+
+/* Pestañas SOLO con CSS (radios): sin JavaScript. Si el CSS falla, se ven los dos formularios uno tras otro. */
+.pestanas { position: relative; }
+.pestanas > input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.pestanas > label.pest { display: inline-block; font-weight: 700; padding: .55rem 1.1rem; border: 1px solid var(--gris); border-bottom: 0; border-radius: 10px 10px 0 0; background: #fafafa; cursor: pointer; color: var(--texto-suave); margin-right: .25rem; }
+#t-resp:checked + label.pest { background: var(--blanco); color: var(--principal); box-shadow: inset 0 3px 0 var(--principal); }
+#t-nota:checked ~ label.pest[for="t-nota"] { background: #ececf0; color: var(--texto); box-shadow: inset 0 3px 0 #4a5568; }
+#t-resp:focus-visible + label.pest, #t-nota:focus-visible ~ label.pest[for="t-nota"] { outline: 3px solid var(--principal-claro); outline-offset: 2px; }
+.pestanas .panel { border: 1px solid var(--gris); border-radius: 0 12px 12px 12px; padding: 1.1rem 1.25rem; background: var(--blanco); }
+.pestanas .panel.nota { background: #f4f4f6; border-style: dashed; border-color: #8a8f9c; }
+#t-resp:checked ~ .panel.nota { display: none; }
+#t-nota:checked ~ .panel.resp { display: none; }
+.panel .aviso-nota { font-weight: 700; color: #4a5568; font-size: .9rem; margin: 0 0 .6rem; }
+
+/* Gestión (lateral) */
+.gestion .grupo { margin-bottom: 1.1rem; padding-bottom: 1.1rem; border-bottom: 1px solid var(--gris); }
+.gestion .grupo:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: 0; }
+.gestion label { display: block; font-weight: 700; font-size: .9rem; margin-bottom: .3rem; }
+.gestion select { width: 100%; font: inherit; color: var(--texto); padding: .5rem .7rem; border: 1px solid #b8bcc6; border-radius: 8px; background: var(--blanco); margin-bottom: .5rem; }
+.gestion .boton { padding: .45rem 1rem; font-size: .9rem; }
+.gestion textarea { width: 100%; min-height: 70px; font: inherit; color: var(--texto); padding: .5rem .7rem; border: 1px solid #b8bcc6; border-radius: 8px; margin-bottom: .5rem; resize: vertical; }
+.gestion textarea:disabled { opacity: .5; cursor: not-allowed; }
+.gestion .nota-ayuda { font-size: .82rem; color: var(--texto-suave); margin: .4rem 0 0; }
+.gestion .nota-ayuda.fuerte { color: var(--titulo); font-weight: 600; }
+.otros-tickets { list-style: none; margin: 0; padding: 0; font-size: .9rem; }
+.otros-tickets li { margin-bottom: .45rem; }
+.otros-tickets small { display: block; color: var(--texto-suave); }
+.lateral-col > .tarjeta + .tarjeta { margin-top: 1.25rem; }
+.detalles dd, .detalles a { overflow-wrap: anywhere; } /* un correo largo no debe salirse de la tarjeta */
+
+/* Móvil: la fila de la cuadrícula no debe estirarse hasta la altura mínima de la página (dejaba un hueco bajo el menú) */
+@media (max-width: 860px) { .marco { align-content: start; } }
+
+/* ---------- Formularios y piezas comunes de estas pantallas ---------- */
+:root { --error: #b3261e; }
+.campo { margin-bottom: 1.1rem; }
+.campo > label, .campo .etq { display: block; font-weight: 600; margin-bottom: .3rem; }
+.campo input[type=text], .campo input[type=email], .campo input[type=password], .campo input[type=tel], .campo select, .campo textarea { width: 100%; font: inherit; color: var(--texto); padding: .6rem .8rem; border: 1px solid #b8bcc6; border-radius: 8px; background: #fff; }
+.campo input[readonly] { background: #f3f3f5; color: var(--texto-suave); }
+.campo .ayuda { font-size: .85rem; color: var(--texto-suave); margin: .25rem 0 0; }
+.oblig { color: var(--dep-webs-texto); }
+.cols2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 1rem; }
+.apilado > .tarjeta { margin-bottom: 1.25rem; }
+.tarjeta .sub { font-size: .9rem; color: var(--texto-suave); margin: -.4rem 0 1rem; }
+.chip { display: inline-block; background: var(--gris); border-radius: 999px; padding: .1rem .65rem; margin: 0 .3rem .3rem 0; font-size: .85rem; }
+.chip.sin { background: #fff; border: 1px dashed #b8bcc6; color: var(--texto-suave); }
+.rolchip { display: inline-block; font-size: .78rem; font-weight: 700; border-radius: 999px; padding: .1rem .6rem; background: #efe5fb; color: var(--titulo); white-space: nowrap; }
+.rolchip.admin { background: var(--titulo); color: #fff; }
+.cuenta { font-size: .85rem; font-weight: 700; white-space: nowrap; }
+.checks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6rem 1rem; border: 1px solid var(--gris); border-radius: 10px; padding: .9rem 1rem; margin: 0 0 1rem; }
+.checks label { display: flex; gap: .55rem; align-items: flex-start; font-weight: 600; margin: 0; }
+.checks label small { display: block; font-weight: 400; color: var(--texto-suave); }
+.checks input { margin-top: .3rem; width: 1.1rem; height: 1.1rem; flex: none; }
+.peligro { border: 2px solid var(--error); background: #fff6f5; }
+.peligro h2 { color: var(--error); }
+.boton.peligro-b { background: #fff; color: var(--error); border-color: var(--error); }
+.boton.pequeno { padding: .3rem .8rem; font-size: .85rem; }
+.boton:disabled { opacity: .5; cursor: not-allowed; }
+.alerta { padding: .8rem 1rem; border-radius: 8px; border-left: 5px solid; margin-bottom: 1rem; font-size: .95rem; }
+.alerta.error { background: #fdeceb; border-color: var(--error); color: #7a1710; }
+.alerta.ok { background: #f6f0fd; border-color: var(--principal); }
+.tabla-caja + .tarjeta, .tarjeta + .tabla-caja { margin-top: 1.25rem; }
+.titulo-fila .sub { margin: .2rem 0 0; color: var(--texto-suave); font-size: .95rem; }
+td .acc { display: flex; gap: .4rem; flex-wrap: wrap; }
+td .secundario { display: block; color: var(--texto-suave); font-size: .85rem; line-height: 1.3; }
+.tabla-caja { overflow-x: auto; } /* red de seguridad: si algo no cabe, se desplaza en vez de cortarse */
+
+/* "Fichas": tablas dentro de una tarjeta estrecha. Cada fila se muestra como una ficha, también en pantalla ancha. */
+table.fichas, table.fichas thead, table.fichas tbody, table.fichas td, table.fichas caption { display: block; }
+table.fichas thead { position: absolute; left: -9999px; } /* oculta a la vista, no a lectores de pantalla */
+table.fichas tr { display: flex; flex-wrap: wrap; gap: .35rem 1.4rem; align-items: center; padding: .85rem 1rem; border-bottom: 1px solid var(--gris); }
+table.fichas tr:last-child { border-bottom: 0; }
+table.fichas td { border: 0; padding: 0; }
+table.fichas td::before { content: attr(data-etiqueta) ": "; font-size: .8rem; color: var(--texto-suave); }
+table.fichas td.asunto-celda { flex: 1 1 100%; }
+table.fichas td.asunto-celda::before { content: ""; }
+table.fichas td[data-etiqueta="Acciones"]::before { content: ""; }
+
+/* Tablas anchas normales: por debajo de 1180px pasan a tarjetas, como en el móvil */
+@media (max-width: 1180px) {
+    table:not(.fichas), table:not(.fichas) thead, table:not(.fichas) tbody, table:not(.fichas) tr, table:not(.fichas) td, table:not(.fichas) caption { display: block; }
+    table:not(.fichas) thead { position: absolute; left: -9999px; }
+    table:not(.fichas) tr { padding: .8rem 1rem; border-bottom: 1px solid var(--gris); }
+    table:not(.fichas) tr:last-child { border-bottom: 0; }
+    table:not(.fichas) td { border: 0; padding: .15rem 0; }
+    table:not(.fichas) td::before { content: attr(data-etiqueta) ": "; font-size: .8rem; color: var(--texto-suave); }
+    table:not(.fichas) td.asunto-celda::before, table:not(.fichas) td.num::before { content: ""; }
+}
+.etiqueta-panel { display: inline-block; background: var(--titulo); color: #fff; font-size: .72rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; border-radius: 6px; padding: .1rem .5rem; margin: 0 .8rem .4rem; }
+
+/* ---------- Acceso (pantalla partida; sin marco: no hay sesión todavía) ---------- */
+.acceso2 { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1fr) minmax(380px, 30%); }
+.acceso-marca { position: relative; overflow: hidden; color: #fff; padding: 2.5rem 2.75rem; display: flex; flex-direction: column; background: linear-gradient(165deg, #0e0a1d 0%, #1a1236 55%, #2d1f5e 100%); }
+.acceso-marca::before { content: ""; position: absolute; width: 330px; height: 330px; border-radius: 50%; background: rgba(116, 43, 186, .22); top: -70px; right: -50px; }
+.acceso-marca::after { content: ""; position: absolute; width: 300px; height: 300px; border-radius: 50%; background: rgba(116, 43, 186, .18); bottom: -150px; left: -90px; }
+.acceso-marca > * { position: relative; z-index: 1; }
+.marca-logo { display: block; width: min(270px, 70vw); aspect-ratio: 3188 / 458; overflow: hidden; } /* el lienzo del SVG blanco es más alto que el logo: se recorta lo vacío de abajo */
+.marca-logo img { display: block; width: 100%; height: auto; }
+.marca-sub { color: #cdc3e8; font-size: .95rem; margin: .7rem 0 0; }
+.marca-texto { margin: auto 0; }
+.marca-texto .etiqueta { letter-spacing: .14em; text-transform: uppercase; font-size: .78rem; font-weight: 700; color: #b79df2; margin: 0 0 1rem; }
+.marca-texto h2 { color: #fff; font-size: clamp(1.9rem, 3.2vw, 2.8rem); line-height: 1.1; margin: 0 0 1.2rem; max-width: 18ch; }
+.marca-texto p { color: #e4ddf5; max-width: 34rem; font-size: 1.05rem; margin: 0; }
+.acceso-form { background: #fff; display: flex; flex-direction: column; justify-content: center; padding: 2.5rem; }
+.acceso-form-int { width: 100%; max-width: 360px; margin: 0 auto; }
+.bienvenida small { display: block; color: var(--texto-suave); }
+.bienvenida strong { display: block; font-size: 1.7rem; line-height: 1.1; color: var(--principal); margin-bottom: .8rem; }
+.acceso-form h1 { font-size: 1.5rem; margin-bottom: .4rem; }
+.acceso-form p.sub { margin: 0 0 1.3rem; font-size: .95rem; color: var(--texto-suave); }
+.acceso-form .campo input:focus { outline: 2px solid var(--principal-claro); border-color: var(--principal); }
+.pw { display: flex; }
+.pw input { border-radius: 8px 0 0 8px !important; }
+.pw button { border: 1px solid #b8bcc6; border-left: 0; border-radius: 0 8px 8px 0; background: #f3f3f5; padding: 0 .85rem; cursor: pointer; color: var(--texto-suave); }
+.recordar { display: flex; gap: .55rem; align-items: center; margin: -.2rem 0 1.1rem; font-size: .95rem; }
+.recordar input { width: 1.1rem; height: 1.1rem; }
+.ancho { width: 100%; text-align: center; }
+.centro { text-align: center; }
+.enlace-olvido { margin: 1rem 0 0; font-size: .95rem; }
+.pie-acceso { margin: 1.6rem 0 0; text-align: center; font-size: .85rem; color: var(--texto-suave); }
+.copy { margin: 1.4rem 0 0; font-size: .8rem; color: var(--texto-suave); text-align: center; }
+.reglas { margin: .3rem 0 0; padding-left: 1.1rem; font-size: .85rem; color: var(--texto-suave); }
+@media (max-width: 900px) {
+    .acceso2 { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; } /* la franja de marca mide lo justo; el formulario toma el resto */
+    .acceso-marca { padding: 1.5rem; }
+    .acceso-marca::before { width: 200px; height: 200px; top: -80px; right: -60px; }
+    .acceso-marca::after { display: none; }
+    .marca-texto { margin: 1.5rem 0 0; }
+    .marca-texto h2 { font-size: 1.6rem; margin-bottom: .6rem; }
+    .marca-texto p { display: none; }
+    .acceso-form { padding: 2rem 1.25rem; }
+}
+
+/* ---------- Avisos ---------- */
+.avisos { list-style: none; margin: 0; padding: 0; }
+.avisos li { display: flex; gap: .9rem; padding: .9rem 1rem; border-bottom: 1px solid var(--gris); align-items: flex-start; }
+.avisos li:last-child { border-bottom: 0; }
+.avisos li.nuevo-aviso { background: #f6f0fd; }
+.avisos .punto { width: .7rem; height: .7rem; border-radius: 50%; background: var(--principal); flex: none; margin-top: .55rem; }
+.avisos li:not(.nuevo-aviso) .punto { background: transparent; border: 2px solid #b8bcc6; }
+.avisos .texto { flex: 1; min-width: 0; }
+.avisos .texto a { font-weight: 700; }
+.avisos .texto p { margin: .15rem 0 0; color: var(--texto-suave); font-size: .92rem; }
+.avisos time { color: var(--texto-suave); font-size: .85rem; white-space: nowrap; }
+
+@media (max-width: 860px) {
+    .marco { align-content: start; }
+    .cols2 { grid-template-columns: minmax(0, 1fr); }
+    .checks { grid-template-columns: minmax(0, 1fr); }
+    .avisos li { flex-wrap: wrap; }
+}
+</style>
+</head>
+<body>
+<div class="acceso2">
+    <section class="acceso-marca" aria-label="Ling Marco">
+        <div><span class="marca-logo"><img src="../../marca lingmarco/logo-LM-b.svg" alt="Ling Marco &amp; Asociados"></span><p class="marca-sub">Soporte y gestión de incidencias</p></div>
+        <div class="marca-texto">
+            <p class="etiqueta">Panel de clientes · Ling Marco</p>
+            <h2>Tus incidencias, siempre a la vista.</h2>
+            <p>Abre un ticket, sigue su estado y habla con el equipo de Ling Marco desde un único sitio. Te avisamos por correo y en el panel en cuanto haya novedades.</p>
+        </div>
+    </section>
+    <main class="acceso-form">
+        <div class="acceso-form-int">
+                <h1>Código de recuperación</h1>
+        <p class="sub">Escribe uno de los códigos de recuperación que guardaste. Cada uno sirve una sola vez.</p>
+        <form action="#" method="post">
+            <div class="campo">
+                <label for="codigo">Código de recuperación <span class="oblig" aria-hidden="true">*</span></label>
+                <input type="text" id="codigo" name="codigo" inputmode="text" autocomplete="off" pattern="[A-Za-z0-9-]*" maxlength="9" required placeholder="XXXX-XXXX" style="font-size:1.35rem;letter-spacing:.25em;text-align:center">
+                <p class="ayuda">Te quedan 7 códigos sin usar.</p>
+            </div>
+            <button type="submit" class="boton principal ancho">Entrar</button>
+        </form>
+        <p class="enlace-olvido centro"><a href="#">Volver a usar mi app</a></p>
+        <p class="pie-acceso">Si también perdiste los códigos, contacta con quien administra el servidor.</p>
+        <p class="copy">© 2026 Ling Marco &amp; Asociados SL</p>
+        </div>
+    </main>
+</div>
+
+</body>
+</html>
