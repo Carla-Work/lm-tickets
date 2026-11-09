@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<!--
+  MOCKUP — Pantalla "Mis tickets" (panel del cliente), alternativa A: lista en tabla.
+
+  Qué es: referencia visual de la pantalla, con datos de mentira realistas. NO es código de
+  producción y no se borra al implementar: es lo que se aprobó.
+  Cómo verlo: doble clic. Un solo archivo, CSS dentro, sin servidor ni conexión, sin JavaScript.
+  Única dependencia externa: el logo, por ruta relativa (../../marca lingmarco/logo-LM.svg).
+  Hereda el marco (cabecera, menú) y la paleta de nuevo-ticket-a-departamentos-tarjetas.html.
+
+  Estado: PENDIENTE DE VALIDAR por la usuaria.
+
+  Se muestra la vista de un USUARIO de empresa (ve solo SUS tickets, regla R1 + decisión de
+  visibilidad). El ADMINISTRADOR DE EMPRESA vería la misma pantalla con TODOS los de su empresa,
+  una columna extra "Solicitante" y un filtro por solicitante. No se dibuja aparte salvo que
+  la usuaria lo pida.
+
+  SUPUESTOS a confirmar:
+   1. Los estados se llaman como en el encuadre, salvo "Pendiente de cliente", que al cliente se
+      le muestra como "Pendiente de tu respuesta" (la otra redacción es lenguaje interno).
+   2. Los colores de ESTADO son neutros/morados a propósito: el verde, rosa, azul y amarillo
+      están reservados a los departamentos y no deben significar dos cosas.
+   3. "Respuesta nueva" marca los tickets con mensaje del equipo que el usuario aún no ha leído
+      (es lo que alimenta la campana de avisos).
+   4. Orden por defecto: los que esperan al usuario primero, luego por última actividad.
+   5. Paginación de 10 en 10 (cifra de ejemplo).
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mis tickets · Ling Marco Tickets</title>
+<style>
+/* ---------- Paleta (misma que el mockup de Nuevo ticket) ---------- */
+:root {
+    --texto: #040f24;
+    --titulo: #3c1d6f;
+    --principal: #742bba;
+    --principal-claro: #9e4af0;
+    --gris: #ededed;
+    --blanco: #ffffff;
+    --texto-suave: #4a5568;
+
+    /* Departamentos: "marca" para bordes/puntos, "texto" más oscuro para rótulos (contraste). */
+    --dep-apps: #7eba28;     --dep-apps-texto: #486330;   --dep-apps-fondo: #f1f8e4;
+    --dep-webs: #e6318a;     --dep-webs-texto: #a00860;   --dep-webs-fondo: #fdecf4;
+    --dep-soporte: #3c76ba;  --dep-soporte-texto: #1f4f8c; --dep-soporte-fondo: #e8f0fa;
+    --dep-otros: #ffe90b;    --dep-otros-texto: #6b5a00;  --dep-otros-fondo: #fffbd1;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--texto); background: #f7f7f8; line-height: 1.5; }
+h1, h2 { color: var(--titulo); line-height: 1.2; margin: 0; }
+a { color: var(--principal); }
+:focus-visible { outline: 3px solid var(--principal-claro); outline-offset: 2px; }
+
+/* ---------- Marco ---------- */
+.cabecera { background: var(--blanco); border-bottom: 1px solid var(--gris); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: .75rem 1.5rem; gap: .5rem 1rem; }
+.cabecera img { height: 34px; width: auto; max-width: 60vw; }
+.cabecera .usuario { display: flex; align-items: center; gap: 1rem; font-size: .9rem; }
+.campana { text-decoration: none; color: var(--texto); padding: .35rem .6rem; border: 1px solid var(--gris); border-radius: 999px; background: var(--blanco); }
+.campana b { background: var(--principal); color: #fff; border-radius: 999px; padding: 0 .45rem; font-size: .75rem; margin-left: .3rem; }
+.marco { display: grid; grid-template-columns: 220px minmax(0, 1fr); min-height: calc(100vh - 62px); }
+.menu { background: var(--blanco); border-right: 1px solid var(--gris); padding: 1.25rem 1rem; }
+.menu a { display: block; padding: .6rem .8rem; border-radius: 8px; color: var(--texto); text-decoration: none; margin-bottom: .2rem; }
+.menu a:hover { background: var(--gris); }
+.menu a[aria-current="page"] { background: var(--principal); color: #fff; font-weight: 600; }
+.menu .empresa { font-size: .8rem; color: var(--texto-suave); margin: 0 .8rem 1rem; }
+main { padding: 1.75rem; max-width: 1200px; }
+.titulo-fila { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+
+/* ---------- Botones ---------- */
+.boton { font: inherit; font-weight: 600; padding: .65rem 1.3rem; border-radius: 8px; cursor: pointer; border: 2px solid transparent; text-decoration: none; display: inline-block; }
+.boton.principal { background: linear-gradient(135deg, var(--principal), var(--principal-claro)); color: #fff; }
+.boton.secundario { background: var(--blanco); color: var(--principal); border-color: var(--principal); }
+
+/* ---------- Resumen por estado ---------- */
+.resumen { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; margin-bottom: 1.25rem; }
+.resumen a { display: block; background: var(--blanco); border: 1px solid var(--gris); border-radius: 12px; padding: .8rem 1rem; text-decoration: none; color: var(--texto); }
+.resumen a:hover { border-color: var(--principal); }
+.resumen strong { display: block; font-size: 1.6rem; color: var(--titulo); line-height: 1.1; }
+.resumen .atencion { border: 2px solid var(--principal); background: #f6f0fd; }
+
+/* ---------- Filtros (formulario GET normal: funciona sin JavaScript) ---------- */
+.filtros { background: var(--blanco); border: 1px solid var(--gris); border-radius: 12px; padding: 1rem; display: flex; flex-wrap: wrap; gap: .75rem 1rem; align-items: end; margin-bottom: 1rem; }
+.filtros label { display: block; font-size: .85rem; font-weight: 600; margin-bottom: .2rem; }
+.filtros input, .filtros select { font: inherit; color: var(--texto); padding: .5rem .7rem; border: 1px solid #b8bcc6; border-radius: 8px; background: var(--blanco); min-width: 0; }
+.filtros .buscar { flex: 1 1 220px; }
+.filtros .buscar input { width: 100%; }
+
+/* ---------- Tabla ---------- */
+.tabla-caja { background: var(--blanco); border: 1px solid var(--gris); border-radius: 12px; overflow: hidden; }
+table { width: 100%; border-collapse: collapse; }
+caption { text-align: left; padding: .8rem 1rem; font-weight: 600; color: var(--titulo); border-bottom: 1px solid var(--gris); }
+th { text-align: left; font-size: .8rem; text-transform: uppercase; letter-spacing: .03em; color: var(--texto-suave); padding: .6rem 1rem; background: #fafafa; border-bottom: 1px solid var(--gris); }
+td { padding: .8rem 1rem; border-bottom: 1px solid var(--gris); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+tbody tr:hover { background: #fcfaff; }
+td.num { white-space: nowrap; color: var(--texto-suave); font-variant-numeric: tabular-nums; }
+td .asunto { font-weight: 600; color: var(--texto); text-decoration: none; }
+td .asunto:hover { color: var(--principal); text-decoration: underline; }
+.nuevo { display: inline-block; margin-left: .5rem; font-size: .75rem; font-weight: 700; color: #fff; background: var(--principal); border-radius: 999px; padding: 0 .55rem; vertical-align: middle; }
+tr.sin-leer td .asunto { font-weight: 800; }
+
+/* Departamento: punto del color del logo + nombre en tono oscuro. Nunca solo color. */
+.dep { display: inline-flex; align-items: center; gap: .45rem; font-weight: 600; font-size: .9rem; white-space: nowrap; }
+.dep::before { content: ""; width: .8rem; height: .8rem; border-radius: 50%; flex: none; }
+.dep.apps { color: var(--dep-apps-texto); }     .dep.apps::before { background: var(--dep-apps); }
+.dep.webs { color: var(--dep-webs-texto); }     .dep.webs::before { background: var(--dep-webs); }
+.dep.soporte { color: var(--dep-soporte-texto); } .dep.soporte::before { background: var(--dep-soporte); }
+.dep.otros { color: var(--dep-otros-texto); }   .dep.otros::before { background: var(--dep-otros); box-shadow: inset 0 0 0 1px #c9b800; }
+
+/* Estado: forma + texto, en neutros y morados (los 4 colores de departamento están reservados). */
+.estado { display: inline-block; font-size: .8rem; font-weight: 700; padding: .15rem .65rem; border-radius: 999px; white-space: nowrap; border: 1.5px solid transparent; }
+.estado.abierto { background: #fff; color: var(--titulo); border-color: var(--titulo); }
+.estado.curso { background: #efe5fb; color: var(--titulo); }
+.estado.pendiente { background: var(--principal); color: #fff; }
+.estado.resuelto { background: var(--gris); color: var(--texto); }
+.estado.resuelto::before { content: "✓ "; }
+.estado.cerrado { background: var(--gris); color: var(--texto-suave); }
+
+.paginacion { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .75rem; padding-top: 1rem; font-size: .9rem; color: var(--texto-suave); }
+.paginacion nav a, .paginacion nav span { display: inline-block; min-width: 2.2rem; text-align: center; padding: .35rem .6rem; border: 1px solid var(--gris); border-radius: 8px; background: var(--blanco); text-decoration: none; margin-left: .2rem; }
+.paginacion nav span[aria-current="page"] { background: var(--principal); color: #fff; border-color: var(--principal); font-weight: 700; }
+
+/* ---------- Móvil: cada fila de la tabla pasa a ser una tarjeta ---------- */
+@media (max-width: 860px) {
+    .marco { grid-template-columns: minmax(0, 1fr); }
+    .menu { border-right: 0; border-bottom: 1px solid var(--gris); display: flex; flex-wrap: wrap; align-content: flex-start; gap: .25rem; padding: .75rem 1rem; }
+    .menu .empresa { width: 100%; margin: 0 0 .25rem; }
+    main { padding: 1rem; }
+    .cabecera .usuario span { display: none; }
+    .resumen { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    table, thead, tbody, tr, td, caption { display: block; }
+    thead { position: absolute; left: -9999px; } /* cabecera oculta a la vista pero no a lectores de pantalla */
+    tr { padding: .8rem 1rem; border-bottom: 1px solid var(--gris); }
+    tr:last-child { border-bottom: 0; }
+    td { border: 0; padding: .15rem 0; }
+    td::before { content: attr(data-etiqueta) ": "; font-size: .8rem; color: var(--texto-suave); }
+    td.asunto-celda::before, td.num::before { content: ""; }
+    td.asunto-celda { order: -1; }
+}
+
+/* Móvil: la fila de la cuadrícula no debe estirarse hasta la altura mínima de la página (dejaba un hueco bajo el menú) */
+@media (max-width: 860px) { .marco { align-content: start; } }
+</style>
+</head>
+<body>
+
+<header class="cabecera">
+    <img src="../../marca lingmarco/logo-LM.svg" alt="Ling Marco &amp; Asociados">
+    <div class="usuario">
+        <a class="campana" href="#">Avisos <b>2</b></a>
+        <span>María Suárez · Hermanos Santana S.L.</span>
+        <a href="#">Salir</a>
+    </div>
+</header>
+
+<div class="marco">
+    <nav class="menu" aria-label="Menú del panel">
+        <p class="empresa">Hermanos Santana S.L.<br>Rol: usuario</p>
+        <a href="#" aria-current="page">Mis tickets</a>
+        <a href="#">Nuevo ticket</a>
+        <a href="#">Mi empresa</a>
+        <a href="#">Mis datos</a>
+    </nav>
+
+    <main>
+        <div class="titulo-fila">
+            <h1>Mis tickets</h1>
+            <a class="boton principal" href="#">+ Nuevo ticket</a>
+        </div>
+
+        <section class="resumen" aria-label="Resumen por estado">
+            <a class="atencion" href="#"><strong>1</strong>Pendiente de tu respuesta</a>
+            <a href="#"><strong>2</strong>Abiertos</a>
+            <a href="#"><strong>1</strong>En curso</a>
+            <a href="#"><strong>6</strong>Resueltos o cerrados</a>
+        </section>
+
+        <form class="filtros" action="#" method="get" aria-label="Filtrar tickets">
+            <div class="buscar">
+                <label for="q">Buscar</label>
+                <input type="search" id="q" name="q" placeholder="Asunto o número de ticket">
+            </div>
+            <div>
+                <label for="f-estado">Estado</label>
+                <select id="f-estado" name="estado">
+                    <option>Todos</option>
+                    <option>Abierto</option>
+                    <option>En curso</option>
+                    <option>Pendiente de tu respuesta</option>
+                    <option>Resuelto</option>
+                    <option>Cerrado</option>
+                </select>
+            </div>
+            <div>
+                <label for="f-dep">Departamento</label>
+                <select id="f-dep" name="departamento">
+                    <option>Todos</option>
+                    <option>Soporte</option>
+                    <option>Aplicaciones web</option>
+                    <option>Páginas web</option>
+                    <option>Otros</option>
+                </select>
+            </div>
+            <div>
+                <label for="f-prod">Producto</label>
+                <select id="f-prod" name="producto">
+                    <option>Todos</option>
+                    <option>oneFact</option>
+                    <option>oneCOP</option>
+                    <option>Pool de mantenimiento</option>
+                </select>
+            </div>
+            <button type="submit" class="boton secundario">Filtrar</button>
+        </form>
+
+        <div class="tabla-caja">
+            <table>
+                <caption>10 de 10 tickets</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Nº</th>
+                        <th scope="col">Asunto</th>
+                        <th scope="col">Departamento</th>
+                        <th scope="col">Producto</th>
+                        <th scope="col">Estado</th>
+                        <th scope="col">Última actividad</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="sin-leer">
+                        <td class="num" data-etiqueta="Nº">#2026-0312</td>
+                        <td class="asunto-celda" data-etiqueta="Asunto"><a class="asunto" href="#">Error al importar el cliente desde Excel</a><span class="nuevo">Respuesta nueva</span></td>
+                        <td data-etiqueta="Departamento"><span class="dep apps">Aplicaciones web</span></td>
+                        <td data-etiqueta="Producto">oneCOP</td>
+                        <td data-etiqueta="Estado"><span class="estado pendiente">Pendiente de tu respuesta</span></td>
+                        <td data-etiqueta="Última actividad">Hoy, 09:42</td>
+                    </tr>
+                    <tr>
+                        <td class="num" data-etiqueta="Nº">#2026-0318</td>
+                        <td class="asunto-celda" data-etiqueta="Asunto"><a class="asunto" href="#">No puedo emitir la factura de octubre</a></td>
+                        <td data-etiqueta="Departamento"><span class="dep apps">Aplicaciones web</span></td>
+                        <td data-etiqueta="Producto">oneFact</td>
+                        <td data-etiqueta="Estado"><span class="estado abierto">Abierto</span></td>
+                        <td data-etiqueta="Última actividad">Hoy, 08:15</td>
+                    </tr>
+                    <tr class="sin-leer">
+                        <td class="num" data-etiqueta="Nº">#2026-0305</td>
+                        <td class="asunto-celda" data-etiqueta="Asunto"><a class="asunto" href="#">El correo de administracion@ no recibe mensajes</a><span class="nuevo">Respuesta nueva</span></td>
+                        <td data-etiqueta="Departamento"><span class="dep soporte">Soporte</span></td>
+                        <td data-etiqueta="Producto">Pool de mantenimiento</td>
+                        <td data-etiqueta="Estado"><span class="estado curso">En curso</span></td>
+                        <td data-etiqueta="Última actividad">Ayer, 17:30</td>
+                    </tr>
+                    <tr>
+                        <td class="num" data-etiqueta="Nº">#2026-0298</td>
+                        <td class="asunto-celda" data-etiqueta="Asunto"><a class="asunto" href="#">Cambiar el horario en la página de contacto</a></td>
+                        <td data-etiqueta="Departamento"><span class="dep webs">Páginas web</span></td>
+                        <td data-etiqueta="Producto">Pool de mantenimiento</td>
+                        <td data-etiqueta="Estado"><span class="estado abierto">Abierto</span></td>
+                        <td data-etiqueta="Última actividad">6 nov, 12:05</td>
+                    </tr>
+                    <tr>
+                        <td class="num" data-etiqueta="Nº">#2026-0281</td>
+                        <td class="asunto-celda" data-etiqueta="Asunto"><a class="asunto" href="#">Presupuesto para ampliar licencias de oneCOP</a></td>
+                        <td data-etiqueta="Departamento"><span class="dep otros">Otros</span></td>
+                        <td data-etiqueta="Producto">oneCOP</td>
+                        <td data-etiqueta="Estado"><span class="estado resuelto">Resuelto</span></td>
+                        <td data-etiqueta="Última actividad">3 nov, 10:20</td>
+                    </tr>
+                    <tr>
+                        <td class="num" data-etiqueta="Nº">#2026-0266</td>
+                        <td class="asunto-celda" data-etiqueta="Asunto"><a class="asunto" href="#">Impresora de recepción no imprime en red</a></td>
+                        <td data-etiqueta="Departamento"><span class="dep soporte">Soporte</span></td>
+                        <td data-etiqueta="Producto">Pool de mantenimiento</td>
+                        <td data-etiqueta="Estado"><span class="estado resuelto">Resuelto</span></td>
+                        <td data-etiqueta="Última actividad">29 oct, 16:48</td>
+                    </tr>
+                    <tr>
+                        <td class="num" data-etiqueta="Nº">#2026-0240</td>
+                        <td class="asunto-celda" data-etiqueta="Asunto"><a class="asunto" href="#">Alta de un nuevo usuario en oneFact</a></td>
+                        <td data-etiqueta="Departamento"><span class="dep apps">Aplicaciones web</span></td>
+                        <td data-etiqueta="Producto">oneFact</td>
+                        <td data-etiqueta="Estado"><span class="estado cerrado">Cerrado</span></td>
+                        <td data-etiqueta="Última actividad">21 oct, 09:10</td>
+                    </tr>
+                    <tr>
+                        <td class="num" data-etiqueta="Nº">#2026-0233</td>
+                        <td class="asunto-celda" data-etiqueta="Asunto"><a class="asunto" href="#">Renovación del dominio hermanossantana.es</a></td>
+                        <td data-etiqueta="Departamento"><span class="dep webs">Páginas web</span></td>
+                        <td data-etiqueta="Producto">Pool de mantenimiento</td>
+                        <td data-etiqueta="Estado"><span class="estado cerrado">Cerrado</span></td>
+                        <td data-etiqueta="Última actividad">17 oct, 13:00</td>
+                    </tr>
+                    <tr>
+                        <td class="num" data-etiqueta="Nº">#2026-0210</td>
+                        <td class="asunto-celda" data-etiqueta="Asunto"><a class="asunto" href="#">Copia de seguridad semanal no se ha ejecutado</a></td>
+                        <td data-etiqueta="Departamento"><span class="dep soporte">Soporte</span></td>
+                        <td data-etiqueta="Producto">Pool de mantenimiento</td>
+                        <td data-etiqueta="Estado"><span class="estado cerrado">Cerrado</span></td>
+                        <td data-etiqueta="Última actividad">9 oct, 11:35</td>
+                    </tr>
+                    <tr>
+                        <td class="num" data-etiqueta="Nº">#2026-0187</td>
+                        <td class="asunto-celda" data-etiqueta="Asunto"><a class="asunto" href="#">Factura duplicada del mes de septiembre</a></td>
+                        <td data-etiqueta="Departamento"><span class="dep otros">Otros</span></td>
+                        <td data-etiqueta="Producto">oneFact</td>
+                        <td data-etiqueta="Estado"><span class="estado cerrado">Cerrado</span></td>
+                        <td data-etiqueta="Última actividad">2 oct, 15:22</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="paginacion">
+            <span>Mostrando 1–10 de 10</span>
+            <nav aria-label="Paginación">
+                <span aria-current="page">1</span>
+            </nav>
+        </div>
+    </main>
+</div>
+
+</body>
+</html>

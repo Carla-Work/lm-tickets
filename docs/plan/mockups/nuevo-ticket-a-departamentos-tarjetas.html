@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<!--
+  MOCKUP — Pantalla "Nuevo ticket" (panel del cliente), alternativa A: departamento en tarjetas.
+
+  Qué es: referencia visual de la pantalla, con datos de mentira realistas. NO es código de
+  producción y no se borra al implementar: es lo que se aprobó.
+  Cómo verlo: doble clic. Un solo archivo, CSS dentro, sin servidor ni conexión, sin JavaScript.
+  Única dependencia externa: el logo, por ruta relativa (../../marca lingmarco/logo-LM.svg).
+  Si no se encuentra, se ve el texto alternativo y el resto de la pantalla no cambia.
+
+  Estado: VALIDADO por la usuaria el 2026-11-09 (con "Comercial y contable" renombrado a "Otros").
+  Los supuestos 1-4 de abajo quedan aceptados; las cifras de adjuntos siguen siendo de ejemplo.
+
+  SUPUESTOS que esta pantalla da por buenos y hay que confirmar (ver docs/plan/00-encuadre.md):
+   1. Hay 4 departamentos con color del logo y el usuario elige uno al abrir el ticket.
+   2. La categoría depende del departamento (aquí, un desplegable agrupado por departamento).
+   3. El producto sale de los asignados a la empresa y es obligatorio porque esta empresa tiene.
+   4. Tipos y tamaño de adjuntos (PDF, imágenes, ZIP, 10 MB) son cifras de ejemplo, sin decidir.
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nuevo ticket · Ling Marco Tickets</title>
+<style>
+/* ---------- Paleta (guía de colores de https://lingmarco.es/ + colores del logo) ---------- */
+:root {
+    --texto: #040f24;
+    --titulo: #3c1d6f;
+    --principal: #742bba;
+    --principal-claro: #9e4af0;
+    --secundario-oscuro: #486330;
+    --secundario: #8cb73c;
+    --gris: #ededed;
+    --blanco: #ffffff;
+
+    /* Departamentos. Cada uno lleva dos tonos: "marca" (relleno, tomado del logo) y "texto"
+       (más oscuro) porque el color de marca sobre blanco NO cumple contraste como texto. */
+    --dep-apps: #7eba28;     --dep-apps-texto: #486330;   --dep-apps-fondo: #f1f8e4;
+    --dep-webs: #e6318a;     --dep-webs-texto: #a00860;   --dep-webs-fondo: #fdecf4;
+    --dep-soporte: #3c76ba;  --dep-soporte-texto: #1f4f8c; --dep-soporte-fondo: #e8f0fa;
+    --dep-comercial: #ffe90b; --dep-comercial-texto: #6b5a00; --dep-comercial-fondo: #fffbd1;
+}
+
+* { box-sizing: border-box; }
+body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: var(--texto);
+    background: #f7f7f8;
+    line-height: 1.5;
+}
+h1, h2, h3 { color: var(--titulo); line-height: 1.2; margin: 0; }
+a { color: var(--principal); }
+:focus-visible { outline: 3px solid var(--principal-claro); outline-offset: 2px; }
+
+/* ---------- Estructura: cabecera + menú lateral + contenido ---------- */
+.cabecera {
+    background: var(--blanco);
+    border-bottom: 1px solid var(--gris);
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+    padding: .75rem 1.5rem; gap: .5rem 1rem;
+}
+.cabecera img { height: 34px; width: auto; max-width: 60vw; }
+.cabecera .usuario { display: flex; align-items: center; gap: 1rem; font-size: .9rem; }
+.campana {
+    position: relative; text-decoration: none; color: var(--texto);
+    padding: .35rem .6rem; border: 1px solid var(--gris); border-radius: 999px; background: var(--blanco);
+}
+.campana b {
+    background: var(--principal); color: #fff; border-radius: 999px;
+    padding: 0 .45rem; font-size: .75rem; margin-left: .3rem;
+}
+.marco { display: grid; grid-template-columns: 220px minmax(0, 1fr); min-height: calc(100vh - 62px); }
+.menu { background: var(--blanco); border-right: 1px solid var(--gris); padding: 1.25rem 1rem; }
+.menu a {
+    display: block; padding: .6rem .8rem; border-radius: 8px;
+    color: var(--texto); text-decoration: none; margin-bottom: .2rem;
+}
+.menu a:hover { background: var(--gris); }
+.menu a[aria-current="page"] { background: var(--principal); color: #fff; font-weight: 600; }
+.menu .empresa { font-size: .8rem; color: #4a5568; margin: 0 .8rem 1rem; }
+main { padding: 1.75rem; max-width: 1100px; }
+.migas { font-size: .85rem; margin-bottom: .75rem; color: #4a5568; }
+.migas a { color: #4a5568; }
+
+/* ---------- Formulario ---------- */
+.dos-columnas { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 1.5rem; align-items: start; margin-top: 1.25rem; }
+.tarjeta { background: var(--blanco); border: 1px solid var(--gris); border-radius: 12px; padding: 1.5rem; }
+.campo { margin-bottom: 1.25rem; }
+label, .etiqueta { display: block; font-weight: 600; margin-bottom: .35rem; }
+.ayuda { font-size: .85rem; color: #4a5568; margin: .25rem 0 0; }
+.obligatorio { color: var(--dep-webs-texto); }
+input[type=text], select, textarea {
+    width: 100%; padding: .65rem .8rem; font: inherit; color: var(--texto);
+    border: 1px solid #b8bcc6; border-radius: 8px; background: var(--blanco);
+}
+textarea { min-height: 150px; resize: vertical; }
+input[type=file] { width: 100%; padding: .8rem; border: 2px dashed #b8bcc6; border-radius: 8px; background: #fafafa; font: inherit; }
+
+/* ---------- Tarjetas de departamento (radio + CSS, sin JavaScript) ---------- */
+fieldset { border: 0; padding: 0; margin: 0 0 1.25rem; }
+legend { font-weight: 600; padding: 0; margin-bottom: .5rem; }
+.departamentos { display: grid; grid-template-columns: repeat(2, 1fr); gap: .75rem; }
+.dep { position: relative; }
+.dep input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
+.dep .caja {
+    display: block; height: 100%; padding: .9rem 1rem .9rem 1.2rem;
+    border: 2px solid var(--gris); border-left-width: 8px; border-radius: 10px; background: var(--blanco);
+}
+.dep strong { display: block; color: var(--titulo); }
+.dep small { color: #4a5568; }
+.dep:hover .caja { background: #fafafa; }
+.dep input:focus-visible + .caja { outline: 3px solid var(--principal-claro); outline-offset: 2px; }
+.dep.apps .caja { border-left-color: var(--dep-apps); }
+.dep.webs .caja { border-left-color: var(--dep-webs); }
+.dep.soporte .caja { border-left-color: var(--dep-soporte); }
+.dep.comercial .caja { border-left-color: var(--dep-comercial); }
+.dep.apps input:checked + .caja { border-color: var(--dep-apps); background: var(--dep-apps-fondo); }
+.dep.webs input:checked + .caja { border-color: var(--dep-webs); background: var(--dep-webs-fondo); }
+.dep.soporte input:checked + .caja { border-color: var(--dep-soporte); background: var(--dep-soporte-fondo); }
+.dep.comercial input:checked + .caja { border-color: var(--dep-comercial); background: var(--dep-comercial-fondo); }
+.dep input:checked + .caja strong::after { content: " ✓"; }
+
+/* ---------- Botones ---------- */
+.acciones { display: flex; gap: .75rem; flex-wrap: wrap; margin-top: 1.5rem; }
+.boton {
+    font: inherit; font-weight: 600; padding: .7rem 1.4rem; border-radius: 8px; cursor: pointer;
+    border: 2px solid transparent; text-decoration: none; display: inline-block;
+}
+.boton.principal { background: linear-gradient(135deg, var(--principal), var(--principal-claro)); color: #fff; }
+.boton.secundario { background: var(--blanco); color: var(--principal); border-color: var(--principal); }
+
+/* ---------- Panel lateral ---------- */
+.lateral h2 { font-size: 1.05rem; margin-bottom: .75rem; }
+.lateral ol { margin: 0 0 1rem; padding-left: 1.2rem; }
+.lateral li { margin-bottom: .5rem; }
+.productos { list-style: none; padding: 0; margin: 0; }
+.productos li {
+    display: inline-block; background: var(--gris); border-radius: 999px;
+    padding: .15rem .7rem; margin: 0 .3rem .4rem 0; font-size: .85rem;
+}
+.aviso { background: #f6f0fd; border-left: 4px solid var(--principal); padding: .75rem 1rem; border-radius: 6px; font-size: .9rem; }
+
+/* ---------- Móvil ---------- */
+@media (max-width: 860px) {
+    /* minmax(0,1fr): sin el 0, un campo ancho impide que la columna encoja y todo se sale de la pantalla */
+    .marco { grid-template-columns: minmax(0, 1fr); }
+    .menu { border-right: 0; border-bottom: 1px solid var(--gris); display: flex; flex-wrap: wrap; align-content: flex-start; gap: .25rem; padding: .75rem 1rem; }
+    .menu .empresa { width: 100%; margin: 0 0 .25rem; }
+    .dos-columnas { grid-template-columns: minmax(0, 1fr); }
+    .departamentos { grid-template-columns: minmax(0, 1fr); }
+    main { padding: 1rem; }
+    .cabecera .usuario span { display: none; }
+}
+
+/* Móvil: la fila de la cuadrícula no debe estirarse hasta la altura mínima de la página (dejaba un hueco bajo el menú) */
+@media (max-width: 860px) { .marco { align-content: start; } }
+</style>
+</head>
+<body>
+
+<header class="cabecera">
+    <img src="../../marca lingmarco/logo-LM.svg" alt="Ling Marco &amp; Asociados">
+    <div class="usuario">
+        <a class="campana" href="#">Avisos <b>2</b></a>
+        <span>María Suárez · Hermanos Santana S.L.</span>
+        <a href="#">Salir</a>
+    </div>
+</header>
+
+<div class="marco">
+    <nav class="menu" aria-label="Menú del panel">
+        <p class="empresa">Hermanos Santana S.L.<br>Rol: usuario</p>
+        <a href="#">Mis tickets</a>
+        <a href="#" aria-current="page">Nuevo ticket</a>
+        <a href="#">Mi empresa</a>
+        <a href="#">Mis datos</a>
+    </nav>
+
+    <main>
+        <p class="migas"><a href="#">Mis tickets</a> › Nuevo ticket</p>
+        <h1>Nuevo ticket</h1>
+        <p class="ayuda" style="font-size:1rem">Cuéntanos qué te ocurre y lo atenderá el departamento que elijas.</p>
+
+        <form class="dos-columnas" action="#">
+            <div class="tarjeta">
+                <fieldset>
+                    <legend>Departamento <span class="obligatorio" aria-hidden="true">*</span></legend>
+                    <div class="departamentos">
+                        <label class="dep soporte">
+                            <input type="radio" name="departamento" value="soporte" required>
+                            <span class="caja"><strong>Soporte</strong><small>Equipos, correo, copias y seguridad</small></span>
+                        </label>
+                        <label class="dep apps">
+                            <input type="radio" name="departamento" value="apps" checked>
+                            <span class="caja"><strong>Aplicaciones web</strong><small>Programas de gestión y desarrollos a medida</small></span>
+                        </label>
+                        <label class="dep webs">
+                            <input type="radio" name="departamento" value="webs">
+                            <span class="caja"><strong>Páginas web</strong><small>Tu web, dominio y hosting</small></span>
+                        </label>
+                        <label class="dep comercial">
+                            <input type="radio" name="departamento" value="comercial">
+                            <span class="caja"><strong>Otros</strong><small>Presupuestos, facturas y contratos</small></span>
+                        </label>
+                    </div>
+                </fieldset>
+
+                <div class="campo">
+                    <label for="categoria">Tipo de incidencia <span class="obligatorio" aria-hidden="true">*</span></label>
+                    <select id="categoria" name="categoria" required>
+                        <optgroup label="Aplicaciones web">
+                            <option selected>Error en la aplicación</option>
+                            <option>Consulta de uso</option>
+                            <option>Mejora o cambio solicitado</option>
+                            <option>Acceso y usuarios</option>
+                        </optgroup>
+                        <optgroup label="Páginas web">
+                            <option>Cambio de contenido</option>
+                            <option>Web caída o con errores</option>
+                            <option>Dominio y hosting</option>
+                        </optgroup>
+                        <optgroup label="Soporte">
+                            <option>Equipos y sistemas</option>
+                            <option>Correo electrónico</option>
+                            <option>Copias de seguridad</option>
+                            <option>Seguridad</option>
+                            <option>Red e impresoras</option>
+                        </optgroup>
+                        <optgroup label="Otros">
+                            <option>Presupuesto</option>
+                            <option>Factura o cobro</option>
+                            <option>Contrato o pool de horas</option>
+                            <option>Otra consulta</option>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <div class="campo">
+                    <label for="producto">Producto o servicio afectado <span class="obligatorio" aria-hidden="true">*</span></label>
+                    <select id="producto" name="producto" required>
+                        <option value="" disabled>Elige uno</option>
+                        <option selected>oneFact</option>
+                        <option>oneCOP</option>
+                        <option>Pool de mantenimiento</option>
+                    </select>
+                    <p class="ayuda">Solo aparecen los productos contratados por tu empresa.</p>
+                </div>
+
+                <div class="campo">
+                    <label for="asunto">Asunto <span class="obligatorio" aria-hidden="true">*</span></label>
+                    <input type="text" id="asunto" name="asunto" required value="No puedo emitir la factura de octubre">
+                </div>
+
+                <div class="campo">
+                    <label for="descripcion">Descripción <span class="obligatorio" aria-hidden="true">*</span></label>
+                    <textarea id="descripcion" name="descripcion" required>Al pulsar «Emitir» en la factura FA-2026-0142 aparece un error y la factura se queda en borrador. Me pasa desde esta mañana con todos los clientes. No he cambiado ningún dato.</textarea>
+                    <p class="ayuda">Cuanto más detalle (qué pulsaste, qué mensaje salió), antes lo resolvemos.</p>
+                </div>
+
+                <div class="campo">
+                    <label for="adjuntos">Adjuntos (opcional)</label>
+                    <input type="file" id="adjuntos" name="adjuntos[]" multiple>
+                    <p class="ayuda">Capturas de pantalla, PDF o ZIP. Máximo 10 MB por archivo.</p>
+                </div>
+
+                <div class="acciones">
+                    <button type="submit" class="boton principal">Enviar ticket</button>
+                    <a class="boton secundario" href="#">Cancelar</a>
+                </div>
+            </div>
+
+            <aside class="tarjeta lateral" aria-label="Información">
+                <h2>¿Qué pasa después?</h2>
+                <ol>
+                    <li>Recibes un número de ticket, por ejemplo <strong>#2026-0318</strong>.</li>
+                    <li>Un técnico del departamento lo recoge.</li>
+                    <li>Te avisamos por correo y en el panel (campana de arriba) cuando haya respuesta.</li>
+                </ol>
+                <h2>Tu empresa tiene contratado</h2>
+                <ul class="productos">
+                    <li>oneFact</li>
+                    <li>oneCOP</li>
+                    <li>Pool de mantenimiento</li>
+                </ul>
+                <p class="aviso">Solo tú y el equipo de Ling Marco veis este ticket. Los administradores de tu empresa también.</p>
+            </aside>
+        </form>
+    </main>
+</div>
+
+</body>
+</html>
