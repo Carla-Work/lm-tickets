@@ -1,25 +1,61 @@
 /*
  * Hoja de estilos base de Ling Marco Tickets (CSS propio, sin Tailwind ni Vite).
  *
- * Qué es: estilos comunes a toda la aplicación. Se sirve tal cual desde public/, sin paso
- * de compilación: lo que se edita aquí es lo que ve el navegador.
- * Cuándo tocarlo: al aplicar un diseño validado en docs/plan/mockups/. Los colores y
- * tipografías definitivos salen de la marca; los de abajo son provisionales.
+ * Qué es: variables de la paleta y estilos comunes (texto, botones, formularios, alertas). Se sirve
+ * tal cual desde public/, sin paso de compilación.
+ * Cuándo tocarlo: al aplicar un diseño validado de docs/plan/mockups/. Los colores salen de la guía
+ * de lingmarco.es y del logo; NO inventar colores nuevos.
+ *
+ * Trampa: el color de marca de cada departamento sobre fondo blanco NO cumple contraste como texto;
+ * por eso hay dos tonos (--dep-*-texto). Y un color nunca va solo: siempre con su nombre.
  */
 :root {
-    --color-texto: #1b1b18;
-    --color-fondo: #fdfdfc;
-    --color-acento: #1d4ed8; /* provisional: sustituir por el color de marca */
+    --texto: #040f24;
+    --titulo: #3c1d6f;
+    --principal: #742bba;
+    --principal-claro: #9e4af0;
+    --gris: #ededed;
+    --blanco: #ffffff;
+    --texto-suave: #4a5568;
+    --error: #b3261e;
+
+    --dep-apps: #7eba28;     --dep-apps-texto: #486330;
+    --dep-webs: #e6318a;     --dep-webs-texto: #a00860;
+    --dep-soporte: #3c76ba;  --dep-soporte-texto: #1f4f8c;
+    --dep-otros: #ffe90b;    --dep-otros-texto: #6b5a00;
 }
+
+* { box-sizing: border-box; }
 
 body {
     margin: 0;
-    padding: 2rem;
-    font-family: system-ui, sans-serif;
-    color: var(--color-texto);
-    background: var(--color-fondo);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: var(--texto);
+    background: #f7f7f8;
+    line-height: 1.5;
 }
 
-a {
-    color: var(--color-acento);
+h1, h2, h3 { color: var(--titulo); line-height: 1.2; margin: 0; }
+a { color: var(--principal); }
+:focus-visible { outline: 3px solid var(--principal-claro); outline-offset: 2px; }
+
+/* ---------- Botones ---------- */
+.boton { font: inherit; font-weight: 600; padding: .65rem 1.3rem; border-radius: 8px; cursor: pointer; border: 2px solid transparent; text-decoration: none; display: inline-block; }
+.boton.principal { background: linear-gradient(135deg, var(--principal), var(--principal-claro)); color: #fff; }
+.boton.secundario { background: var(--blanco); color: var(--principal); border-color: var(--principal); }
+.boton:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ---------- Formularios ---------- */
+.campo { margin-bottom: 1.1rem; }
+.campo > label { display: block; font-weight: 600; margin-bottom: .3rem; }
+.campo input[type=text], .campo input[type=email], .campo input[type=password] {
+    width: 100%; font: inherit; color: var(--texto); padding: .6rem .8rem;
+    border: 1px solid #b8bcc6; border-radius: 8px; background: #fff;
 }
+.campo .ayuda { font-size: .85rem; color: var(--texto-suave); margin: .25rem 0 0; }
+.oblig { color: var(--dep-webs-texto); }
+
+/* ---------- Alertas (nunca solo color: llevan texto) ---------- */
+.alerta { padding: .8rem 1rem; border-radius: 8px; border-left: 5px solid; margin-bottom: 1rem; font-size: .95rem; }
+.alerta.error { background: #fdeceb; border-color: var(--error); color: #7a1710; }
+.alerta.ok { background: #f6f0fd; border-color: var(--principal); }

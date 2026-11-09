@@ -1,0 +1,47 @@
+/*
+ * Estilos de las pantallas de acceso (entrar, recuperar, crear contraseña).
+ * Cuándo tocarlo: solo con un cambio del diseño validado (docs/plan/mockups/acceso-*.html).
+ * Pantalla partida: panel oscuro de marca a la izquierda y formulario a la derecha. En móvil el
+ * panel de marca se reduce a una franja superior. Requiere app.css.
+ */
+.acceso2 { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1fr) minmax(380px, 30%); }
+.acceso-marca { position: relative; overflow: hidden; color: #fff; padding: 2.5rem 2.75rem; display: flex; flex-direction: column; background: linear-gradient(165deg, #0e0a1d 0%, #1a1236 55%, #2d1f5e 100%); }
+.acceso-marca::before { content: ""; position: absolute; width: 330px; height: 330px; border-radius: 50%; background: rgba(116, 43, 186, .22); top: -70px; right: -50px; }
+.acceso-marca::after { content: ""; position: absolute; width: 300px; height: 300px; border-radius: 50%; background: rgba(116, 43, 186, .18); bottom: -150px; left: -90px; }
+.acceso-marca > * { position: relative; z-index: 1; }
+/* El lienzo del SVG blanco es más alto que el logo: se recorta lo vacío de abajo. */
+.marca-logo { display: block; width: min(270px, 70vw); aspect-ratio: 3188 / 458; overflow: hidden; }
+.marca-logo img { display: block; width: 100%; height: auto; }
+.marca-sub { color: #cdc3e8; font-size: .95rem; margin: .7rem 0 0; }
+.marca-texto { margin: auto 0; }
+.marca-texto .etiqueta { letter-spacing: .14em; text-transform: uppercase; font-size: .78rem; font-weight: 700; color: #b79df2; margin: 0 0 1rem; }
+.marca-texto h2 { color: #fff; font-size: clamp(1.9rem, 3.2vw, 2.8rem); line-height: 1.1; margin: 0 0 1.2rem; max-width: 18ch; }
+.marca-texto p { color: #e4ddf5; max-width: 34rem; font-size: 1.05rem; margin: 0; }
+
+.acceso-form { background: #fff; display: flex; flex-direction: column; justify-content: center; padding: 2.5rem; }
+.acceso-form-int { width: 100%; max-width: 360px; margin: 0 auto; }
+.bienvenida small { display: block; color: var(--texto-suave); }
+.bienvenida strong { display: block; font-size: 1.7rem; line-height: 1.1; color: var(--principal); margin-bottom: .8rem; }
+.acceso-form h1 { font-size: 1.5rem; margin-bottom: .4rem; }
+.acceso-form p.sub { margin: 0 0 1.3rem; font-size: .95rem; color: var(--texto-suave); }
+.acceso-form .campo input:focus { outline: 2px solid var(--principal-claro); border-color: var(--principal); }
+.pw { display: flex; }
+.pw input { border-radius: 8px 0 0 8px !important; }
+.pw button { border: 1px solid #b8bcc6; border-left: 0; border-radius: 0 8px 8px 0; background: #f3f3f5; padding: 0 .85rem; cursor: pointer; color: var(--texto-suave); }
+.ancho { width: 100%; text-align: center; }
+.centro { text-align: center; }
+.enlace-olvido { margin: 1rem 0 0; font-size: .95rem; }
+.pie-acceso { margin: 1.6rem 0 0; text-align: center; font-size: .85rem; color: var(--texto-suave); }
+.copy { margin: 1.4rem 0 0; font-size: .8rem; color: var(--texto-suave); text-align: center; }
+.reglas { margin: .3rem 0 0; padding-left: 1.1rem; font-size: .85rem; color: var(--texto-suave); }
+
+@media (max-width: 900px) {
+    .acceso2 { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; }
+    .acceso-marca { padding: 1.5rem; }
+    .acceso-marca::before { width: 200px; height: 200px; top: -80px; right: -60px; }
+    .acceso-marca::after { display: none; }
+    .marca-texto { margin: 1.5rem 0 0; }
+    .marca-texto h2 { font-size: 1.6rem; margin-bottom: .6rem; }
+    .marca-texto p { display: none; }
+    .acceso-form { padding: 2rem 1.25rem; }
+}

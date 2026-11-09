@@ -13,6 +13,7 @@ namespace App\Models;
 
 use App\Enums\Team;
 use App\Enums\UserRole;
+use App\Notifications\ResetPasswordNotification;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -40,6 +41,15 @@ class User extends Authenticatable
             'activated_at' => 'datetime',
             'deactivated_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Correo de «he olvidado mi contraseña» propio (en español, con la caducidad de config/auth.php).
+     * Sustituye al de Laravel, que sale en inglés.
+     */
+    public function sendPasswordResetNotification(#[\SensitiveParameter] $token): void
+    {
+        $this->notify(new ResetPasswordNotification($token));
     }
 
     /** @return BelongsTo<Company, $this> */

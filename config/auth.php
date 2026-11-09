@@ -96,7 +96,19 @@ return [
         'users' => [
             'provider' => 'users',
             'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
-            'expire' => 60,
+            'expire' => 60, // enlace de «he olvidado mi contraseña»: 60 minutos y de un solo uso (decidido)
+            'throttle' => 60,
+        ],
+
+        // Enlace de INVITACIÓN (R18). Mismo proveedor y misma tabla que el anterior pero caduca
+        // mucho más tarde: una invitación se abre al cabo de días, no de minutos. 7 días es una
+        // propuesta de Claude, pendiente de validar. TRAMPA: la tabla guarda UN token por correo, así
+        // que una invitación y una recuperación para el mismo correo se pisan (no pasa: a una cuenta
+        // pendiente no se le envía recuperación, y a una activa no se le envía invitación).
+        'invitations' => [
+            'provider' => 'users',
+            'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
+            'expire' => 60 * 24 * 7,
             'throttle' => 60,
         ],
     ],

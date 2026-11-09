@@ -1,0 +1,13 @@
+{{-- Campo de contraseña con ojo para verla. Parámetros: $id, $etiqueta, $autocompletar, $ayuda (opcional). --}}
+<div class="campo">
+    <label for="{{ $id }}">{{ $etiqueta }} <span class="oblig" aria-hidden="true">*</span></label>
+    <div class="pw">
+        <input type="password" id="{{ $id }}" name="{{ $id }}" autocomplete="{{ $autocompletar }}" required>
+        <button type="button" class="ver-pw" data-para="{{ $id }}" aria-label="Mostrar contraseña" hidden>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+    </div>
+    @isset($ayuda)
+        <ul class="reglas"><li>{{ $ayuda }}</li><li>Mejor una frase larga que una palabra con símbolos.</li></ul>
+    @endisset
+</div>
