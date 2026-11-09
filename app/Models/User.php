@@ -30,7 +30,7 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
-    // Sin PHPDoc a propósito: un `@return array<string, string>` borra a Larastan el tipo de las enumeraciones.
+    // Larastan lee el cuerpo de este método gracias a `parseModelCastsMethod: true` en phpstan.neon.
     protected function casts(): array
     {
         return [
@@ -74,12 +74,36 @@ class User extends Authenticatable
         return $this->hasMany(Ticket::class, 'assigned_to');
     }
 
+    /** ¿Tiene alguno de estos roles? */
+    public function hasRole(UserRole ...$roles): bool
+    {
+        return in_array($this->getAttribute('role'), $roles, true);
+    }
+
+    /** Empleado de Ling Marco (agente o administrador). */
+    public function isInternal(): bool
+    {
+        return $this->hasRole(UserRole::Agent, UserRole::Admin);
+    }
+
+    /**
+     * ¿Puede usar la aplicación AHORA? Activada, no dada de baja y, si es cliente, con su empresa de alta.
+     * Es lo primero que se mira en toda autorización: una cuenta que no es operativa no puede NADA,
+     * aunque conserve una sesión abierta de antes de la baja.
+     */
+    public function isOperational(): bool
+    {
+        if ($this->activated_at === null || $this->deactivated_at !== null) {
+            return false;
+        }
+
+        return $this->company_id === null || ($this->company !== null && $this->company->isActive());
+    }
+
     /** R21: solo el administrador entra con segundo factor. */
     public function requiresTwoFactor(): bool
     {
-        // getAttribute(): dentro del propio modelo Larastan ve `role` como string (el cast a enumeración
-        // solo lo reconoce desde fuera); el valor real SÍ es un UserRole.
-        return $this->getAttribute('role') === UserRole::Admin;
+        return $this->hasRole(UserRole::Admin);
     }
 
     /** El segundo factor está ACTIVADO: la persona demostró que su app genera códigos válidos. */

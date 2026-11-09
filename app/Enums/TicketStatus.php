@@ -38,6 +38,31 @@ enum TicketStatus: string
         return $this === self::PendingCustomer ? 'Pendiente de tu respuesta' : $this->label();
     }
 
+    /**
+     * Estados a los que se puede pasar desde este (R14, R15). Propuesta de Claude pendiente de validar;
+     * ver docs/plan/autorizacion.md, «Transiciones de estado».
+     *
+     * R15: NADIE reabre. Por eso desde Resuelto solo se va a Cerrado, de Cerrado no se sale, y
+     * «Abierto» es únicamente el estado inicial (ningún estado vuelve a él).
+     *
+     * @return list<self>
+     */
+    public function allowedTargets(): array
+    {
+        return match ($this) {
+            self::Open => [self::InProgress, self::PendingCustomer, self::Resolved],
+            self::InProgress => [self::PendingCustomer, self::Resolved],
+            self::PendingCustomer => [self::InProgress, self::Resolved],
+            self::Resolved => [self::Closed],
+            self::Closed => [],
+        };
+    }
+
+    public function canTransitionTo(self $destino): bool
+    {
+        return in_array($destino, $this->allowedTargets(), true);
+    }
+
     /** Ya no admite mensajes del cliente ni puede reabrirse (R4, R15). */
     public function isFinal(): bool
     {

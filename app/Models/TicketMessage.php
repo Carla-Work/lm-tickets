@@ -25,7 +25,7 @@ class TicketMessage extends Model
     /** @use HasFactory<TicketMessageFactory> */
     use HasFactory;
 
-    // Sin PHPDoc a propósito: un `@return array<string, string>` borra a Larastan el tipo de las enumeraciones.
+    // Larastan lee el cuerpo de este método gracias a `parseModelCastsMethod: true` en phpstan.neon.
     protected function casts(): array
     {
         return ['kind' => MessageKind::class];
@@ -40,6 +40,19 @@ class TicketMessage extends Model
     public function scopePublic(Builder $query): Builder
     {
         return $query->where('kind', MessageKind::Public->value);
+    }
+
+    /**
+     * Los mensajes que este usuario puede ver (R2): el equipo ve todo; un CLIENTE solo los públicos.
+     * Se usa SIEMPRE que se listan mensajes. Ojo: no comprueba que el usuario vea el TICKET; eso lo
+     * hace Ticket::visibleTo / TicketPolicy::view. Se combinan.
+     *
+     * @param  Builder<TicketMessage>  $query
+     * @return Builder<TicketMessage>
+     */
+    public function scopeVisibleTo(Builder $query, User $user): Builder
+    {
+        return $user->isInternal() && $user->isOperational() ? $query : $query->public();
     }
 
     /** @return BelongsTo<Ticket, $this> */

@@ -16,8 +16,10 @@ namespace App\Models;
 
 use App\Enums\Department;
 use App\Enums\TicketStatus;
+use App\Enums\UserRole;
 use Database\Factories\TicketFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -45,7 +47,7 @@ class Ticket extends Model
         });
     }
 
-    // Sin PHPDoc a propósito: un `@return array<string, string>` borra a Larastan el tipo de las enumeraciones.
+    // Larastan lee el cuerpo de este método gracias a `parseModelCastsMethod: true` en phpstan.neon.
     protected function casts(): array
     {
         return [
@@ -55,6 +57,35 @@ class Ticket extends Model
             'closed_at' => 'datetime',
             'last_activity_at' => 'datetime',
         ];
+    }
+
+    /** ¿Es un ticket del departamento «Otros»? Solo lo ven y lo atienden el administrador y el cliente (R13). */
+    public function isOther(): bool
+    {
+        return $this->getAttribute('department') === Department::Other;
+    }
+
+    /**
+     * Los tickets que este usuario puede VER (R1, R11, R13). ÚNICA vía permitida para construir una
+     * lista, un buscador o un contador: sin este filtro, una consulta cualquiera entrega tickets ajenos.
+     * Debe dar el MISMO resultado que TicketPolicy::view (lo comprueba TicketVisibilityTest).
+     *
+     * @param  Builder<Ticket>  $query
+     * @return Builder<Ticket>
+     */
+    public function scopeVisibleTo(Builder $query, User $user): Builder
+    {
+        if (! $user->isOperational()) {
+            return $query->whereRaw('1 = 0'); // una cuenta de baja no ve nada
+        }
+
+        return match ($user->getAttribute('role')) {
+            UserRole::CompanyUser => $query->where('company_id', $user->company_id)->where('requester_id', $user->id),
+            UserRole::CompanyAdmin => $query->where('company_id', $user->company_id),
+            UserRole::Agent => $query->where('department', '!=', Department::Other->value),
+            UserRole::Admin => $query,
+            default => $query->whereRaw('1 = 0'), // un rol desconocido no ve nada: ante la duda, denegar
+        };
     }
 
     /** Número legible: `2026-0312`. @return Attribute<string, never> */

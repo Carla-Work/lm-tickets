@@ -50,8 +50,9 @@ Route::post('/contrasena', [NewPasswordController::class, 'store'])->defaults('b
 Route::get('/invitacion/{token}', [NewPasswordController::class, 'create'])->defaults('broker', 'invitations')->name('invitation.accept');
 Route::post('/invitacion', [NewPasswordController::class, 'store'])->defaults('broker', 'invitations')->name('invitation.store');
 
+// operational: una cuenta o empresa dada de baja pierde la sesión en la siguiente petición.
 // admin.2fa: un administrador sin segundo factor activado no pasa (R21), p. ej. si lo ascienden con la sesión abierta.
-Route::middleware(['auth', 'admin.2fa'])->group(function () {
+Route::middleware(['auth', 'operational', 'admin.2fa'])->group(function () {
     Route::get('/panel', PanelController::class)->name('panel');
     Route::post('/salir', [LoginController::class, 'destroy'])->name('logout');
 });

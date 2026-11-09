@@ -8,12 +8,35 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Attachment extends Model
 {
     public const UPDATED_AT = null;
+
+    /**
+     * Disco donde viven los ficheros: el PRIVADO (`local`, en storage/app/private), fuera de
+     * public/. Nunca el disco `public`: un adjunto no debe tener nunca una URL abierta (R3).
+     */
+    public const DISK = 'local';
+
+    /**
+     * Los adjuntos que este usuario puede ver (R2, R3): los de notas internas son SOLO del equipo.
+     * No comprueba que vea el ticket: se combina con Ticket::visibleTo.
+     *
+     * @param  Builder<Attachment>  $query
+     * @return Builder<Attachment>
+     */
+    public function scopeVisibleTo(Builder $query, User $user): Builder
+    {
+        if ($user->isInternal() && $user->isOperational()) {
+            return $query;
+        }
+
+        return $query->whereHas('message', fn (Builder $mensaje) => $mensaje->public());
+    }
 
     /** @return BelongsTo<Ticket, $this> */
     public function ticket(): BelongsTo

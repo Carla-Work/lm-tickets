@@ -11,6 +11,7 @@
 namespace App\Models;
 
 use App\Enums\TicketEventType;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -18,10 +19,22 @@ class TicketEvent extends Model
 {
     public const UPDATED_AT = null; // solo se añade (R5)
 
-    // Sin PHPDoc a propósito: un `@return array<string, string>` borra a Larastan el tipo de las enumeraciones.
+    // Larastan lee el cuerpo de este método gracias a `parseModelCastsMethod: true` en phpstan.neon.
     protected function casts(): array
     {
         return ['type' => TicketEventType::class, 'data' => 'array', 'visible_to_customer' => 'boolean', 'created_at' => 'datetime'];
+    }
+
+    /**
+     * Los eventos que este usuario puede ver (R2, R5): el equipo ve todo el historial; un CLIENTE solo
+     * los marcados `visible_to_customer` (p. ej. no ve las reasignaciones entre agentes).
+     *
+     * @param  Builder<TicketEvent>  $query
+     * @return Builder<TicketEvent>
+     */
+    public function scopeVisibleTo(Builder $query, User $user): Builder
+    {
+        return $user->isInternal() && $user->isOperational() ? $query : $query->where('visible_to_customer', true);
     }
 
     /** @return BelongsTo<Ticket, $this> */
