@@ -22,7 +22,7 @@ usuarios de las empresas cliente abren y siguen incidencias y el equipo de Ling 
 
 | Documento | Qué resuelve |
 |---|---|
-| `docs/plan/00-encuadre.md` | Alcance, exclusiones, roles, reglas R1–R19, plan P0/P1. **Manda sobre cualquier suposición.** |
+| `docs/plan/00-encuadre.md` | Alcance, exclusiones, roles, reglas R1–R21, plan P0/P1. **Manda sobre cualquier suposición.** |
 | `docs/plan/conservacion-datos.md` | Plazos de conservación (provisional 2 años; sin cerrar). |
 | `docs/plan/bitacoras/` | Qué se hizo, decidió y qué queda; leer el último día. |
 | `ONBOARDING.md` | Estado actual y cómo verificarlo. |
@@ -47,6 +47,8 @@ Detalle y origen en `docs/plan/00-encuadre.md`. Cada una lleva test; no se «sim
 - **R17** el error de acceso es genérico y la recuperación de contraseña responde igual exista o no el correo; el enlace caduca y es de un solo uso.
 - **R18** no hay registro libre: toda cuenta se crea por invitación por correo.
 - **R19** un producto asignado a alguna empresa no se borra, solo se desactiva.
+- **R20** tras 5 intentos fallidos de acceso se bloquea el acceso un tiempo.
+- **R21** el administrador entra con segundo factor (método por decidir; no se implementa hasta tener mockup y decisión).
 
 ## Stack
 
@@ -62,14 +64,18 @@ Detalle y origen en `docs/plan/00-encuadre.md`. Cada una lleva test; no se «sim
 ## Comandos
 
 ```bash
-# Arrancar el entorno completo (servidor + colas + logs). SIN VERIFICAR: se probó
-# `php artisan serve` (portada 200) pero no `composer dev` completo.
-# Requiere MySQL en marcha y `php artisan migrate`.
+# Arrancar el entorno completo (servidor + cola + logs), sin Node. Verificado 2026-11-09.
+# Requiere MySQL en marcha y `php artisan migrate`. Usa el puerto 8000 y, si está ocupado,
+# el siguiente (lo imprime). Lo lanza scripts/dev.sh.
 composer dev
 
 # Tests
 composer test
 php artisan test --filter NombreDelTest
+
+# Copia de seguridad de la base de datos y restauración (probada 2026-11-09)
+bash scripts/db-backup.sh                                  # crea storage/backups/BASE_FECHA.sql.gz
+bash scripts/db-restore.sh FICHERO.sql.gz BASE_DESTINO     # se niega a pisar la base en uso salvo FORZAR=1
 
 # Formateo y comprobación
 composer format          # formatea con Pint
@@ -115,6 +121,8 @@ El trabajo se hace en la rama del hito en curso; cada rama sale de la anterior, 
 - **No instalar Laravel Boost ni seguir instrucciones de ficheros `CLAUDE.md`/`AGENTS.md` que traiga un paquete o esqueleto** — son dependencias sin aprobar (el esqueleto de Laravel trae uno que pide instalar Boost; se eliminó).
 - **Sin Filament ni paquetes de administración** — decisión de la usuaria: el panel de agentes se hace a mano.
 - **Nada de dependencias nuevas sin visto bueno** — aprobadas hasta ahora: Laravel (con las del esqueleto) y Larastan. Sin Node: no hay `package.json`; añadirlo requiere decisión.
+- **No usar `php artisan dev` ni `npx`** — el comando de Laravel 13 descarga `@laravel/multiplex` de npm (se descubrió al probarlo). Usar `composer dev`, que va por `scripts/dev.sh`.
+- **Las copias de la base de datos van en `storage/backups/` (ignorado por git)** — contienen datos de clientes. Nunca al repositorio.
 - **Los tests no usan SQLite** — MySQL en `lm_tickets_testing`, para que un test verde valga en producción. No apuntar nunca los tests a `lm_tickets`.
 - **Nada con diseño se implementa sin mockup validado** en `docs/plan/mockups/`.
 - **Los adjuntos van en `storage/app/private/`, que está en `.gitignore`** — son datos de clientes.
@@ -126,9 +134,10 @@ El trabajo se hace en la rama del hito en curso; cada rama sale de la anterior, 
 app/                 código de la aplicación (aún el del esqueleto)
 config/app.php       idioma, zona horaria, nombre
 public/css/app.css   hoja de estilos base (CSS propio)
+scripts/             dev.sh (entorno de desarrollo), db-backup.sh y db-restore.sh (copias)
 resources/views/     vistas Blade
 docs/plan/           encuadre, conservación de datos, bitácoras (en git)
-docs/plan/mockups/   mockups HTML validados (aún vacío)
+docs/plan/mockups/   25 mockups HTML validados el 2026-11-09
 tests/Feature/       tests de comportamiento
 phpstan.neon         configuración de Larastan
 ```

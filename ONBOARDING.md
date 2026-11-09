@@ -17,35 +17,38 @@
 ### Verificado
 - `composer check`: Pint, Larastan y tests en verde.
 - `php artisan serve`: portada y `css/app.css` responden HTTP 200.
+- `composer dev` (servidor + cola + logs, sin Node): portada 200 en el puerto que imprime; sin procesos huérfanos.
+- Copia de seguridad: copia → restauración en una base aparte → comparación tabla a tabla y fila marcada idéntica (2026-11-09).
 
 ### Sin verificar
-- `composer dev` completo (servidor + colas + logs). Se intentó probarlo y el sistema bloqueó el comando; falta ejecutarlo a mano.
+Nada de la Fase 1.
 
-### Pendiente en la Fase 1
-1. **Copia de seguridad configurada y restaurada una vez** (regla de Fase 1; sin hacer).
-2. Verificar `composer dev` a mano.
-3. Zona horaria de presentación (hoy UTC).
-4. Retirar la copia duplicada de `docs/` en `/Volumes/Proyectos Lingmarco/Publico/lingmarco/` (decide la usuaria).
-5. Subida a GitHub (la ejecuta la usuaria).
-6. Decidir qué hacer con `docs/marca lingmarco/` (apareció sin commitear; no es de Claude).
+### Fase 1: cerrada (2026-11-09)
+Pendientes que quedan fuera de la fase: zona horaria de presentación (hoy UTC), retirar la copia duplicada de `docs/` en `/Volumes/Proyectos Lingmarco/Publico/lingmarco/` (decide la usuaria) y subir a GitHub (lo ejecuta la usuaria).
 
-### Decisiones abiertas del encuadre
-Categorías (propuesta hecha), servicios de soporte del catálogo de productos, plazos definitivos de conservación de datos.
+### Fase 2 (en curso): plan aprobado el 2026-11-09
+Pasos: 0 cierre de Fase 1 (**hecho**) · 1 modelo de datos (esquema **aprobado**, por escribir) · 2 acceso · 3 autorización (antes que pantallas) · 4 flujo del ticket · 5 avisos · 6 test de integración. Sin dependencias nuevas.
+
+Decidido para el acceso: 2FA solo del administrador, sin «Recordarme», bloqueo a los 5 intentos, enlace de 60 min, 12 caracteres.
+**Bloqueo del 2FA:** falta mockup y decidir el método (por correo, o app de autenticación que exige una librería). No se implementa hasta entonces.
+
+### Decisiones abiertas
+Aviso de ticket nuevo, administrador de empresa respondiendo en tickets ajenos, varios administradores por empresa, «Mi empresa» del usuario normal, confirmación al dar de baja una empresa, plazos de conservación definitivos, plan de IONOS y cómo encaja el panel en la web pública.
 
 ### Mockups
 - `docs/plan/mockups/nuevo-ticket-a-departamentos-tarjetas.html`: pantalla «Nuevo ticket». **Validado 2026-11-09.** Departamentos (Soporte, Aplicaciones web, Páginas web, Otros) como campo del ticket, categoría dependiente del departamento, producto de la empresa.
-- `docs/plan/mockups/mis-tickets-a-lista-tabla.html`: lista de tickets del usuario. **Sin validar.**
-- `docs/plan/mockups/bandeja-a-lista-tabla.html`: bandeja del panel interno, con columna «Abierto por» (persona + empresa) y «Asignado a». **Sin validar.**
-- `docs/plan/mockups/ticket-detalle-cliente-a-hilo.html`: detalle del ticket del cliente (estado «Pendiente de tu respuesta»). **Sin validar.**
-- `docs/plan/mockups/ticket-detalle-interno-a-hilo.html`: detalle interno (agente que lleva el ticket). **Sin validar.**
-- `docs/plan/mockups/ticket-detalle-cliente-b-resuelto.html`: ticket resuelto, sin reabrir, con «Abrir un ticket nuevo» (R4). **Sin validar.**
-- `docs/plan/mockups/nuevo-ticket-b-relacionado.html`: nuevo ticket relacionado con uno resuelto. **Sin validar.**
-- `docs/plan/mockups/ticket-detalle-interno-c-resuelto.html`: ticket resuelto no cerrado, vista interna. **Sin validar.**
-- `docs/plan/mockups/ticket-detalle-interno-b-ajeno.html`: agente que no lleva el ticket, con «Asignármelo». **Sin validar.**
-- Acceso: `acceso-a-entrar`, `acceso-b-entrar-error`, `acceso-c-recuperar`, `acceso-d-recuperar-enviado`, `acceso-e-nueva-contrasena`. **Sin validar.**
-- Administrador: `admin-empresas-a-lista`, `admin-empresa-b-detalle` (asigna productos), `admin-empresa-c-nueva`, `admin-usuarios-a-empleados` (con traspaso del rol), `admin-catalogo-a-productos-categorias`. **Sin validar.**
-- Cliente: `cliente-mi-empresa-a-administrador`, `mis-tickets-b-administrador-empresa`, `mis-datos-a-cliente`, `avisos-a-cliente`. **Sin validar.**
-- Interno: `mis-datos-b-interno`, `avisos-b-interno`. **Sin validar.**
+- `docs/plan/mockups/mis-tickets-a-lista-tabla.html`: lista de tickets del usuario. **Validado 2026-11-09.**
+- `docs/plan/mockups/bandeja-a-lista-tabla.html`: bandeja del panel interno, con columna «Abierto por» (persona + empresa) y «Asignado a». **Validado 2026-11-09.**
+- `docs/plan/mockups/ticket-detalle-cliente-a-hilo.html`: detalle del ticket del cliente (estado «Pendiente de tu respuesta»). **Validado 2026-11-09.**
+- `docs/plan/mockups/ticket-detalle-interno-a-hilo.html`: detalle interno (agente que lleva el ticket). **Validado 2026-11-09.**
+- `docs/plan/mockups/ticket-detalle-cliente-b-resuelto.html`: ticket resuelto, sin reabrir, con «Abrir un ticket nuevo» (R4). **Validado 2026-11-09.**
+- `docs/plan/mockups/nuevo-ticket-b-relacionado.html`: nuevo ticket relacionado con uno resuelto. **Validado 2026-11-09.**
+- `docs/plan/mockups/ticket-detalle-interno-c-resuelto.html`: ticket resuelto no cerrado, vista interna. **Validado 2026-11-09.**
+- `docs/plan/mockups/ticket-detalle-interno-b-ajeno.html`: agente que no lleva el ticket, con «Asignármelo». **Validado 2026-11-09.**
+- Acceso: `acceso-a-entrar`, `acceso-b-entrar-error`, `acceso-c-recuperar`, `acceso-d-recuperar-enviado`, `acceso-e-nueva-contrasena`. **Validado 2026-11-09.**
+- Administrador: `admin-empresas-a-lista`, `admin-empresa-b-detalle` (asigna productos), `admin-empresa-c-nueva`, `admin-usuarios-a-empleados` (con traspaso del rol), `admin-catalogo-a-productos-categorias`. **Validado 2026-11-09.**
+- Cliente: `cliente-mi-empresa-a-administrador`, `mis-tickets-b-administrador-empresa`, `mis-datos-a-cliente`, `avisos-a-cliente`. **Validado 2026-11-09.**
+- Interno: `mis-datos-b-interno`, `avisos-b-interno`. **Validado 2026-11-09.**
 - **Ya hay mockup de todas las pantallas previstas.** Falta que la usuaria los valide; las dudas pendientes están en el encuadre, sección «Acceso, administración y panel del cliente».
 - Sin dibujar, por no haberse pedido: ticket recién creado sin respuestas, enlace caducado, estados vacíos de las listas, vista del usuario normal en «Mi empresa».
 - Decidido: el cierre lo hace un agente; nadie reabre (se clona/crea uno relacionado); el cliente marca «resuelto» directo pero explicando cómo; al responder el cliente el estado pasa solo a «En curso».

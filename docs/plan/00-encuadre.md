@@ -32,8 +32,8 @@ con el nombre del departamento.
 y que determina a quién llega. Entonces las categorías pasarían a colgar de un departamento
 (la propuesta de la sección «Categorías» se reorganiza, y aparece «Otros», que
 no estaba; recoge presupuestos, facturas y contratos). Mockup:
-`docs/plan/mockups/nuevo-ticket-a-departamentos-tarjetas.html`. ❓ Sigue por decidir: si los
-agentes pertenecen a un departamento y solo ven los suyos (afectaría a R1–R3 y a la bandeja).
+`docs/plan/mockups/nuevo-ticket-a-departamentos-tarjetas.html`. **Resuelto:** los agentes ven todos los
+tickets (salvo «Otros»); el departamento no limita lo que ven.
 
 ## Productos por empresa (decidido 2026-11-09)
 
@@ -45,7 +45,7 @@ agentes pertenecen a un departamento y solo ven los suyos (afectaría a R1–R3 
 - El usuario solo ve en el desplegable los productos de su empresa.
 - El administrador de empresa ve los productos asignados a su empresa en **solo lectura**.
 - Catálogo inicial: oneCOP, oneFact, oneCAR, oneSIGW, oneHADA, más servicios de soporte
-  (propuesta tomada de lingmarco.es ❓ a validar: Pool de mantenimiento, Asistencia
+  (propuesta tomada de lingmarco.es, validada con los mockups: Pool de mantenimiento, Asistencia
   informática, Backup de datos, Mantenimiento web, Servicios de seguridad).
 - El catálogo lo gestiona el administrador de la aplicación (el rol de supervisor se fusionó con él, ver «Roles»).
 
@@ -75,7 +75,7 @@ las atiende.
 | Idioma | Español (interfaz, errores, comentarios, descripciones de tests) | 2026-11-09 |
 | Despliegue | IONOS, en `https://publico.lingmarco.com/lingmarco/` mientras dure el diseño. La infraestructura definitiva se decide tras aprobar diseño y funcionalidad | 2026-11-09 |
 
-## Categorías de incidencia (propuesta ❓ a validar)
+## Categorías de incidencia (validadas con los mockups, 2026-11-09)
 
 Basadas en los servicios de https://lingmarco.es/ (soporte y mantenimiento, desarrollo a
 medida, apps ONE, webs) y en lo indicado por la usuaria (correo). Deben ser editables por el
@@ -103,7 +103,7 @@ El subtipo de aplicación (oneCOP, oneFact…) ya no va en la descripción: es e
 - Escaneo antivirus de adjuntos (riesgo aceptado en MVP, confirmado).
 - Informes y estadísticas (candidato a P1).
 
-## Roles (propuesta ❓ a validar)
+## Roles (validados con los mockups, 2026-11-09)
 
 Clientes (pertenecen a una empresa):
 - **Administrador de empresa:** ve todos los tickets de su empresa, gestiona los usuarios de la empresa.
@@ -203,15 +203,16 @@ Decisiones que salen de ellos, **todas pendientes de validar** salvo lo marcado:
 - **Avisos** (campana): lista con lo que también llega por correo; no configurables (decidido).
 - **«Mis datos»:** el correo no se cambia desde ahí; no se cita el plazo de conservación al cliente mientras sea provisional.
 
-❓ Sin decidir (declarado en los propios HTML):
-1. Segundo factor (2FA): no hay. Con un único administrador con poder total, merece decisión explícita. «Recordarme en este equipo»: está en el acceso por la pantalla de referencia, pero es una decisión de seguridad sin tomar.
-2. Bloqueo tras varios intentos fallidos de acceso.
-3. Caducidad del enlace de contraseña (propuesto 60 min) y longitud mínima (propuesto 12).
-4. A quién avisa un ticket nuevo: propuesta, al equipo del departamento; los de «Otros», solo al administrador.
-5. Si el administrador de empresa puede responder en tickets de sus compañeros (propuesta: solo leer).
-6. Si una empresa puede tener varios administradores de empresa (se permite en el mockup).
-7. Qué ve un usuario normal en «Mi empresa» (propuesta: solo productos).
-8. Confirmación extra al dar de baja una empresa.
+**Mockups validados el 2026-11-09.** Siguen SIN decidir (declarado en los propios HTML); cada uno hay que cerrarlo antes de implementar lo que afecta:
+1. ~~2FA~~ **Decidido 2026-11-09:** segundo factor **solo para el administrador** (R21). Falta decidir el método (código por correo, o app de autenticación, que exige una dependencia) y dibujar su pantalla: **no se implementa hasta tenerlo**.
+2. ~~Recordarme~~ **Decidido:** no hay «Recordarme en este equipo» en el MVP.
+3. ~~Bloqueo por intentos~~ **Decidido:** bloqueo temporal tras 5 intentos fallidos (R20).
+4. ~~Caducidad del enlace y mínimo~~ **Decidido:** enlace de 60 minutos de un solo uso y contraseña de 12 caracteres como mínimo.
+5. A quién avisa un ticket nuevo: propuesta, al equipo del departamento; los de «Otros», solo al administrador. (Pendiente.)
+6. Si el administrador de empresa puede responder en tickets de sus compañeros (propuesta: solo leer).
+7. Si una empresa puede tener varios administradores de empresa (se permite en el mockup).
+8. Qué ve un usuario normal en «Mi empresa» (propuesta: solo productos).
+9. Confirmación extra al dar de baja una empresa.
 
 ## Flujo crítico (7 pasos)
 
@@ -246,6 +247,8 @@ Decisiones que salen de ellos, **todas pendientes de validar** salvo lo marcado:
 | R17 | Acceso: el error de inicio de sesión es genérico («el correo o la contraseña no son correctos») y la recuperación de contraseña responde igual exista o no el correo; el enlace caduca y sirve una sola vez | Test de ambos mensajes y del enlace usado/caducado |
 | R18 | No hay registro libre: toda cuenta (empresa, usuario de empresa, empleado) se crea por invitación por correo y quien la recibe elige su contraseña | Test de que no existe ruta de registro público |
 | R19 | Un producto asignado a alguna empresa no se borra, solo se desactiva; los tickets antiguos conservan su producto | Test |
+| R20 | Tras 5 intentos fallidos de acceso se bloquea el acceso un tiempo | Test (el sexto intento, aun con la contraseña buena, se rechaza) |
+| R21 | La cuenta de administrador exige un segundo factor para entrar | Test; pendiente de decidir el método |
 
 Fuente: requisitos de la usuaria y RGPD (R1–R3 por confidencialidad de datos de clientes).
 
@@ -276,7 +279,7 @@ no el modelo.
 4. Bandeja del agente: ver, asignar, cambiar estado.
 5. Hilo de respuestas, notas internas, cierre y reapertura.
 6. Notificaciones por email y en el panel.
-7. Reglas R1–R19 con tests; comando de recuperación del acceso del administrador, documentado y probado.
+7. Reglas R1–R21 con tests; comando de recuperación del acceso del administrador, documentado y probado.
 8. Test de integración del flujo completo.
 9. Plan de conservación de datos definido e implementado.
 
@@ -287,9 +290,10 @@ no el modelo.
 - Valoración de la atención.
 - Antivirus de adjuntos.
 
-## Pendiente antes de la Fase 1
+## Pendiente
 
-- ❓ Aprobación de este documento.
-- ❓ Validar la lista de categorías (propuesta abajo).
-- ❓ Validar los servicios de soporte del catálogo inicial de productos.
-- ❓ Cómo encaja el panel en el diseño de la web (las pantallas pasan por mockup antes de implementar).
+- Aprobado el encuadre (2026-11-09). Categorías, servicios de soporte del catálogo y roles, validados con los mockups.
+- **Mockups validados el 2026-11-09:** los 25 de `docs/plan/mockups/`.
+- ❓ Cómo encaja el panel en el diseño de la web pública (que se diseñará aparte, también en Laravel).
+- ❓ Las decisiones de la lista «Sin decidir» de la sección «Acceso, administración y panel del cliente».
+- ❓ Plan de conservación de datos (provisional 2 años) y de IONOS: antes de producción.
