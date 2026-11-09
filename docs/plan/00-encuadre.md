@@ -192,7 +192,7 @@ Mockups hechos para todas las pantallas del flujo y de la administración (lista
 Decisiones que salen de ellos, **todas pendientes de validar** salvo lo marcado:
 
 - **Entrada única** para clientes y empleados; la aplicación lleva a cada uno a su panel.
-- **Estilo del acceso** (indicado por la usuaria con una captura de otra herramienta de Ling Marco, onePULSE): pantalla partida, panel oscuro de marca a la izquierda con titular y descripción, formulario sobrio a la derecha, ojo para ver la contraseña. Con los colores de Ling Marco; el logo va sobre una pastilla blanca. No se incluye el botón de tema claro/oscuro de la referencia.
+- **Estilo del acceso** (indicado por la usuaria con una captura de otra herramienta de Ling Marco, onePULSE): pantalla partida, panel oscuro de marca a la izquierda con titular y descripción, formulario sobrio a la derecha, ojo para ver la contraseña. Con los colores de Ling Marco; sobre el panel oscuro se usa la versión blanca del logo (`docs/marca lingmarco/logo-LM-b.svg`). No se incluye el botón de tema claro/oscuro de la referencia.
 - **Sin registro libre** (R18). El administrador de Ling Marco da de alta empresas y su primer usuario; el
   administrador de empresa gestiona los usuarios de su empresa; el administrador de Ling Marco crea
   a los empleados. Todos por invitación.

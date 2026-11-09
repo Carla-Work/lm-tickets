@@ -12,9 +12,11 @@
 
   ESTILO: adaptado a la pantalla de acceso de referencia (onePULSE) que aportó la usuaria el
   2026-11-09: pantalla partida, panel oscuro de marca a la izquierda con titular y descripción, y
-  formulario sobrio a la derecha. Colores de Ling Marco (guía de lingmarco.es); el logo, que es
-  oscuro, va sobre una pastilla blanca para leerse sobre el fondo oscuro. En móvil el panel de
-  marca se reduce a una franja superior.
+  formulario sobrio a la derecha. Colores de Ling Marco (guía de lingmarco.es). Sobre el panel
+  oscuro se usa la VERSIÓN BLANCA del logo (../../marca lingmarco/logo-LM-b.svg); es la segunda
+  dependencia externa de estas cinco pantallas, junto a logo-LM.svg. El lienzo de ese SVG es más
+  alto que el logo, así que se recorta por CSS para no dejar hueco. En móvil el panel de marca
+  se reduce a una franja superior.
 
   Se llega desde "¿Olvidaste tu contraseña?". Pide solo el correo.
 
@@ -302,8 +304,8 @@ table.fichas td[data-etiqueta="Acciones"]::before { content: ""; }
 .acceso-marca::before { content: ""; position: absolute; width: 330px; height: 330px; border-radius: 50%; background: rgba(116, 43, 186, .22); top: -70px; right: -50px; }
 .acceso-marca::after { content: ""; position: absolute; width: 300px; height: 300px; border-radius: 50%; background: rgba(116, 43, 186, .18); bottom: -150px; left: -90px; }
 .acceso-marca > * { position: relative; z-index: 1; }
-.marca-logo { display: inline-flex; background: #fff; border-radius: 12px; padding: .55rem .95rem; } /* el logo es oscuro: necesita fondo claro sobre el panel oscuro */
-.marca-logo img { height: 34px; width: auto; max-width: 70vw; }
+.marca-logo { display: block; width: min(270px, 70vw); aspect-ratio: 3188 / 458; overflow: hidden; } /* el lienzo del SVG blanco es más alto que el logo: se recorta lo vacío de abajo */
+.marca-logo img { display: block; width: 100%; height: auto; }
 .marca-sub { color: #cdc3e8; font-size: .95rem; margin: .7rem 0 0; }
 .marca-texto { margin: auto 0; }
 .marca-texto .etiqueta { letter-spacing: .14em; text-transform: uppercase; font-size: .78rem; font-weight: 700; color: #b79df2; margin: 0 0 1rem; }
@@ -361,7 +363,7 @@ table.fichas td[data-etiqueta="Acciones"]::before { content: ""; }
 <body>
 <div class="acceso2">
     <section class="acceso-marca" aria-label="Ling Marco">
-        <div><span class="marca-logo"><img src="../../marca lingmarco/logo-LM.svg" alt="Ling Marco &amp; Asociados"></span><p class="marca-sub">Soporte y gestión de incidencias</p></div>
+        <div><span class="marca-logo"><img src="../../marca lingmarco/logo-LM-b.svg" alt="Ling Marco &amp; Asociados"></span><p class="marca-sub">Soporte y gestión de incidencias</p></div>
         <div class="marca-texto">
             <p class="etiqueta">Panel de clientes · Ling Marco</p>
             <h2>Tus incidencias, siempre a la vista.</h2>
