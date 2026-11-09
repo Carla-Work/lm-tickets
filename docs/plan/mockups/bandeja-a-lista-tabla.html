@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<!--
+  MOCKUP — Panel INTERNO: "Bandeja de tickets", alternativa A: lista en tabla.
+
+  Qué es: referencia visual de la pantalla, con datos de mentira realistas. NO es código de
+  producción y no se borra al implementar: es lo que se aprobó.
+  Cómo verlo: doble clic. Un solo archivo, CSS dentro, sin servidor ni conexión, sin JavaScript.
+  Única dependencia externa: el logo, por ruta relativa (../../marca lingmarco/logo-LM.svg).
+  Hereda marco y paleta de mis-tickets-a-lista-tabla.html (la vista del cliente).
+
+  Estado: PENDIENTE DE VALIDAR por la usuaria.
+
+  Petición de la usuaria: en cada fila debe verse QUIÉN ABRIÓ el ticket en los paneles del
+  supervisor, del empleado de Ling Marco (agente) y del administrador. Aquí: columna
+  "Abierto por" con el nombre de la persona y, debajo, su empresa. El usuario de empresa NO la
+  tiene: solo ve sus propios tickets, así que sería redundante.
+
+  Se dibuja la vista del ADMINISTRADOR (el jefe; absorbe al antiguo "supervisor", decidido
+  2026-11-09). Es la ÚNICA que ve los tickets de "Otros" (#2026-0294 y #2026-0281, que él lleva).
+   - Agente: misma lista y misma columna, pero SIN los tickets de "Otros" (R13), y con los
+     contadores recalculados sin ellos. Ve todos los demás, de Soporte y de Aplicaciones, para
+     detectar incidencias parecidas y cubrir ausencias (decidido).
+   - El administrador, en los tickets que no son "Otros", ve y puede REASIGNAR (R11) pero no
+     responder ni cambiar el estado (R10); en "Otros" responde y gestiona todo, incluido
+     pasarlos a otro departamento. Reasignar se hace dentro del ticket, no desde esta lista.
+  Esta pantalla no tiene botones de acción por fila a propósito: asignar o cambiar estado se
+  hace dentro del ticket (mockup de detalle, pendiente).
+
+  SUPUESTOS a confirmar:
+   1. Se añade la columna "Asignado a" porque el flujo crítico (paso 4) necesita ver quién lleva
+      cada ticket; los que no tienen agente se marcan "Sin asignar".
+   2. El producto pasa a una segunda línea bajo el asunto para que quepan las columnas nuevas.
+   3. Aquí SÍ aparece el estado con su nombre interno ("Pendiente de cliente"); el cliente lo
+      ve como "Pendiente de tu respuesta".
+   4. "Respuesta del cliente" avisa al equipo de que el cliente ha contestado desde la última
+      respuesta del equipo (equivale a "Respuesta nueva" en el panel del cliente).
+   5. Los datos de los tickets de Hermanos Santana S.L. coinciden con el mockup del cliente.
+   6. Bajo el nombre del asignado se ve su EQUIPO INTERNO (Soporte o Aplicaciones), porque un
+      ticket puede estar en manos del otro equipo si el cliente lo categorizó mal: el #2026-0318,
+      de departamento "Aplicaciones web", lo lleva Laura Pérez, de Soporte. Los nombres y el
+      reparto de personas por equipo son de ejemplo (Soporte son dos empleados, según la usuaria).
+   7. Cualquier agente puede reasignar un ticket a alguien del OTRO equipo (decidido 2026-11-09).
+      Eso se hace dentro del ticket (mockup de detalle), no desde esta lista.
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bandeja de tickets · Ling Marco Tickets</title>
+<style>
+/* ---------- Paleta (misma que el mockup de Nuevo ticket) ---------- */
+:root {
+    --texto: #040f24;
+    --titulo: #3c1d6f;
+    --principal: #742bba;
+    --principal-claro: #9e4af0;
+    --gris: #ededed;
+    --blanco: #ffffff;
+    --texto-suave: #4a5568;
+
+    /* Departamentos: "marca" para bordes/puntos, "texto" más oscuro para rótulos (contraste). */
+    --dep-apps: #7eba28;     --dep-apps-texto: #486330;   --dep-apps-fondo: #f1f8e4;
+    --dep-webs: #e6318a;     --dep-webs-texto: #a00860;   --dep-webs-fondo: #fdecf4;
+    --dep-soporte: #3c76ba;  --dep-soporte-texto: #1f4f8c; --dep-soporte-fondo: #e8f0fa;
+    --dep-otros: #ffe90b;    --dep-otros-texto: #6b5a00;  --dep-otros-fondo: #fffbd1;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--texto); background: #f7f7f8; line-height: 1.5; }
+h1, h2 { color: var(--titulo); line-height: 1.2; margin: 0; }
+a { color: var(--principal); }
+:focus-visible { outline: 3px solid var(--principal-claro); outline-offset: 2px; }
+
+/* ---------- Marco ---------- */
+.cabecera { background: var(--blanco); border-bottom: 1px solid var(--gris); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: .75rem 1.5rem; gap: .5rem 1rem; }
+.cabecera img { height: 34px; width: auto; max-width: 60vw; }
+.cabecera .usuario { display: flex; align-items: center; gap: 1rem; font-size: .9rem; }
+.campana { text-decoration: none; color: var(--texto); padding: .35rem .6rem; border: 1px solid var(--gris); border-radius: 999px; background: var(--blanco); }
+.campana b { background: var(--principal); color: #fff; border-radius: 999px; padding: 0 .45rem; font-size: .75rem; margin-left: .3rem; }
+.marco { display: grid; grid-template-columns: 220px minmax(0, 1fr); min-height: calc(100vh - 62px); }
+.menu { background: var(--blanco); border-right: 1px solid var(--gris); padding: 1.25rem 1rem; }
+.menu a { display: block; padding: .6rem .8rem; border-radius: 8px; color: var(--texto); text-decoration: none; margin-bottom: .2rem; }
+.menu a:hover { background: var(--gris); }
+.menu a[aria-current="page"] { background: var(--principal); color: #fff; font-weight: 600; }
+.menu .empresa { font-size: .8rem; color: var(--texto-suave); margin: 0 .8rem 1rem; }
+main { padding: 1.75rem; max-width: 1200px; }
+.titulo-fila { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+
+/* ---------- Botones ---------- */
+.boton { font: inherit; font-weight: 600; padding: .65rem 1.3rem; border-radius: 8px; cursor: pointer; border: 2px solid transparent; text-decoration: none; display: inline-block; }
+.boton.principal { background: linear-gradient(135deg, var(--principal), var(--principal-claro)); color: #fff; }
+.boton.secundario { background: var(--blanco); color: var(--principal); border-color: var(--principal); }
+
+/* ---------- Resumen por estado ---------- */
+.resumen { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .75rem; margin-bottom: 1.25rem; }
+.resumen a { display: block; background: var(--blanco); border: 1px solid var(--gris); border-radius: 12px; padding: .8rem 1rem; text-decoration: none; color: var(--texto); }
+.resumen a:hover { border-color: var(--principal); }
+.resumen strong { display: block; font-size: 1.6rem; color: var(--titulo); line-height: 1.1; }
+.resumen .atencion { border: 2px solid var(--principal); background: #f6f0fd; }
+
+/* ---------- Filtros (formulario GET normal: funciona sin JavaScript) ---------- */
+.filtros { background: var(--blanco); border: 1px solid var(--gris); border-radius: 12px; padding: 1rem; display: flex; flex-wrap: wrap; gap: .75rem 1rem; align-items: end; margin-bottom: 1rem; }
+.filtros label { display: block; font-size: .85rem; font-weight: 600; margin-bottom: .2rem; }
+.filtros input, .filtros select { font: inherit; color: var(--texto); padding: .5rem .7rem; border: 1px solid #b8bcc6; border-radius: 8px; background: var(--blanco); min-width: 0; }
+.filtros .buscar { flex: 1 1 220px; }
+.filtros .buscar input { width: 100%; }
+
+/* ---------- Tabla ---------- */
+.tabla-caja { background: var(--blanco); border: 1px solid var(--gris); border-radius: 12px; overflow: hidden; }
+table { width: 100%; border-collapse: collapse; }
+caption { text-align: left; padding: .8rem 1rem; font-weight: 600; color: var(--titulo); border-bottom: 1px solid var(--gris); }
+th { text-align: left; font-size: .8rem; text-transform: uppercase; letter-spacing: .03em; color: var(--texto-suave); padding: .6rem 1rem; background: #fafafa; border-bottom: 1px solid var(--gris); }
+td { padding: .8rem 1rem; border-bottom: 1px solid var(--gris); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+tbody tr:hover { background: #fcfaff; }
+td.num { white-space: nowrap; color: var(--texto-suave); font-variant-numeric: tabular-nums; }
+td .asunto { font-weight: 600; color: var(--texto); text-decoration: none; }
+td .asunto:hover { color: var(--principal); text-decoration: underline; }
+.nuevo { display: inline-block; margin-left: .5rem; font-size: .75rem; font-weight: 700; color: #fff; background: var(--principal); border-radius: 999px; padding: 0 .55rem; vertical-align: middle; }
+tr.sin-leer td .asunto { font-weight: 800; }
+
+/* Departamento: punto del color del logo + nombre en tono oscuro. Nunca solo color. */
+.dep { display: inline-flex; align-items: center; gap: .45rem; font-weight: 600; font-size: .9rem; white-space: nowrap; }
+.dep::before { content: ""; width: .8rem; height: .8rem; border-radius: 50%; flex: none; }
+.dep.apps { color: var(--dep-apps-texto); }     .dep.apps::before { background: var(--dep-apps); }
+.dep.webs { color: var(--dep-webs-texto); }     .dep.webs::before { background: var(--dep-webs); }
+.dep.soporte { color: var(--dep-soporte-texto); } .dep.soporte::before { background: var(--dep-soporte); }
+.dep.otros { color: var(--dep-otros-texto); }   .dep.otros::before { background: var(--dep-otros); box-shadow: inset 0 0 0 1px #c9b800; }
+
+/* Estado: forma + texto, en neutros y morados (los 4 colores de departamento están reservados). */
+.estado { display: inline-block; font-size: .8rem; font-weight: 700; padding: .15rem .65rem; border-radius: 999px; white-space: nowrap; border: 1.5px solid transparent; }
+.estado.abierto { background: #fff; color: var(--titulo); border-color: var(--titulo); }
+.estado.curso { background: #efe5fb; color: var(--titulo); }
+.estado.pendiente { background: var(--principal); color: #fff; }
+.estado.resuelto { background: var(--gris); color: var(--texto); }
+.estado.resuelto::before { content: "✓ "; }
+.estado.cerrado { background: var(--gris); color: var(--texto-suave); }
+
+.paginacion { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .75rem; padding-top: 1rem; font-size: .9rem; color: var(--texto-suave); }
+.paginacion nav a, .paginacion nav span { display: inline-block; min-width: 2.2rem; text-align: center; padding: .35rem .6rem; border: 1px solid var(--gris); border-radius: 8px; background: var(--blanco); text-decoration: none; margin-left: .2rem; }
+.paginacion nav span[aria-current="page"] { background: var(--principal); color: #fff; border-color: var(--principal); font-weight: 700; }
+
+/* ---------- Móvil: cada fila de la tabla pasa a ser una tarjeta ---------- */
+@media (max-width: 860px) {
+    .marco { grid-template-columns: minmax(0, 1fr); }
+    .menu { border-right: 0; border-bottom: 1px solid var(--gris); display: flex; flex-wrap: wrap; align-content: flex-start; gap: .25rem; padding: .75rem 1rem; }
+    .menu .empresa { width: 100%; margin: 0 0 .25rem; }
+    main { padding: 1rem; }
+    .cabecera .usuario span { display: none; }
+    .resumen { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    table, thead, tbody, tr, td, caption { display: block; }
+    thead { position: absolute; left: -9999px; } /* cabecera oculta a la vista pero no a lectores de pantalla */
+    tr { padding: .8rem 1rem; border-bottom: 1px solid var(--gris); }
+    tr:last-child { border-bottom: 0; }
+    td { border: 0; padding: .15rem 0; }
+    td::before { content: attr(data-etiqueta) ": "; font-size: .8rem; color: var(--texto-suave); }
+    td.asunto-celda::before, td.num::before { content: ""; }
+    td.asunto-celda { order: -1; }
+}
+
+/* ---------- Propio de la bandeja interna ---------- */
+.etiqueta-panel { display: inline-block; background: var(--titulo); color: #fff; font-size: .72rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; border-radius: 6px; padding: .1rem .5rem; margin: 0 .8rem .4rem; }
+.solicitante strong { display: block; line-height: 1.25; }
+td, th { padding-left: .7rem; padding-right: .7rem; }
+main { max-width: 1500px; }
+.tabla-caja { overflow-x: auto; }
+/* Con 7 columnas, por debajo de 1180px la tabla no cabe sin partir cada celda en varias líneas:
+   se muestra como tarjetas (las mismas reglas que ya usa el móvil para la tabla). */
+@media (max-width: 1180px) {
+    table, thead, tbody, tr, td, caption { display: block; }
+    thead { position: absolute; left: -9999px; } /* oculta a la vista, no a lectores de pantalla */
+    tr { padding: .8rem 1rem; border-bottom: 1px solid var(--gris); }
+    tr:last-child { border-bottom: 0; }
+    td { border: 0; padding: .15rem 0; }
+    td::before { content: attr(data-etiqueta) ": "; font-size: .8rem; color: var(--texto-suave); }
+    td.asunto-celda::before, td.num::before { content: ""; }
+    td.solicitante::before { display: block; }
+}
+ /* red de seguridad: si algo no cabe, se desplaza en vez de cortarse */
+/* Nombre, asignado y fecha en una sola línea SOLO en pantallas anchas: con 7 columnas, partirlos
+   duplica la altura de cada fila, pero en pantallas medianas forzar una línea corta la tabla. */
+@media (min-width: 1280px) {
+    .solicitante strong, td[data-etiqueta="Asignado a"], td[data-etiqueta="Última actividad"], .sin-asignar { white-space: nowrap; }
+}
+.solicitante small, td .secundario { display: block; color: var(--texto-suave); font-size: .85rem; line-height: 1.3; }
+.sin-asignar { font-weight: 700; color: var(--titulo); border-bottom: 2px dashed var(--principal); }
+.aviso-cliente { display: inline-block; margin-left: .5rem; font-size: .75rem; font-weight: 700; color: var(--titulo); background: #efe5fb; border: 1.5px solid var(--principal); border-radius: 999px; padding: 0 .55rem; vertical-align: middle; }
+@media (max-width: 1100px) { .resumen { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 860px) { .resumen { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* Móvil: la fila de la cuadrícula no debe estirarse hasta la altura mínima de la página (dejaba un hueco bajo el menú) */
+@media (max-width: 860px) { .marco { align-content: start; } }
+</style>
+</head>
+<body>
+
+<header class="cabecera">
+    <img src="../../marca lingmarco/logo-LM.svg" alt="Ling Marco &amp; Asociados">
+    <div class="usuario">
+        <a class="campana" href="#">Avisos <b>5</b></a>
+        <span>Carlos Medina · Administrador</span>
+        <a href="#">Salir</a>
+    </div>
+</header>
+
+<div class="marco">
+    <nav class="menu" aria-label="Menú del panel interno">
+        <span class="etiqueta-panel">Panel interno</span>
+        <p class="empresa">Ling Marco &amp; Asociados<br>Rol: administrador</p>
+        <a href="#" aria-current="page">Bandeja</a>
+        <a href="#">Empresas</a>
+        <a href="#">Productos y categorías</a>
+        <a href="#">Usuarios</a>
+        <a href="#">Mis datos</a>
+    </nav>
+
+    <main>
+        <div class="titulo-fila">
+            <h1>Bandeja de tickets</h1>
+        </div>
+
+        <section class="resumen" aria-label="Resumen por estado">
+            <a class="atencion" href="#"><strong>2</strong>Sin asignar</a>
+            <a href="#"><strong>4</strong>Abiertos</a>
+            <a href="#"><strong>2</strong>En curso</a>
+            <a href="#"><strong>1</strong>Pendiente de cliente</a>
+            <a href="#"><strong>3</strong>Resueltos o cerrados</a>
+        </section>
+
+        <form class="filtros" action="#" method="get" aria-label="Filtrar tickets">
+            <div class="buscar">
+                <label for="q">Buscar</label>
+                <input type="search" id="q" name="q" placeholder="Asunto, número, persona o empresa">
+            </div>
+            <div>
+                <label for="f-estado">Estado</label>
+                <select id="f-estado" name="estado">
+                    <option>Todos</option><option>Abierto</option><option>En curso</option>
+                    <option>Pendiente de cliente</option><option>Resuelto</option><option>Cerrado</option>
+                </select>
+            </div>
+            <div>
+                <label for="f-dep">Departamento</label>
+                <select id="f-dep" name="departamento">
+                    <option>Todos</option><option>Soporte</option><option>Aplicaciones web</option>
+                    <option>Páginas web</option><option>Otros</option>
+                </select>
+            </div>
+            <div>
+                <label for="f-emp">Empresa</label>
+                <select id="f-emp" name="empresa">
+                    <option>Todas</option><option>Asesoría Quintana</option><option>Clínica Dental Atlántico</option>
+                    <option>Hermanos Santana S.L.</option><option>Transportes Insulares S.L.</option>
+                </select>
+            </div>
+            <div>
+                <label for="f-asig">Asignado a</label>
+                <select id="f-asig" name="asignado">
+                    <option>Todos</option><option>Sin asignar</option>
+                    <optgroup label="Soporte"><option>Andrés Vega</option><option>Laura Pérez</option></optgroup>
+                    <optgroup label="Aplicaciones"><option>Daniel Ortega</option></optgroup>
+                    <optgroup label="Administración"><option>Carlos Medina</option></optgroup>
+                </select>
+            </div>
+            <button type="submit" class="boton secundario">Filtrar</button>
+        </form>
+
+        <div class="tabla-caja">
+            <table>
+                <caption>10 de 87 tickets</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Nº</th>
+                        <th scope="col">Asunto</th>
+                        <th scope="col">Abierto por</th>
+                        <th scope="col">Departamento</th>
+                        <th scope="col">Estado</th>
+                        <th scope="col">Asignado a</th>
+                        <th scope="col">Última actividad</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="num" data-etiqueta="Nº">#2026-0321</td>
+                        <td class="asunto-celda" data-etiqueta="Asunto"><a class="asunto" href="#">TPV no sincroniza con oneFact</a><span class="secundario">Producto: oneFact</span></td>
+                        <td class="solicitante" data-etiqueta="Abierto por"><strong>Rubén Alonso</strong><small>Transportes Insulares S.L.</small></td>
+                        <td data-etiqueta="Departamento"><span class="dep apps">Aplicaciones web</span></td>
+                        <td data-etiqueta="Estado"><span class="estado abierto">Abierto</span></td>
+                        <td data-etiqueta="Asignado a"><span class="sin-asignar">Sin asignar</span></td>
+                        <td data-etiqueta="Última actividad">Hoy, 09:58</td>
+                    </tr>
+                    <tr>
+                        <td class="num" data-etiqueta="Nº">#2026-0319</td>
+                        <td class="asunto-celda" data-etiqueta="Asunto"><a class="asunto" href="#">Web caída desde esta mañana</a><span class="secundario">Producto: Mantenimiento web</span></td>
+                        <td class="solicitante" data-etiqueta="Abierto por"><strong>Elena Marrero</strong><small>Clínica Dental Atlántico</small></td>
+                        <td data-etiqueta="Departamento"><span class="dep webs">Páginas web</span></td>
+                        <td data-etiqueta="Estado"><span class="estado abierto">Abierto</span></td>
+                        <td data-etiqueta="Asignado a"><span class="sin-asignar">Sin asignar</span></td>
+                        <td data-etiqueta="Última actividad">Hoy, 08:41</td>
+                    </tr>
+                    <tr>
+                        <td class="num" data-etiqueta="Nº">#2026-0318</td>
+                        <td class="asunto-celda" data-etiqueta="Asunto"><a class="asunto" href="#">No puedo emitir la factura de octubre</a><span class="secundario">Producto: oneFact</span></td>
+                        <td class="solicitante" data-etiqueta="Abierto por"><strong>María Suárez</strong><small>Hermanos Santana S.L.</small></td>
+                        <td data-etiqueta="Departamento"><span class="dep apps">Aplicaciones web</span></td>
+                        <td data-etiqueta="Estado"><span class="estado abierto">Abierto</span></td>
+                        <td data-etiqueta="Asignado a"><span>Laura Pérez</span><small class="secundario">Soporte</small></td>
+                        <td data-etiqueta="Última actividad">Hoy, 08:15</td>
+                    </tr>
+                    <tr class="sin-leer">
+                        <td class="num" data-etiqueta="Nº">#2026-0316</td>
+                        <td class="asunto-celda" data-etiqueta="Asunto"><a class="asunto" href="#">Ordenador de contabilidad muy lento</a><span class="aviso-cliente">Respuesta del cliente</span><span class="secundario">Producto: Pool de mantenimiento</span></td>
+                        <td class="solicitante" data-etiqueta="Abierto por"><strong>Jorge Quintana</strong><small>Asesoría Quintana</small></td>
+                        <td data-etiqueta="Departamento"><span class="dep soporte">Soporte</span></td>
+                        <td data-etiqueta="Estado"><span class="estado curso">En curso</span></td>
+                        <td data-etiqueta="Asignado a"><span>Laura Pérez</span><small class="secundario">Soporte</small></td>
+                        <td data-etiqueta="Última actividad">Hoy, 07:55</td>
+                    </tr>
+                    <tr>
+                        <td class="num" data-etiqueta="Nº">#2026-0312</td>
+                        <td class="asunto-celda" data-etiqueta="Asunto"><a class="asunto" href="#">Error al importar el cliente desde Excel</a><span class="secundario">Producto: oneCOP</span></td>
+                        <td class="solicitante" data-etiqueta="Abierto por"><strong>María Suárez</strong><small>Hermanos Santana S.L.</small></td>
+                        <td data-etiqueta="Departamento"><span class="dep apps">Aplicaciones web</span></td>
+                        <td data-etiqueta="Estado"><span class="estado pendiente">Pendiente de cliente</span></td>
+                        <td data-etiqueta="Asignado a"><span>Daniel Ortega</span><small class="secundario">Aplicaciones</small></td>
+                        <td data-etiqueta="Última actividad">Hoy, 09:42</td>
+                    </tr>
+                    <tr>
+                        <td class="num" data-etiqueta="Nº">#2026-0305</td>
+                        <td class="asunto-celda" data-etiqueta="Asunto"><a class="asunto" href="#">El correo de administracion@ no recibe mensajes</a><span class="secundario">Producto: Pool de mantenimiento</span></td>
+                        <td class="solicitante" data-etiqueta="Abierto por"><strong>María Suárez</strong><small>Hermanos Santana S.L.</small></td>
+                        <td data-etiqueta="Departamento"><span class="dep soporte">Soporte</span></td>
+                        <td data-etiqueta="Estado"><span class="estado curso">En curso</span></td>
+                        <td data-etiqueta="Asignado a"><span>Laura Pérez</span><small class="secundario">Soporte</small></td>
+                        <td data-etiqueta="Última actividad">Ayer, 17:30</td>
+                    </tr>
+                    <tr>
+                        <td class="num" data-etiqueta="Nº">#2026-0298</td>
+                        <td class="asunto-celda" data-etiqueta="Asunto"><a class="asunto" href="#">Cambiar el horario en la página de contacto</a><span class="secundario">Producto: Pool de mantenimiento</span></td>
+                        <td class="solicitante" data-etiqueta="Abierto por"><strong>María Suárez</strong><small>Hermanos Santana S.L.</small></td>
+                        <td data-etiqueta="Departamento"><span class="dep webs">Páginas web</span></td>
+                        <td data-etiqueta="Estado"><span class="estado abierto">Abierto</span></td>
+                        <td data-etiqueta="Asignado a"><span>Daniel Ortega</span><small class="secundario">Aplicaciones</small></td>
+                        <td data-etiqueta="Última actividad">6 nov, 12:05</td>
+                    </tr>
+                    <tr>
+                        <td class="num" data-etiqueta="Nº">#2026-0294</td>
+                        <td class="asunto-celda" data-etiqueta="Asunto"><a class="asunto" href="#">Solicitud de presupuesto para tienda online</a><span class="secundario">Producto: Mantenimiento web</span></td>
+                        <td class="solicitante" data-etiqueta="Abierto por"><strong>Elena Marrero</strong><small>Clínica Dental Atlántico</small></td>
+                        <td data-etiqueta="Departamento"><span class="dep otros">Otros</span></td>
+                        <td data-etiqueta="Estado"><span class="estado resuelto">Resuelto</span></td>
+                        <td data-etiqueta="Asignado a"><span>Carlos Medina</span><small class="secundario">Administrador</small></td>
+                        <td data-etiqueta="Última actividad">5 nov, 10:00</td>
+                    </tr>
+                    <tr>
+                        <td class="num" data-etiqueta="Nº">#2026-0281</td>
+                        <td class="asunto-celda" data-etiqueta="Asunto"><a class="asunto" href="#">Presupuesto para ampliar licencias de oneCOP</a><span class="secundario">Producto: oneCOP</span></td>
+                        <td class="solicitante" data-etiqueta="Abierto por"><strong>María Suárez</strong><small>Hermanos Santana S.L.</small></td>
+                        <td data-etiqueta="Departamento"><span class="dep otros">Otros</span></td>
+                        <td data-etiqueta="Estado"><span class="estado resuelto">Resuelto</span></td>
+                        <td data-etiqueta="Asignado a"><span>Carlos Medina</span><small class="secundario">Administrador</small></td>
+                        <td data-etiqueta="Última actividad">3 nov, 10:20</td>
+                    </tr>
+                    <tr>
+                        <td class="num" data-etiqueta="Nº">#2026-0277</td>
+                        <td class="asunto-celda" data-etiqueta="Asunto"><a class="asunto" href="#">Alta de un usuario nuevo en oneCOP</a><span class="secundario">Producto: oneCOP</span></td>
+                        <td class="solicitante" data-etiqueta="Abierto por"><strong>Rubén Alonso</strong><small>Transportes Insulares S.L.</small></td>
+                        <td data-etiqueta="Departamento"><span class="dep apps">Aplicaciones web</span></td>
+                        <td data-etiqueta="Estado"><span class="estado cerrado">Cerrado</span></td>
+                        <td data-etiqueta="Asignado a"><span>Daniel Ortega</span><small class="secundario">Aplicaciones</small></td>
+                        <td data-etiqueta="Última actividad">2 nov, 16:05</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="paginacion">
+            <span>Mostrando 1–10 de 87</span>
+            <nav aria-label="Paginación">
+                <span aria-current="page">1</span><a href="#">2</a><a href="#">3</a><span>…</span><a href="#">9</a>
+            </nav>
+        </div>
+    </main>
+</div>
+
+</body>
+</html>
