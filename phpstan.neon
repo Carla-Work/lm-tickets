@@ -1,0 +1,14 @@
+# Configuración de Larastan (análisis estático). Se ejecuta con `composer analyse`.
+# Cuándo tocarlo: al subir de nivel o al añadir carpetas con código propio.
+# Nivel 5 de partida: lo bastante estricto para cazar errores reales sin ahogar el
+# arranque del proyecto. Subir de nivel es una decisión a tomar con la usuaria, no de paso.
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    level: 5
+    paths:
+        - app
+        - routes
+        - database
+        - tests
