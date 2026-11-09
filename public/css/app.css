@@ -1,0 +1,25 @@
+/*
+ * Hoja de estilos base de Ling Marco Tickets (CSS propio, sin Tailwind ni Vite).
+ *
+ * Qué es: estilos comunes a toda la aplicación. Se sirve tal cual desde public/, sin paso
+ * de compilación: lo que se edita aquí es lo que ve el navegador.
+ * Cuándo tocarlo: al aplicar un diseño validado en docs/plan/mockups/. Los colores y
+ * tipografías definitivos salen de la marca; los de abajo son provisionales.
+ */
+:root {
+    --color-texto: #1b1b18;
+    --color-fondo: #fdfdfc;
+    --color-acento: #1d4ed8; /* provisional: sustituir por el color de marca */
+}
+
+body {
+    margin: 0;
+    padding: 2rem;
+    font-family: system-ui, sans-serif;
+    color: var(--color-texto);
+    background: var(--color-fondo);
+}
+
+a {
+    color: var(--color-acento);
+}
