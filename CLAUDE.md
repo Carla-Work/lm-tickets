@@ -48,7 +48,7 @@ Detalle y origen en `docs/plan/00-encuadre.md`. Cada una lleva test; no se «sim
 - **R18** no hay registro libre: toda cuenta se crea por invitación por correo.
 - **R19** un producto asignado a alguna empresa no se borra, solo se desactiva.
 - **R20** tras 5 intentos fallidos de acceso se bloquea el acceso un tiempo.
-- **R21** el administrador entra con segundo factor TOTP (RFC 6238) implementado a mano (`App\Support\Totp`), sin librerías, con 8 códigos de recuperación de un solo uso. **IMPLEMENTADO.** `TotpTest` lleva los vectores OFICIALES de los RFC 4226/6238/4648: no tocarlo para «hacer que pase».
+- **R21** (revisada 2026-11-09: **OPCIONAL**; sin activarlo el administrador entra con contraseña, si lo activa se le exige; falta la pantalla «Mis datos» para activarlo/desactivarlo, con mockup) el segundo factor TOTP (RFC 6238) implementado a mano (`App\Support\Totp`), sin librerías, con 8 códigos de recuperación de un solo uso. **IMPLEMENTADO.** `TotpTest` lleva los vectores OFICIALES de los RFC 4226/6238/4648: no tocarlo para «hacer que pase».
 
 ## Stack
 
@@ -133,7 +133,7 @@ El trabajo se hace en la rama del hito en curso; cada rama sale de la anterior, 
 - **R18: no hay ruta de registro** y `NoRegistrationTest` lo vigila. `NewPasswordController` es el ÚNICO sitio que activa cuentas (`activated_at`).
 - **2FA: el administrador NO queda autenticado tras la contraseña** (`Auth::check()` es falso hasta pasar el código; mientras tanto solo hay un «acceso a medias» en sesión, `PendingLogin`, que caduca a los 10 min). Los fallos de código usan la MISMA clave de bloqueo que la contraseña y NO se borran al acertar la contraseña (si no, quien la conoce reiniciaría el contador a voluntad).
 - **2FA: un código TOTP no se acepta dos veces** (`two_factor_last_step`); la clave va CIFRADA (`encrypted`) y los códigos de recuperación con HASH; ambos están en `#[Hidden]`. Los códigos en claro viajan por la sesión cifrados y se ven una sola vez.
-- **Un administrador sin 2FA activado no pasa** (`admin.2fa`): p. ej. un ascendido con la sesión abierta. El traspaso del rol debe llamar a `User::clearTwoFactor()` al antiguo.
+- **2FA opcional (2026-11-09):** `User::requiresTwoFactor()` es administrador **Y** 2FA activado; no devolver `true` solo por el rol (bloquearía a quien nunca lo activó). El middleware `admin.2fa` ya no se usa. El traspaso del rol debe llamar a `User::clearTwoFactor()` al antiguo.
 - **Pruebas con procesos (`artisan serve`):** leer el puerto del mensaje «Server running on», NO el primero que aparezca (puede ser el de «ya está en uso», de otra app); y al terminar comprobar que no quedan procesos y matar por pid.
 - **El bloqueo (R20) se comprueba ANTES de mirar la contraseña** y se cuenta por correo + IP (solo por correo, cualquiera bloquearía a otros a propósito).
 - **El rol, la empresa y el equipo de un usuario NO se asignan en masa** (no están en `#[Fillable]`) — si un formulario pudiera rellenarlos, cualquiera se haría administrador. Los fija el código de servidor.
@@ -153,9 +153,12 @@ El trabajo se hace en la rama del hito en curso; cada rama sale de la anterior, 
 app/Actions/Users/   InviteUser: única vía por la que nace una cuenta (R18)
 app/Http/Controllers/Auth/  entrar, recuperar contraseña, crear contraseña (invitación y recuperación)
 app/Notifications/   correos de recuperación e invitación
+app/Actions/Tickets/ casos de uso del ticket (CreateTicket…); una acción = una transacción
+app/Http/Requests/   validación de formularios (StoreTicketRequest: R6 en servidor)
+public/css/panel.css CSS del panel, sacado de los mockups validados (.dep = etiqueta, .dep-opcion = tarjeta del formulario)
 app/Policies/        quién puede hacer qué (TicketPolicy, UserPolicy, CompanyPolicy…); la matriz está en docs/plan/autorizacion.md
 app/Support/         LoginThrottle (bloqueo, R20), Totp (2FA, R21), RecoveryCodes, PendingLogin (acceso a medias)
-app/Http/Middleware/ EnsurePendingLogin (pantallas del 2FA), RequireAdminTwoFactor (admin sin 2FA no pasa)
+app/Http/Middleware/ EnsurePendingLogin (pantallas del 2FA); RequireAdminTwoFactor está SIN USO (pendiente de borrar)
 config/access.php    números de R17-R21 (intentos, bloqueo, longitud mínima)
 lang/es/             textos en español (auth, passwords, validation): sin ellos salen las claves en crudo
 public/img/          logos copiados de docs/marca lingmarco/ (la fuente de verdad es esa carpeta)
