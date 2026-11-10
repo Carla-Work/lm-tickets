@@ -24,6 +24,7 @@ usuarios de las empresas cliente abren y siguen incidencias y el equipo de Ling 
 |---|---|
 | `docs/plan/00-encuadre.md` | Alcance, exclusiones, roles, reglas R1–R21, plan P0/P1. **Manda sobre cualquier suposición.** |
 | `docs/plan/conservacion-datos.md` | Plazos de conservación (provisional 2 años; sin cerrar). |
+| `docs/plan/recuperacion-admin.md` | Qué hacer si el único administrador pierde el acceso (`admin:recover`). |
 | `docs/plan/bitacoras/` | Qué se hizo, decidió y qué queda; leer el último día. |
 | `ONBOARDING.md` | Estado actual y cómo verificarlo. |
 
@@ -37,10 +38,10 @@ Detalle y origen en `docs/plan/00-encuadre.md`. Cada una lleva test; no se «sim
 - **R4** un ticket resuelto o cerrado no admite mensajes del cliente ni lo puede reabrir; debe abrir uno nuevo.
 - **R5** cada cambio de estado o asignación queda registrado.
 - **R6/R7** producto: validado en servidor y solo asignable por el administrador.
-- **R8/R9/R10** administrador: único (el jefe; absorbe al antiguo supervisor), no se elimina sin traspasar el rol, ve todos los tickets y puede reasignarlos, pero no responder ni cambiar estado **salvo en «Otros»**, donde gestiona todo.
-- **R11** los agentes ven todos los tickets salvo «Otros»; agentes y administrador asignan cualquiera a cualquier agente, también del otro equipo; cada reasignación queda registrada.
+- **R8/R9/R10** administrador: único (el jefe; absorbe al antiguo supervisor), no se elimina sin traspasar el rol, ve todos los tickets y puede reasignarlos, pero **nunca responde ni cambia estado, en ningún departamento** (revisada 2026-11-10: ya no hay excepción en Contabilidad).
+- **R11** los agentes de Soporte y Desarrollo y Diseño ven todos los tickets salvo Contabilidad; el agente de **Contabilidad** (equipo propio, p. ej. comercial@lingmarco.es) ve **solo** Contabilidad. Agentes y administrador asignan a cualquier agente **que pueda atender ese departamento** (entre Soporte y Desarrollo y Diseño, cruzado); cada reasignación queda registrada. Revisada 2026-11-10.
 - **R12** cualquier agente puede corregir el departamento de un ticket; queda registrado y se avisa al cliente.
-- **R13** los tickets de «Otros» solo los ven y responden el administrador y el cliente que los abrió; los agentes no los ven por ninguna vía. Sin suplente en la aplicación: si el administrador falta, los avisa él a los clientes (teléfono o correo).
+- **R13** los tickets de **Contabilidad** (antes «Otros»; valor guardado `other`) los ven y responden el equipo de Contabilidad y el cliente que los abrió; el administrador los ve y reasigna; los demás agentes no los ven por ninguna vía. Revisada 2026-11-10.
 - **R14** cuando el cliente responde en un ticket «Pendiente de cliente», el estado pasa solo a «En curso».
 - **R15** nadie reabre un ticket resuelto o cerrado; desde resuelto solo se pasa a cerrado (lo hace un agente). Misma incidencia = ticket nuevo relacionado.
 - **R16** pasar un ticket a resuelto (cliente o agente) exige explicar cómo se resolvió. Solo el cliente puede abrir uno nuevo relacionado; agentes y administrador no clonan.
@@ -76,6 +77,9 @@ php artisan test --filter NombreDelTest
 # Copia de seguridad de la base de datos y restauración (probada 2026-11-09)
 bash scripts/db-backup.sh                                  # crea storage/backups/BASE_FECHA.sql.gz
 bash scripts/db-restore.sh FICHERO.sql.gz BASE_DESTINO     # se niega a pisar la base en uso salvo FORZAR=1
+
+# Recuperar el acceso del administrador (solo en el servidor; ver docs/plan/recuperacion-admin.md)
+php artisan admin:recover                  # imprime un enlace de un solo uso; --disable-2fa, --reactivate, --email=
 
 # Formateo y comprobación
 composer format          # formatea con Pint
@@ -125,6 +129,7 @@ El trabajo se hace en la rama del hito en curso; cada rama sale de la anterior, 
 - **No usar `php artisan dev` ni `npx`** — el comando de Laravel 13 descarga `@laravel/multiplex` de npm (se descubrió al probarlo). Usar `composer dev`, que va por `scripts/dev.sh`.
 - **Las copias de la base de datos van en `storage/backups/` (ignorado por git)** — contienen datos de clientes. Nunca al repositorio.
 - **No excluir los `.gitignore` de `storage/` ni `bootstrap/cache/`** — protegen registros y cachés (que pueden llevar datos de clientes). Si se vuelve a copiar un esqueleto: `--exclude '/.gitignore'`, solo el de la raíz.
+- **Qué ve cada agente sale de UN sitio: `User::workableDepartments()`/`canWorkOn()`** (ámbito `Ticket::visibleTo`, policy `view`, quién puede recibir una asignación, qué pestañas del filtro se ofrecen). Contabilidad es el equipo `accounting` y el departamento `other` (solo cambió la etiqueta, como «Aplicaciones»): no tocar el valor guardado sin migrar CHECKs y datos.
 - **Autorización: toda lista de tickets, mensajes, eventos o adjuntos pasa por su ámbito `visibleTo($user)`** (`Ticket::visibleTo`, `TicketMessage::visibleTo`, `TicketEvent::visibleTo`, `Attachment::visibleTo`). Una consulta suelta (`Ticket::where(...)`) entrega tickets ajenos y notas internas (R1, R2, R13). El ámbito y la policy `view` deben dar lo MISMO: `TicketVisibilityTest` lo vigila.
 - **Las policies deniegan por defecto** (matriz en `docs/plan/autorizacion.md`; `TicketActionsTest` comprueba TODAS las habilidades de TODOS los roles: lo que no figura está denegado). Un permiso nuevo exige cambiar la matriz Y el test. `Gate::before` deniega a cuentas de baja y **nunca concede**.
 - **R3: `'serve' => false` en el disco `local`** (`config/filesystems.php`): con `true` Laravel registra GET y PUT en `/storage/{path}` sobre el disco privado de los adjuntos. NO volver a `true`. Los adjuntos van por un controlador con `AttachmentPolicy::download`.
@@ -139,7 +144,7 @@ El trabajo se hace en la rama del hito en curso; cada rama sale de la anterior, 
 - **El bloqueo (R20) se comprueba ANTES de mirar la contraseña** y se cuenta por correo + IP (solo por correo, cualquiera bloquearía a otros a propósito).
 - **El rol, la empresa y el equipo de un usuario NO se asignan en masa** (no están en `#[Fillable]`) — si un formulario pudiera rellenarlos, cualquiera se haría administrador. Los fija el código de servidor.
 - **Acciones sobre un ticket: dos capas de permiso.** El controlador autoriza con la policy (da el 403 limpio) Y la acción vuelve a autorizar con el ticket releído y `lockForUpdate` (carrera: un agente resuelve mientras el cliente escribe, R4). No quitar ninguna de las dos. La habilidad depende del DESTINO del estado (`resolve`, `close`, `updateStatus`).
-- **Cambio de departamento:** el formulario envía SOLO la categoría y el departamento sale de ella (no aceptar un `departamento` aparte); exige categoría activa de otro departamento (R6); pasar a «Otros» vacía la asignación (decidido 2026-11-10) y deja su evento; el agente que lo hace ya no lo ve (R13) y se le manda a la bandeja, no a un 403.
+- **Cambio de departamento:** el formulario envía SOLO la categoría y el departamento sale de ella (no aceptar un `departamento` aparte); exige categoría activa de otro departamento (R6); si la persona asignada NO puede atender el departamento nuevo (`User::canWorkOn`) se vacía la asignación (decidido 2026-11-10) y queda su evento (`reason` = `department_changed`); el agente que lo hace puede dejar de verlo (R13) y se le manda a la bandeja, no a un 403. El administrador no reclasifica.
 - **La vista decide qué botones salen con `@can`** (policy), no con `if` sobre el estado.
 - **Avisos (paso 5): TODO pasa por `App\Support\TicketNotifier`** (quién recibe qué y los textos); las acciones lo llaman DESPUÉS de su transacción. Nunca se avisa a quien actúa (salvo «Hemos recibido tu ticket») ni a cuentas no operativas; una NOTA INTERNA no llama al notificador (R2); al cliente se le avisa a su SOLICITANTE (no a compañeros ni al administrador de empresa). Ni el correo ni la campana llevan el CUERPO de los mensajes (el correo viaja en claro). `TicketNotice` va a la cola y `afterCommit`: **en producción el trabajador de colas tiene que estar en marcha** o no salen correos ni entradas de la campana. Un fallo al avisar se registra con `report()` y no rompe la acción. La campana y la página «Avisos» usan `User::visibleNotices()`: un aviso de un ticket que la persona ya no puede ver (R13) ni se enseña ni cuenta.
 - **Ticket relacionado (R15/R16):** `?relacionado={id}` y `related_ticket_id` solo valen con un ticket FINAL al que esa persona puede responder con uno nuevo (`TicketPolicy::createRelated`); solo el cliente. El servidor lo recomprueba en `StoreTicketRequest` (el campo oculto no es de fiar) y un id inexistente da el MISMO error que uno ajeno. El enlace al relacionado solo se pinta si quien mira puede VER ese ticket (un agente no ve «Otros», R13). Nunca se reabre el original.
@@ -167,6 +172,7 @@ app/Actions/Tickets/ casos de uso del ticket (CreateTicket, ReplyToTicket, Chang
 app/Http/Requests/   validación de formularios (StoreTicketRequest: R6 en servidor)
 public/css/panel.css CSS del panel (cliente e interno, este último bajo `.interno`), sacado de los mockups validados y reestructurado el 2026-11-10 (barra lateral + cabecera, sin mockup, a petición; los mockups ya no reflejan la estructura) (.dep = etiqueta, .dep-opcion = tarjeta del formulario)
 app/Policies/        quién puede hacer qué (TicketPolicy, UserPolicy, CompanyPolicy…); la matriz está en docs/plan/autorizacion.md
+app/Console/Commands/ RecoverAdminAccess (`admin:recover`)
 app/Support/         LoginThrottle (bloqueo, R20), Totp (2FA, R21), RecoveryCodes, PendingLogin (acceso a medias), Audit (único que escribe `audit_logs`), MailLogger (escribe `email_logs`), BackupStore (lista las copias)
 app/Http/Controllers/Admin/ «Administración» del administrador: CompanyController (Empresas), CatalogController (Productos y categorías), StaffController (Usuarios y traspaso del rol); vistas en resources/views/admin/; acciones en app/Actions/Companies/, Catalog/ (ManageCatalog) y Users/ (SetUserActive, ChangeAgentTeam, TransferAdmin, ChangeCompanyRole, UnassignTickets)
 app/Http/Controllers/ CompanyAreaController («Mi empresa»), ProfileController («Mis datos»), UserStatusController e InvitationController (baja/reactivar y reenviar invitación, compartidos por Administración y «Mi empresa»)

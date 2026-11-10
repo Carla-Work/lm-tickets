@@ -120,15 +120,18 @@ una etiqueta del ticket, y el equipo es dónde trabaja cada empleado.
 | Soporte | Soporte |
 | Aplicaciones | Desarrollo y Diseño |
 | Páginas web | Desarrollo y Diseño |
-| Otros | **Ninguno: solo el administrador** (el jefe de Ling Marco) lo ve y lo responde |
+| Otros → **Contabilidad** (2026-11-10) | **Equipo Contabilidad** (comercial@lingmarco.es); el administrador lo ve y reasigna. Los demás agentes no lo ven |
 
 El cliente puede equivocarse de departamento. Por eso (decidido 2026-11-09):
 - **Cualquier agente puede reasignar** un ticket a alguien del otro equipo (Soporte ↔ Desarrollo y Diseño).
 - **Cualquier agente puede corregir el departamento** del ticket. Queda registrado (R5) y **se
   avisa al cliente** por email y en el panel (R12).
 
-**Otros es un caso aparte:** lo ve y lo responde **solo el administrador**. Los agentes no lo ven
-(R13).
+**Revisión del 2026-11-10 (decidida por la usuaria): «Otros» pasa a llamarse «Contabilidad»** (mismas categorías,
+mismo valor guardado `other`). Lo atiende un equipo propio, **Contabilidad** (comercial@lingmarco.es), que ve **solo** ese
+departamento. El administrador lo ve y reasigna como en los demás departamentos: **la excepción por la que respondía en
+«Otros» queda derogada** (R10). Los otros agentes no lo ven (R13). Donde este documento diga «Otros» con el administrador
+como responsable, léase así. **El rol de Ruyman Sosa (Gerente) se descarta: no se crea.**
 
 - **Agente** (empleado de Soporte o de Desarrollo y Diseño): atiende tickets, escribe respuestas y notas
   internas. **Ve todos los tickets de Soporte, Aplicaciones y Páginas web**, no solo los de
@@ -260,10 +263,10 @@ Matriz completa en `docs/plan/autorizacion.md`. Lo implementado como **lo más r
 | R7 | Solo el administrador asigna productos a empresas | Política de autorización + test |
 | R8 | Solo el administrador de la aplicación crea, desactiva o cambia el rol de empleados internos; nadie puede darse a sí mismo un rol superior | Política de autorización + test |
 | R9 | Siempre existe exactamente un administrador activo: no puede eliminarse, desactivarse ni degradarse sin traspasar antes el rol a otro empleado interno | Validación en servidor + test (incluido el intento de saltarlo) |
-| R10 | El administrador ve todos los tickets y puede reasignarlos (R11), pero no responder ni cambiar su estado, salvo en los de «Otros» (R13) | Política de autorización + test de que todas las acciones de escritura devuelven denegado |
-| R11 | Un agente o el administrador puede asignar un ticket a cualquier agente, de su equipo o del otro (Soporte ↔ Desarrollo y Diseño), o asignárselo a sí mismo; cada reasignación queda registrada con quién, cuándo y de quién a quién, y avisa a la persona que lo recibe | Test + historial (R5) |
+| R10 | El administrador ve todos los tickets y puede reasignarlos (R11), pero **no responde ni cambia estados en ningún departamento** (revisada 2026-11-10: sin la excepción de «Otros») | Política de autorización + test de que todas las acciones de escritura devuelven denegado |
+| R11 | Los agentes de Soporte y Desarrollo y Diseño ven todos los tickets salvo Contabilidad; el agente de Contabilidad ve solo Contabilidad. Un agente o el administrador asigna a cualquier agente que pueda atender el departamento; cada reasignación queda registrada con quién, cuándo y de quién a quién, y avisa a la persona que lo recibe (revisada 2026-11-10) | Test + historial (R5) |
 | R12 | Cualquier agente puede corregir el departamento de un ticket; queda registrado (quién, cuándo, de cuál a cuál) y se avisa al cliente por email y en el panel | Test + historial (R5) + test del aviso |
-| R13 | Los tickets del departamento «Otros» solo los ven y gestionan el administrador y el cliente que los abrió; los agentes no los ven (ni en listas, ni en búsquedas, ni en contadores, ni por URL directa). Si un agente corrige un ticket a «Otros», deja de verlo | Política de autorización + test de cada vía de acceso |
+| R13 | Los tickets de **Contabilidad** (antes «Otros»; valor guardado `other`) los ven y gestionan el equipo de Contabilidad y el cliente que los abrió; el administrador los ve y reasigna; los demás agentes no los ven (ni en listas, ni en búsquedas, ni en contadores, ni por URL directa). Si un agente corrige un ticket a Contabilidad, deja de verlo (revisada 2026-11-10) | Política de autorización + test de cada vía de acceso |
 | R14 | Cuando el cliente responde en un ticket «Pendiente de cliente», el estado pasa solo a «En curso» | Test |
 | R15 | Nadie (cliente, agente ni administrador) puede reabrir un ticket «Resuelto» o «Cerrado»; desde «Resuelto» solo se pasa a «Cerrado», y solo lo hace un agente. Para la misma incidencia se crea uno nuevo relacionado | Test de cada transición de estado prohibida y por cada rol |
 | R16 | Cuando un ticket pasa a «Resuelto» (lo marca el cliente o lo pasa un agente) debe explicarse cómo se ha resuelto; sin explicación no se acepta | Validación en servidor + test |

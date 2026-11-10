@@ -24,8 +24,9 @@ usuaria; todo lo demás está decidido (reglas R1-R21 del encuadre).
 |---|---|
 | Usuario de empresa | Solo los que **abrió él** (y de su empresa). |
 | Administrador de empresa | **Todos** los de su empresa. |
-| Agente | **Todos salvo los de «Otros»** (de cualquier departamento y de cualquier empresa). |
-| Administrador | **Todos**, incluidos los de «Otros». |
+| Agente (Soporte, Desarrollo y Diseño) | **Todos salvo los de Contabilidad** (de cualquier empresa). |
+| Agente de Contabilidad | **Solo los de Contabilidad** (de cualquier empresa). |
+| Administrador | **Todos**, incluidos los de Contabilidad. |
 
 ## Notas internas y datos internos (R2)
 
@@ -36,26 +37,26 @@ adjunto. Se garantiza con los ámbitos `visibleTo` de `TicketMessage`, `TicketEv
 
 ## Acciones sobre un ticket
 
-«Gestiona» = el que lo atiende: el **agente asignado** (ticket que no es de «Otros») o el
-**administrador** (solo en tickets de «Otros»). «Final» = Resuelto o Cerrado.
+«Gestiona» = el que lo atiende: SOLO el **agente asignado**, y solo si puede atender ese departamento (Contabilidad, su equipo;
+los demás departamentos, los otros dos equipos). El **administrador no gestiona nunca** (R10, revisada 2026-11-10). «Final» = Resuelto o Cerrado.
 
 | Acción | Usuario de empresa | Admin. de empresa | Agente | Administrador |
 |---|---|---|---|---|
 | Abrir un ticket (R6 lo valida el paso 4) | Sí | Sí | No | No |
-| **Responder al cliente** (mensaje público) | Solo el suyo, **no final** (R4) | Solo el suyo, no final **(propuesta)** | Si **lo gestiona** y no está Cerrado | Si es de «Otros» y no está Cerrado |
-| **Nota interna** | No | No | **Cualquier ticket que ve**, no Cerrado (decidido) | Solo «Otros», no Cerrado |
-| Marcar como **resuelto** (explicando cómo, R16) | Solo el suyo, no final | Solo el suyo, no final | Si lo gestiona y no es final | Si es de «Otros» y no es final |
-| Cambiar el **estado** (abierto, en curso, pendiente) | No | No | Si lo gestiona y no es final | Solo «Otros», no final |
-| **Cerrar** (Resuelto → Cerrado) | No | No | Si lo gestiona | Solo «Otros» |
-| **Reasignar** (R11) | No | No | Cualquier ticket que ve, no final | Cualquiera **salvo «Otros»**, no final (R10) |
-| **Cambiar el departamento** (R12) | No | No | Cualquier ticket que ve, no final | **Solo «Otros»**, no final |
+| **Responder al cliente** (mensaje público) | Solo el suyo, **no final** (R4) | Solo el suyo, no final **(propuesta)** | Si **lo gestiona** y no está Cerrado | No |
+| **Nota interna** | No | No | **Cualquier ticket que ve**, no Cerrado (decidido) | No |
+| Marcar como **resuelto** (explicando cómo, R16) | Solo el suyo, no final | Solo el suyo, no final | Si lo gestiona y no es final | No |
+| Cambiar el **estado** (abierto, en curso, pendiente) | No | No | Si lo gestiona y no es final | No |
+| **Cerrar** (Resuelto → Cerrado) | No | No | Si lo gestiona | No |
+| **Reasignar** (R11) | No | No | Cualquier ticket que ve, no final | Cualquiera, no final (a un agente que pueda atenderlo) |
+| **Cambiar el departamento** (R12) | No | No | Cualquier ticket que ve, no final | No |
 | Abrir un ticket **relacionado** de uno final | El suyo | Cualquiera de su empresa | No | No |
 | Ver notas internas, historial interno | No | No | Sí | Sí |
 
 Notas:
-- **«Otros» no tiene asignado:** lo lleva el administrador. Nadie puede asignarlo (los agentes ni lo ven).
-- **El administrador, fuera de «Otros», es de solo lectura** (R10) **salvo reasignar**.
-- Un agente que cambia un ticket a «Otros» **deja de verlo** (R13); el administrador pasa a gestionarlo.
+- **Contabilidad** (valor `other`, antes «Otros») lo lleva el equipo Contabilidad; se asigna solo a sus agentes y ellos solo reciben tickets de Contabilidad (`User::canWorkOn`).
+- **El administrador es de solo lectura en todos los departamentos** (R10) **salvo reasignar**.
+- Un agente que cambia un ticket a otro departamento que no es de su equipo **deja de verlo** (R13); si lo llevaba alguien que no puede atenderlo en el departamento nuevo, queda sin asignar.
 - En **Resuelto** se puede escribir (mensajes del equipo, notas) y cerrar, pero **no** reasignar ni cambiar
   de departamento (decidido). El cliente no puede escribir (R4).
 - **Nadie reabre** (R15): ningún estado vuelve atrás (ver «Transiciones»).
@@ -101,7 +102,7 @@ descarga irá por un controlador que llama a `AttachmentPolicy::download` (paso 
 - **Consecuencias que no se ven en el código (decididas por Claude, pendientes de confirmar):** dar de baja a un agente, o pasarlo a administrador, le quita los tickets que lleva y no están cerrados (evento interno `reason` = `user_deactivated` / `role_transfer`); el usuario normal ve en «Mi empresa» solo los productos.
 - **Pantallas «Administración › Empresas» (implementadas 2026-11-10):** `CompanyPolicy::view` deja a un cliente ver SU empresa, pero el detalle de administración (`/administracion/empresas/{id}`) exige además `viewAny` (solo administrador); ``Admin/CompaniesTest` comprueba todos los roles contra todas las rutas. Reenviar invitación sigue `UserPolicy::resendInvitation`: el administrador solo reenvía a agentes y a administradores de empresa; a un usuario normal lo reenvía el administrador de **su** empresa.
 - **(propuesta)** El administrador de empresa **no puede cambiar los productos** de su empresa: solo los ve.
-  Si necesita uno nuevo, abre un ticket en «Otros».
+  Si necesita uno nuevo, abre un ticket en Contabilidad.
 
 ## Sin decidir (se ha implementado lo más restrictivo)
 
