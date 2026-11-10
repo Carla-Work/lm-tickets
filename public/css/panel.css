@@ -13,15 +13,39 @@
  *  - Un color nunca va solo: el departamento y el estado llevan siempre su nombre.
  */
 
-/* ---------- Estructura: cabecera + menú lateral + contenido ---------- */
-.cabecera {
-    background: var(--blanco);
-    border-bottom: 1px solid var(--gris);
-    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
-    padding: .75rem 1.5rem; gap: .5rem 1rem;
+/* ---------- Estructura: barra lateral fija + cabecera fina + contenido ----------
+   Estructura tomada de asesoria/onesigw (2026-11-10): barra de 256px con el logo arriba, cabecera de 64px,
+   texto de 13,5px, tarjetas de radio 10px, contenido con tope de ancho. NO cambia ningún color. */
+body.panel { font-size: 13.5px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.app { display: flex; min-height: 100vh; }
+.barra {
+    position: sticky; top: 0; align-self: flex-start; height: 100vh; width: 256px; flex: none;
+    display: flex; flex-direction: column; background: var(--blanco); border-right: 1px solid var(--gris);
 }
-.cabecera img { height: 34px; width: auto; max-width: 60vw; }
-.cabecera .usuario { display: flex; align-items: center; gap: 1rem; font-size: .9rem; }
+/* Mismo alto (64px) y borde que la cabecera: la línea no se corta al llegar a la barra. */
+.logo { display: flex; align-items: center; height: 64px; flex: none; padding: 0 1.25rem; border-bottom: 1px solid var(--gris); }
+.logo img { height: 28px; width: auto; max-width: 100%; }
+.menu { flex: 1; min-height: 0; overflow-y: auto; padding: .875rem .75rem; }
+.menu a {
+    position: relative; display: block; padding: .6rem .75rem; border-radius: 8px;
+    color: var(--texto); text-decoration: none; font-weight: 500; margin-bottom: .125rem;
+}
+.menu a:hover { background: var(--gris); }
+/* Estado activo: fondo suave + barra de 3px en el borde izquierdo (como la barra de asesoria). */
+.menu a[aria-current="page"] { background: var(--principal); color: #fff; font-weight: 600; }
+.menu a[aria-current="page"]::before {
+    content: ""; position: absolute; left: -.75rem; top: 50%; width: 3px; height: 1.5rem;
+    transform: translateY(-50%); border-radius: 0 3px 3px 0; background: var(--principal-claro);
+}
+.menu .empresa { font-size: .78rem; color: #4a5568; margin: 0 .75rem 1rem; }
+.columna { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.cabecera {
+    position: sticky; top: 0; z-index: 10; height: 64px; flex: none;
+    background: var(--blanco); border-bottom: 1px solid var(--gris);
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0 1.5rem;
+}
+.cabecera .contexto { font-weight: 600; color: var(--titulo); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .campana {
     position: relative; text-decoration: none; color: var(--texto);
     padding: .35rem .6rem; border: 1px solid var(--gris); border-radius: 999px; background: var(--blanco);
@@ -30,16 +54,30 @@
     background: var(--principal); color: #fff; border-radius: 999px;
     padding: 0 .45rem; font-size: .75rem; margin-left: .3rem;
 }
-.marco { display: grid; grid-template-columns: 220px minmax(0, 1fr); min-height: calc(100vh - 62px); }
-.menu { background: var(--blanco); border-right: 1px solid var(--gris); padding: 1.25rem 1rem; }
-.menu a {
-    display: block; padding: .6rem .8rem; border-radius: 8px;
-    color: var(--texto); text-decoration: none; margin-bottom: .2rem;
+/* Menú de la cuenta: <details>, sin JavaScript. */
+.cuenta { position: relative; }
+.cuenta summary {
+    display: flex; align-items: center; gap: .5rem; padding: .25rem .5rem .25rem .25rem;
+    border-radius: 8px; cursor: pointer; list-style: none;
 }
-.menu a:hover { background: var(--gris); }
-.menu a[aria-current="page"] { background: var(--principal); color: #fff; font-weight: 600; }
-.menu .empresa { font-size: .8rem; color: #4a5568; margin: 0 .8rem 1rem; }
-main { padding: 1.75rem; max-width: 1200px; }
+.cuenta summary::-webkit-details-marker { display: none; }
+.cuenta summary:hover, .cuenta[open] summary { background: var(--gris); }
+.cuenta .iniciales {
+    display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%;
+    background: var(--titulo); color: #fff; font-size: .69rem; font-weight: 600;
+}
+.cuenta .nombre { max-width: 12rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cuenta-menu {
+    position: absolute; right: 0; top: calc(100% + 6px); z-index: 20; width: 224px; overflow: hidden;
+    background: var(--blanco); border: 1px solid var(--gris); border-radius: 10px; box-shadow: 0 8px 24px rgba(4, 15, 36, .12);
+}
+.cuenta-datos { margin: 0; padding: .75rem 1rem; border-bottom: 1px solid var(--gris); }
+.cuenta-datos strong, .cuenta-datos small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cuenta-datos small { color: var(--texto-suave); font-size: .78rem; }
+.cuenta-menu form { margin: 0; }
+.cuenta-menu .salir { display: block; width: 100%; text-align: left; padding: .65rem 1rem; font: inherit; color: var(--texto); background: none; border: 0; cursor: pointer; }
+.cuenta-menu .salir:hover { background: var(--gris); }
+main { flex: 1; min-width: 0; width: 100%; max-width: 1400px; margin: 0 auto; padding: 1.5rem; }
 .migas { font-size: .85rem; margin-bottom: .75rem; color: #4a5568; }
 .migas a { color: #4a5568; }
 .titulo-fila { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
@@ -201,11 +239,16 @@ td .secundario { display: block; color: var(--texto-suave); font-size: .85rem; l
 
 /* ---------- Móvil: cada fila de la tabla pasa a ser una tarjeta ---------- */
 @media (max-width: 860px) {
-    .marco { grid-template-columns: minmax(0, 1fr); }
-    .menu { border-right: 0; border-bottom: 1px solid var(--gris); display: flex; flex-wrap: wrap; align-content: flex-start; gap: .25rem; padding: .75rem 1rem; }
+    /* Móvil: la barra deja de ser fija y pasa arriba (logo y enlaces en fila); sin JavaScript, sin cajón. */
+    .app { flex-direction: column; }
+    .barra { position: static; height: auto; width: auto; border-right: 0; border-bottom: 1px solid var(--gris); }
+    .logo { border-bottom: 0; height: 56px; }
+    .menu { display: flex; flex-wrap: wrap; align-content: flex-start; gap: .25rem; padding: 0 1rem .75rem; overflow: visible; }
     .menu .empresa { width: 100%; margin: 0 0 .25rem; }
+    .menu a[aria-current="page"]::before { display: none; }
+    .cabecera { position: static; height: 52px; padding: 0 1rem; }
+    .cuenta .nombre { display: none; }
     main { padding: 1rem; }
-    .cabecera .usuario span { display: none; }
     .resumen { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     table, thead, tbody, tr, td, caption { display: block; }
     thead { position: absolute; left: -9999px; } /* cabecera oculta a la vista pero no a lectores de pantalla */
@@ -217,8 +260,6 @@ td .secundario { display: block; color: var(--texto-suave); font-size: .85rem; l
     td.asunto-celda { order: -1; }
 }
 
-/* Móvil: la fila de la cuadrícula no debe estirarse hasta la altura mínima de la página (dejaba un hueco bajo el menú) */
-@media (max-width: 860px) { .marco { align-content: start; } }
 @media (max-width: 860px) {
     .dos-columnas { grid-template-columns: minmax(0, 1fr); }
     .departamentos { grid-template-columns: minmax(0, 1fr); }
@@ -292,3 +333,32 @@ td .secundario { display: block; color: var(--texto-suave); font-size: .85rem; l
 .gestion .nota-ayuda.fuerte { color: var(--titulo); font-weight: 600; }
 .lateral-col > .tarjeta + .tarjeta { margin-top: 1.25rem; }
 .detalles dd, .detalles a { overflow-wrap: anywhere; } /* un correo largo no debe salirse de la tarjeta */
+
+/* ---------- Densidad y tamaños (2026-11-10): escala de asesoria/onesigw, sin tocar colores ----------
+   Texto 13,5px; ayudas 12,5px; rótulos de columna 11px; título de pantalla 17px; radio de tarjeta 10px.
+   Va al final a propósito: reajusta lo de arriba sin reescribirlo. Si cambias un tamaño, cámbialo aquí. */
+body.panel h1 { font-size: 1.0625rem; font-weight: 600; }
+body.panel .titulo-fila { margin-bottom: 1rem; }
+body.panel .tarjeta, body.panel .filtros, body.panel .tabla-caja, body.panel .resumen a,
+body.panel .mensaje, body.panel .cabecera-ticket, body.panel .pestanas .panel { border-radius: 10px; }
+body.panel .tarjeta { padding: 1.1rem 1.25rem; }
+body.panel .tarjeta h2, body.panel .lateral h2, body.panel .responder h2 { font-size: .906rem; margin-bottom: .6rem; }
+body.panel .cabecera-ticket { padding: .9rem 1.25rem; }
+body.panel .cabecera-ticket h1 { font-size: 1.0625rem; margin: .1rem 0 .5rem; }
+body.panel .cabecera-ticket .meta { font-size: .9rem; }
+body.panel th { font-size: 11px; padding: .5rem .875rem; }
+body.panel td { padding: .65rem .875rem; }
+body.panel caption { padding: .65rem .875rem; font-size: .906rem; }
+body.panel .resumen strong { font-size: 1.35rem; }
+body.panel .resumen a { padding: .65rem .875rem; }
+body.panel .filtros { padding: .75rem .875rem; }
+body.panel .ayuda, body.panel .ayuda-leyenda, body.panel .detalles dd small, body.panel td .secundario,
+body.panel .solicitante small { font-size: 12.5px; }
+body.panel .detalles dt, body.panel .estado, body.panel .nuevo { font-size: 11px; }
+body.panel .dep { font-size: 12.5px; }
+body.panel .migas { font-size: 12.5px; margin-bottom: .5rem; }
+body.panel input[type=text], body.panel select, body.panel textarea,
+body.panel .filtros input, body.panel .filtros select { padding: .5rem .7rem; font-size: 13.5px; }
+body.panel .boton { padding: .5rem 1.1rem; font-size: 13.5px; }
+body.panel .campo, body.panel fieldset { margin-bottom: 1rem; }
+body.panel .dos-columnas, body.panel .dos { gap: 1.25rem; }

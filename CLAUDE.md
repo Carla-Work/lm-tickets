@@ -159,7 +159,7 @@ app/Notifications/   correos de recuperación e invitación
 app/Http/Controllers/ InboxController (bandeja del equipo), TicketController (cliente + detalle común), PanelController (solo reparte: equipo→/bandeja, cliente→/tickets)
 app/Actions/Tickets/ casos de uso del ticket (CreateTicket, ReplyToTicket, ChangeTicketStatus, AssignTicket, ChangeDepartment); una acción = una transacción que recomprueba el permiso con el ticket bloqueado
 app/Http/Requests/   validación de formularios (StoreTicketRequest: R6 en servidor)
-public/css/panel.css CSS del panel (cliente e interno, este último bajo `.interno`), sacado de los mockups validados (.dep = etiqueta, .dep-opcion = tarjeta del formulario)
+public/css/panel.css CSS del panel (cliente e interno, este último bajo `.interno`), sacado de los mockups validados y reestructurado el 2026-11-10 (barra lateral + cabecera, sin mockup, a petición; los mockups ya no reflejan la estructura) (.dep = etiqueta, .dep-opcion = tarjeta del formulario)
 app/Policies/        quién puede hacer qué (TicketPolicy, UserPolicy, CompanyPolicy…); la matriz está en docs/plan/autorizacion.md
 app/Support/         LoginThrottle (bloqueo, R20), Totp (2FA, R21), RecoveryCodes, PendingLogin (acceso a medias)
 app/Http/Middleware/ EnsurePendingLogin (pantallas del 2FA)
