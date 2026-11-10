@@ -26,6 +26,23 @@ class AuditLog extends Model
         'two_factor_enabled' => 'Segundo factor activado',
         'recovery_code_used' => 'Código de recuperación usado',
         'backup_requested' => 'Copia de seguridad pedida',
+        'company_created' => 'Empresa creada',
+        'company_updated' => 'Datos de empresa cambiados',
+        'company_products_changed' => 'Productos de empresa cambiados',
+        'company_deactivated' => 'Empresa dada de baja',
+        'company_reactivated' => 'Empresa reactivada',
+        'product_created' => 'Producto creado',
+        'product_updated' => 'Producto editado',
+        'product_status_changed' => 'Producto activado o desactivado',
+        'category_created' => 'Categoría creada',
+        'category_updated' => 'Categoría editada',
+        'category_status_changed' => 'Categoría activada o desactivada',
+        'user_deactivated' => 'Cuenta dada de baja',
+        'user_reactivated' => 'Cuenta reactivada',
+        'team_changed' => 'Equipo de un agente cambiado',
+        'admin_transferred' => 'Rol de administrador traspasado',
+        'company_role_changed' => 'Rol de un usuario de empresa cambiado',
+        'password_changed' => 'Contraseña cambiada desde «Mis datos»',
     ];
 
     protected $guarded = [];

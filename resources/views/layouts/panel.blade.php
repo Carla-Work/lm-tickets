@@ -9,10 +9,10 @@
      - El menú de la cuenta es un <details>: se abre y cierra sin JavaScript (requisito: el contenido y
        «Salir» deben funcionar sin JS). No lo sustituyas por un desplegable con JS.
      - «Salir» es un formulario POST (un enlace GET no debe cerrar sesión; LoginTest lo vigila).
-     - El menú del equipo solo enlaza lo que existe (Bandeja y Registros). «Empresas», «Productos y categorías»,
-       «Usuarios» y «Mis datos» salen en el mockup pero NO se enlazan hasta implementarlos (sin enlaces rotos).
+     - El menú del equipo solo enlaza lo que existe (Bandeja, Administración › Empresas / Productos y categorías / Usuarios, Registros).
+
     La campana de «Avisos» cuenta los avisos sin leer de tickets que esta persona puede ver (User::visibleNotices).
-    Pendiente: «Mi empresa» / «Mis datos», pantallas aún sin implementar.
+    «Mis datos» se abre desde el menú de la cuenta (cabecera). Pendiente en esa pantalla: el 2FA del administrador (activar, desactivar, códigos nuevos), a la espera de mockup validado.
     Variables: $user (quien ha entrado) y, en las hijas, @section('titulo'), @section('menu') y @section('contenido').
 --}}
 <!DOCTYPE html>
@@ -43,6 +43,19 @@
             @if ($internal)
                 <a href="{{ route('inbox') }}" @if (request()->routeIs('inbox', 'tickets.show')) aria-current="page" @endif>Bandeja</a>
 
+                {{-- «Administración»: solo el administrador (policies). Cada entrada sale cuando existe su pantalla. --}}
+                @can('viewAny', \App\Models\Company::class)
+                    <details class="seccion-menu" @if (request()->routeIs('admin.*')) open @endif>
+                        <summary>Administración</summary>
+                        <a href="{{ route('admin.companies.index') }}" @if (request()->routeIs('admin.companies.*')) aria-current="page" @endif>
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V5l8-2v18"/><path d="M12 9h8v12"/><path d="M8 8v.01M8 12v.01M8 16v.01M16 13v.01M16 17v.01"/></svg>Empresas</a>
+                        <a href="{{ route('admin.catalog.index') }}" @if (request()->routeIs('admin.catalog.*')) aria-current="page" @endif>
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 8 12 3 3 8l9 5 9-5Z"/><path d="m3 8 0 8 9 5 9-5V8"/><path d="M12 13v8"/></svg>Productos y categorías</a>
+                        <a href="{{ route('admin.staff.index') }}" @if (request()->routeIs('admin.staff.*')) aria-current="page" @endif>
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2 .6 3.5 2.4 3.5 6"/></svg>Usuarios</a>
+                    </details>
+                @endcan
+
                 {{-- «Registros»: solo el administrador (habilidad view-records). <details>: se pliega sin JavaScript;
                      abierto por defecto si estás dentro de una de sus pantallas. --}}
                 @can('view-records')
@@ -61,6 +74,7 @@
                     {{ $user->role === \App\Enums\UserRole::CompanyAdmin ? 'Tickets de mi empresa' : 'Mis tickets' }}
                 </a>
                 <a href="{{ route('tickets.create') }}" @if (request()->routeIs('tickets.create')) aria-current="page" @endif>Nuevo ticket</a>
+                <a href="{{ route('company.show') }}" @if (request()->routeIs('company.*')) aria-current="page" @endif>Mi empresa</a>
             @endif
         </nav>
 
@@ -113,6 +127,7 @@
                             @endif
                         </small>
                     </p>
+                    <a class="salir" href="{{ route('profile.show') }}" @if (request()->routeIs('profile.*')) aria-current="page" @endif>Mis datos</a>
                     <form action="{{ route('logout') }}" method="post">
                         @csrf
                         <button type="submit" class="salir">Salir</button>

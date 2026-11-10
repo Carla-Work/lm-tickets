@@ -26,6 +26,10 @@
     @case(\App\Enums\TicketEventType::Assigned)
         @if (($data['reason'] ?? null) === 'moved_to_other')
             retiró la asignación de <strong>{{ $data['from_name'] ?? '' }}</strong>: el ticket pasó a «Otros»
+        @elseif (($data['reason'] ?? null) === 'user_deactivated')
+            retiró la asignación de <strong>{{ $data['from_name'] ?? '' }}</strong>: su cuenta se dio de baja
+        @elseif (($data['reason'] ?? null) === 'role_transfer')
+            retiró la asignación de <strong>{{ $data['from_name'] ?? '' }}</strong>: pasó a ser el administrador (no lleva tickets)
         @elseif (empty($data['to_name']))
             quitó la asignación (antes: <strong>{{ $data['from_name'] ?? '—' }}</strong>)
         @elseif (empty($data['from_name']))

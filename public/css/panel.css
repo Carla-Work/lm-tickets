@@ -423,3 +423,42 @@ body.panel .dos-columnas, body.panel .dos { gap: 1.25rem; }
     .seccion-menu { width: 100%; }
 }
 
+/* ---- Administración (Empresas, Productos, Usuarios): piezas sacadas de los mockups admin-* validados ----
+   Trampa: el estado de la cuenta se llama `.estado-cuenta` (en los mockups era `.cuenta`, que aquí ya es el
+   menú de la cabecera). */
+.cols2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 1rem; }
+.apilado > .tarjeta { margin-bottom: 1.25rem; }
+.tarjeta .sub { font-size: .9rem; color: var(--texto-suave); margin: -.4rem 0 1rem; }
+.chip { display: inline-block; background: var(--gris); border-radius: 999px; padding: .1rem .65rem; margin: 0 .3rem .3rem 0; font-size: .85rem; }
+.chip.sin { background: #fff; border: 1px dashed #b8bcc6; color: var(--texto-suave); }
+.rolchip { display: inline-block; font-size: .78rem; font-weight: 700; border-radius: 999px; padding: .1rem .6rem; background: #efe5fb; color: var(--titulo); white-space: nowrap; }
+.rolchip.admin { background: var(--titulo); color: #fff; }
+.estado-cuenta { font-size: .85rem; font-weight: 700; white-space: nowrap; }
+.checks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6rem 1rem; border: 1px solid var(--gris); border-radius: 10px; padding: .9rem 1rem; margin: 0 0 1rem; }
+.checks label { display: flex; gap: .55rem; align-items: flex-start; font-weight: 600; margin: 0; }
+.checks label small { display: block; font-weight: 400; color: var(--texto-suave); }
+.checks input { margin-top: .3rem; width: 1.1rem; height: 1.1rem; flex: none; }
+.peligro { border: 2px solid var(--error); background: #fff6f5; }
+.peligro h2 { color: var(--error); }
+.boton.peligro-b { background: #fff; color: var(--error); border-color: var(--error); }
+.boton.pequeno { padding: .3rem .8rem; font-size: .85rem; }
+td .acc { display: flex; gap: .4rem; flex-wrap: wrap; }
+td .acc form { margin: 0; }
+td .secundario { display: block; color: var(--texto-suave); font-size: .85rem; line-height: 1.3; }
+.apilado { min-width: 0; }
+
+/* "Fichas": tablas dentro de una tarjeta estrecha; cada fila es una ficha también en pantalla ancha. */
+table.fichas, table.fichas thead, table.fichas tbody, table.fichas td, table.fichas caption { display: block; }
+table.fichas thead { position: absolute; left: -9999px; }
+table.fichas tr { display: flex; flex-wrap: wrap; gap: .35rem 1.4rem; align-items: center; padding: .85rem 1rem; border-bottom: 1px solid var(--gris); }
+table.fichas tr:last-child { border-bottom: 0; }
+table.fichas td { border: 0; padding: 0; }
+table.fichas td::before { content: attr(data-etiqueta) ": "; font-size: .8rem; color: var(--texto-suave); }
+table.fichas td.asunto-celda { flex: 1 1 100%; }
+table.fichas td.asunto-celda::before, table.fichas td[data-etiqueta="Acciones"]::before { content: ""; }
+
+@media (max-width: 860px) {
+    .cols2, .checks { grid-template-columns: minmax(0, 1fr); }
+}
+.acc .fila-form { display: flex; gap: .4rem; align-items: center; margin: 0; }
+.acc .fila-form select { padding: .3rem .5rem; font-size: .85rem; }
