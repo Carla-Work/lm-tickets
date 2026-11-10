@@ -147,6 +147,8 @@ El trabajo se hace en la rama del hito en curso; cada rama sale de la anterior, 
 - **Notas internas (R2): todo lo que ve el cliente pasa por `TicketMessage::public()`** — un listado sin filtrar le entrega las notas.
 - **El historial de tickets solo se añade** (`ticket_events`, sin `updated_at`): no hay UPDATE ni DELETE de eventos (R5).
 - **Nada se borra en cascada** — las claves foráneas son RESTRICT; las bajas son `deactivated_at`/`active`.
+- **Los `FormRequest` de administración autorizan en `authorize()` con la policy, ANTES de validar:** con `authorize() { return true; }` un no autorizado recibe 302 con mensajes de validación («ya existe ese correo»), que filtran datos. Probado mandando datos inválidos a propósito.
+- **Al dar de baja a un agente o traspasar el rol se liberan sus tickets no cerrados** (`UnassignTickets`, evento interno): si no, quedan asignados a quien no puede atenderlos. El traspaso va en UNA transacción y degrada al antiguo ANTES de ascender al nuevo (índice único `admin_slot`).
 - **No quitar el índice único de `users.admin_slot`** aunque nadie lo lea: es lo que impide dos administradores activos (R9).
 - **En un `CHECK` sobre columnas con NULL, escribir `IS NOT NULL` explícito** — con NULL el CHECK no falla.
 - **Los tests no usan SQLite** — MySQL en `lm_tickets_testing`, para que un test verde valga en producción. No apuntar nunca los tests a `lm_tickets`.
@@ -166,6 +168,8 @@ app/Http/Requests/   validación de formularios (StoreTicketRequest: R6 en servi
 public/css/panel.css CSS del panel (cliente e interno, este último bajo `.interno`), sacado de los mockups validados y reestructurado el 2026-11-10 (barra lateral + cabecera, sin mockup, a petición; los mockups ya no reflejan la estructura) (.dep = etiqueta, .dep-opcion = tarjeta del formulario)
 app/Policies/        quién puede hacer qué (TicketPolicy, UserPolicy, CompanyPolicy…); la matriz está en docs/plan/autorizacion.md
 app/Support/         LoginThrottle (bloqueo, R20), Totp (2FA, R21), RecoveryCodes, PendingLogin (acceso a medias), Audit (único que escribe `audit_logs`), MailLogger (escribe `email_logs`), BackupStore (lista las copias)
+app/Http/Controllers/Admin/ «Administración» del administrador: CompanyController (Empresas), CatalogController (Productos y categorías), StaffController (Usuarios y traspaso del rol); vistas en resources/views/admin/; acciones en app/Actions/Companies/, Catalog/ (ManageCatalog) y Users/ (SetUserActive, ChangeAgentTeam, TransferAdmin, ChangeCompanyRole, UnassignTickets)
+app/Http/Controllers/ CompanyAreaController («Mi empresa»), ProfileController («Mis datos»), UserStatusController e InvitationController (baja/reactivar y reenviar invitación, compartidos por Administración y «Mi empresa»)
 app/Http/Controllers/Records/ «Registros» del administrador: MailLogController, AuditLogController, BackupController (vistas en resources/views/records/)
 app/Http/Middleware/ EnsurePendingLogin (pantallas del 2FA)
 config/access.php    números de R17-R21 (intentos, bloqueo, longitud mínima)

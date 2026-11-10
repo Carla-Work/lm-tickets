@@ -97,6 +97,9 @@ descarga irá por un controlador que llama a `AttachmentPolicy::download` (paso 
 
 - El administrador **no puede darse de baja ni degradarse a sí mismo**: antes traspasa el rol (R9).
 - Un administrador de empresa **nunca** toca nada de otra empresa (R1).
+- **Implementado 2026-11-10 (Fase 3):** Administración › Usuarios (alta de agentes, equipo, baja/reactivación, traspaso del rol), Productos y categorías (solo administrador, sin borrado), «Mi empresa» (productos de la empresa para todo cliente; usuarios solo para el administrador de empresa) y «Mis datos» (todos). Todas las rutas se prueban contra TODOS los roles y los `FormRequest` autorizan ANTES de validar (un no autorizado recibe 403, no mensajes de validación).
+- **Consecuencias que no se ven en el código (decididas por Claude, pendientes de confirmar):** dar de baja a un agente, o pasarlo a administrador, le quita los tickets que lleva y no están cerrados (evento interno `reason` = `user_deactivated` / `role_transfer`); el usuario normal ve en «Mi empresa» solo los productos.
+- **Pantallas «Administración › Empresas» (implementadas 2026-11-10):** `CompanyPolicy::view` deja a un cliente ver SU empresa, pero el detalle de administración (`/administracion/empresas/{id}`) exige además `viewAny` (solo administrador); ``Admin/CompaniesTest` comprueba todos los roles contra todas las rutas. Reenviar invitación sigue `UserPolicy::resendInvitation`: el administrador solo reenvía a agentes y a administradores de empresa; a un usuario normal lo reenvía el administrador de **su** empresa.
 - **(propuesta)** El administrador de empresa **no puede cambiar los productos** de su empresa: solo los ve.
   Si necesita uno nuevo, abre un ticket en «Otros».
 
