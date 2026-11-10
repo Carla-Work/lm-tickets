@@ -79,7 +79,7 @@ por su mockup en `docs/plan/mockups/`.
 ```bash
 cd ~/Desktop/proyectoslm/lm-tickets
 mysql -u root -e "SHOW DATABASES LIKE 'lm_%'"   # deben existir lm_tickets y lm_tickets_testing
-php artisan migrate                              # aplica migraciones a lm_tickets
+php artisan migrate                              # aplica migraciones a lm_tickets (OBLIGATORIO tras cada git pull o migración nueva: los tests migran solo lm_tickets_testing y no avisan si falta en la base de desarrollo)
 composer check                                   # pint, phpstan y phpunit en verde
 php artisan serve                                # http://127.0.0.1:8000 -> portada 200
 ```
