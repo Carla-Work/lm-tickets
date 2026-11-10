@@ -28,6 +28,17 @@ enum Department: string
         };
     }
 
+    /** Clase CSS de la etiqueta de color (public/css/panel.css). El color nunca va solo: siempre junto a `label()`. */
+    public function cssClass(): string
+    {
+        return match ($this) {
+            self::Support => 'soporte',
+            self::WebApps => 'apps',
+            self::Websites => 'webs',
+            self::Other => 'otros',
+        };
+    }
+
     /** Equipo que lo atiende; null = solo el administrador (R13). */
     public function team(): ?Team
     {

@@ -85,11 +85,11 @@ class DeactivatedAccessTest extends TestCase
     public function test_deactivated_user_with_open_session_is_logged_out(): void
     {
         $user = User::factory()->create();
-        $this->actingAs($user)->get(route('panel'))->assertOk();
+        $this->actingAs($user)->get(route('tickets.index'))->assertOk();
 
         $user->forceFill(['deactivated_at' => now()])->save();
 
-        $this->get(route('panel'))->assertRedirect(route('login'));
+        $this->get(route('tickets.index'))->assertRedirect(route('login'));
         $this->assertGuest();
     }
 
@@ -97,13 +97,13 @@ class DeactivatedAccessTest extends TestCase
     public function test_company_deactivation_logs_out_its_users(): void
     {
         $user = User::factory()->forCompany($this->empresaA)->create();
-        $this->actingAs($user)->get(route('panel'))->assertOk();
+        $this->actingAs($user)->get(route('tickets.index'))->assertOk();
 
         $this->empresaA->forceFill(['deactivated_at' => now()])->save();
 
         // Se vuelve a cargar el usuario desde la base de datos, como pasa en cada petición real: la
         // instancia del test conserva en memoria la relación `company` ya cargada y vería la empresa de alta.
-        $this->actingAs($user->fresh())->get(route('panel'))->assertRedirect(route('login'));
+        $this->actingAs($user->fresh())->get(route('tickets.index'))->assertRedirect(route('login'));
         $this->assertGuest();
     }
 

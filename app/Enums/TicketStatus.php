@@ -38,6 +38,18 @@ enum TicketStatus: string
         return $this === self::PendingCustomer ? 'Pendiente de tu respuesta' : $this->label();
     }
 
+    /** Clase CSS de la etiqueta de estado (public/css/panel.css). */
+    public function cssClass(): string
+    {
+        return match ($this) {
+            self::Open => 'abierto',
+            self::InProgress => 'curso',
+            self::PendingCustomer => 'pendiente',
+            self::Resolved => 'resuelto',
+            self::Closed => 'cerrado',
+        };
+    }
+
     /**
      * Estados a los que se puede pasar desde este (R14, R15). Propuesta de Claude pendiente de validar;
      * ver docs/plan/autorizacion.md, «Transiciones de estado».

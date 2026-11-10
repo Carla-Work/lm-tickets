@@ -1,0 +1,235 @@
+/*
+ * Hoja de estilos del panel (cliente y equipo): cabecera, menú, listas, formularios y detalle del ticket.
+ *
+ * Qué es: el CSS de los mockups VALIDADOS (docs/plan/mockups/ nuevo-ticket-a, mis-tickets-a/b,
+ * ticket-detalle-cliente-a) unido en una sola hoja. Se carga DESPUÉS de app.css, que trae las variables.
+ * Cuándo tocarlo: al aplicar un diseño validado nuevo. Los colores salen de la guía de lingmarco.es y del
+ * logo; no inventar colores.
+ *
+ * Trampas:
+ *  - `.dep` es la etiqueta (punto + nombre) del departamento en listas y detalle; las TARJETAS del
+ *    formulario «Nuevo ticket» son `.dep-opcion`. En los mockups ambas se llamaban `.dep` y chocaban
+ *    al juntar las hojas.
+ *  - Un color nunca va solo: el departamento y el estado llevan siempre su nombre.
+ */
+
+/* ---------- Estructura: cabecera + menú lateral + contenido ---------- */
+.cabecera {
+    background: var(--blanco);
+    border-bottom: 1px solid var(--gris);
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+    padding: .75rem 1.5rem; gap: .5rem 1rem;
+}
+.cabecera img { height: 34px; width: auto; max-width: 60vw; }
+.cabecera .usuario { display: flex; align-items: center; gap: 1rem; font-size: .9rem; }
+.campana {
+    position: relative; text-decoration: none; color: var(--texto);
+    padding: .35rem .6rem; border: 1px solid var(--gris); border-radius: 999px; background: var(--blanco);
+}
+.campana b {
+    background: var(--principal); color: #fff; border-radius: 999px;
+    padding: 0 .45rem; font-size: .75rem; margin-left: .3rem;
+}
+.marco { display: grid; grid-template-columns: 220px minmax(0, 1fr); min-height: calc(100vh - 62px); }
+.menu { background: var(--blanco); border-right: 1px solid var(--gris); padding: 1.25rem 1rem; }
+.menu a {
+    display: block; padding: .6rem .8rem; border-radius: 8px;
+    color: var(--texto); text-decoration: none; margin-bottom: .2rem;
+}
+.menu a:hover { background: var(--gris); }
+.menu a[aria-current="page"] { background: var(--principal); color: #fff; font-weight: 600; }
+.menu .empresa { font-size: .8rem; color: #4a5568; margin: 0 .8rem 1rem; }
+main { padding: 1.75rem; max-width: 1200px; }
+.migas { font-size: .85rem; margin-bottom: .75rem; color: #4a5568; }
+.migas a { color: #4a5568; }
+.titulo-fila { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+
+
+/* ---------- Formulario ---------- */
+.dos-columnas { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 1.5rem; align-items: start; margin-top: 1.25rem; }
+.tarjeta { background: var(--blanco); border: 1px solid var(--gris); border-radius: 12px; padding: 1.5rem; }
+.campo { margin-bottom: 1.25rem; }
+label, .etiqueta { display: block; font-weight: 600; margin-bottom: .35rem; }
+.ayuda { font-size: .85rem; color: #4a5568; margin: .25rem 0 0; }
+.obligatorio { color: var(--dep-webs-texto); }
+input[type=text], select, textarea {
+    width: 100%; padding: .65rem .8rem; font: inherit; color: var(--texto);
+    border: 1px solid #b8bcc6; border-radius: 8px; background: var(--blanco);
+}
+textarea { min-height: 150px; resize: vertical; }
+input[type=file] { width: 100%; padding: .8rem; border: 2px dashed #b8bcc6; border-radius: 8px; background: #fafafa; font: inherit; }
+
+/* ---------- Tarjetas de departamento (radio + CSS, sin JavaScript) ---------- */
+fieldset { border: 0; padding: 0; margin: 0 0 1.25rem; }
+legend { font-weight: 600; padding: 0; margin-bottom: .5rem; }
+.departamentos { display: grid; grid-template-columns: repeat(2, 1fr); gap: .75rem; }
+.dep { position: relative; }
+.dep input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
+.dep .caja {
+    display: block; height: 100%; padding: .9rem 1rem .9rem 1.2rem;
+    border: 2px solid var(--gris); border-left-width: 8px; border-radius: 10px; background: var(--blanco);
+}
+.dep strong { display: block; color: var(--titulo); }
+.dep small { color: #4a5568; }
+.dep:hover .caja { background: #fafafa; }
+.dep input:focus-visible + .caja { outline: 3px solid var(--principal-claro); outline-offset: 2px; }
+.dep.apps .caja { border-left-color: var(--dep-apps); }
+.dep.webs .caja { border-left-color: var(--dep-webs); }
+.dep.soporte .caja { border-left-color: var(--dep-soporte); }
+.dep.otros .caja { border-left-color: var(--dep-otros); }
+.dep.apps input:checked + .caja { border-color: var(--dep-apps); background: var(--dep-apps-fondo); }
+.dep.webs input:checked + .caja { border-color: var(--dep-webs); background: var(--dep-webs-fondo); }
+.dep.soporte input:checked + .caja { border-color: var(--dep-soporte); background: var(--dep-soporte-fondo); }
+.dep.otros input:checked + .caja { border-color: var(--dep-otros); background: var(--dep-otros-fondo); }
+.dep input:checked + .caja strong::after { content: " ✓"; }
+
+/* ---------- Panel lateral ---------- */
+.lateral h2 { font-size: 1.05rem; margin-bottom: .75rem; }
+.lateral ol { margin: 0 0 1rem; padding-left: 1.2rem; }
+.lateral li { margin-bottom: .5rem; }
+.productos { list-style: none; padding: 0; margin: 0; }
+.productos li {
+    display: inline-block; background: var(--gris); border-radius: 999px;
+    padding: .15rem .7rem; margin: 0 .3rem .4rem 0; font-size: .85rem;
+}
+.aviso { background: #f6f0fd; border-left: 4px solid var(--principal); padding: .75rem 1rem; border-radius: 6px; font-size: .9rem; }
+
+/* ---------- Resumen por estado ---------- */
+.resumen { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; margin-bottom: 1.25rem; }
+.resumen a { display: block; background: var(--blanco); border: 1px solid var(--gris); border-radius: 12px; padding: .8rem 1rem; text-decoration: none; color: var(--texto); }
+.resumen a:hover { border-color: var(--principal); }
+.resumen strong { display: block; font-size: 1.6rem; color: var(--titulo); line-height: 1.1; }
+.resumen .atencion { border: 2px solid var(--principal); background: #f6f0fd; }
+
+/* ---------- Filtros (formulario GET normal: funciona sin JavaScript) ---------- */
+.filtros { background: var(--blanco); border: 1px solid var(--gris); border-radius: 12px; padding: 1rem; display: flex; flex-wrap: wrap; gap: .75rem 1rem; align-items: end; margin-bottom: 1rem; }
+.filtros label { display: block; font-size: .85rem; font-weight: 600; margin-bottom: .2rem; }
+.filtros input, .filtros select { font: inherit; color: var(--texto); padding: .5rem .7rem; border: 1px solid #b8bcc6; border-radius: 8px; background: var(--blanco); min-width: 0; }
+.filtros .buscar { flex: 1 1 220px; }
+.filtros .buscar input { width: 100%; }
+
+/* ---------- Tabla ---------- */
+.tabla-caja { background: var(--blanco); border: 1px solid var(--gris); border-radius: 12px; overflow: hidden; }
+table { width: 100%; border-collapse: collapse; }
+caption { text-align: left; padding: .8rem 1rem; font-weight: 600; color: var(--titulo); border-bottom: 1px solid var(--gris); }
+th { text-align: left; font-size: .8rem; text-transform: uppercase; letter-spacing: .03em; color: var(--texto-suave); padding: .6rem 1rem; background: #fafafa; border-bottom: 1px solid var(--gris); }
+td { padding: .8rem 1rem; border-bottom: 1px solid var(--gris); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+tbody tr:hover { background: #fcfaff; }
+td.num { white-space: nowrap; color: var(--texto-suave); font-variant-numeric: tabular-nums; }
+td .asunto { font-weight: 600; color: var(--texto); text-decoration: none; }
+td .asunto:hover { color: var(--principal); text-decoration: underline; }
+.nuevo { display: inline-block; margin-left: .5rem; font-size: .75rem; font-weight: 700; color: #fff; background: var(--principal); border-radius: 999px; padding: 0 .55rem; vertical-align: middle; }
+tr.sin-leer td .asunto { font-weight: 800; }
+
+/* Departamento: punto del color del logo + nombre en tono oscuro. Nunca solo color. */
+.dep { display: inline-flex; align-items: center; gap: .45rem; font-weight: 600; font-size: .9rem; white-space: nowrap; }
+.dep::before { content: ""; width: .8rem; height: .8rem; border-radius: 50%; flex: none; }
+.dep.apps { color: var(--dep-apps-texto); }     .dep.apps::before { background: var(--dep-apps); }
+.dep.webs { color: var(--dep-webs-texto); }     .dep.webs::before { background: var(--dep-webs); }
+.dep.soporte { color: var(--dep-soporte-texto); } .dep.soporte::before { background: var(--dep-soporte); }
+.dep.otros { color: var(--dep-otros-texto); }   .dep.otros::before { background: var(--dep-otros); box-shadow: inset 0 0 0 1px #c9b800; }
+
+/* Estado: forma + texto, en neutros y morados (los 4 colores de departamento están reservados). */
+.estado { display: inline-block; font-size: .8rem; font-weight: 700; padding: .15rem .65rem; border-radius: 999px; white-space: nowrap; border: 1.5px solid transparent; }
+.estado.abierto { background: #fff; color: var(--titulo); border-color: var(--titulo); }
+.estado.curso { background: #efe5fb; color: var(--titulo); }
+.estado.pendiente { background: var(--principal); color: #fff; }
+.estado.resuelto { background: var(--gris); color: var(--texto); }
+.estado.resuelto::before { content: "✓ "; }
+.estado.cerrado { background: var(--gris); color: var(--texto-suave); }
+
+.paginacion { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .75rem; padding-top: 1rem; font-size: .9rem; color: var(--texto-suave); }
+.paginacion nav a, .paginacion nav span { display: inline-block; min-width: 2.2rem; text-align: center; padding: .35rem .6rem; border: 1px solid var(--gris); border-radius: 8px; background: var(--blanco); text-decoration: none; margin-left: .2rem; }
+.paginacion nav span[aria-current="page"] { background: var(--principal); color: #fff; border-color: var(--principal); font-weight: 700; }
+
+td .secundario { display: block; color: var(--texto-suave); font-size: .85rem; line-height: 1.3; }
+/* ---------- Propio del detalle del ticket ---------- */
+.migas { font-size: .85rem; margin-bottom: .75rem; color: var(--texto-suave); }
+.migas a { color: var(--texto-suave); }
+.cabecera-ticket { background: var(--blanco); border: 1px solid var(--gris); border-left: 8px solid var(--dep-apps); border-radius: 12px; padding: 1.1rem 1.4rem; margin-bottom: 1.25rem; }
+.cabecera-ticket .num { color: var(--texto-suave); font-variant-numeric: tabular-nums; font-size: .9rem; }
+.cabecera-ticket h1 { font-size: 1.5rem; margin: .15rem 0 .6rem; }
+.cabecera-ticket .chips { display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: center; }
+.dos { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 1.5rem; align-items: start; }
+.tarjeta { background: var(--blanco); border: 1px solid var(--gris); border-radius: 12px; padding: 1.25rem 1.4rem; }
+.tarjeta h2 { font-size: 1.05rem; margin-bottom: .75rem; }
+
+/* Hilo */
+.hilo { list-style: none; margin: 0; padding: 0; }
+.hilo > li { margin-bottom: 1rem; }
+.mensaje { border: 1px solid var(--gris); border-radius: 12px; padding: 1rem 1.2rem; background: var(--blanco); }
+.mensaje.equipo { border-left: 6px solid var(--principal); }
+.mensaje.mio { background: #f6f0fd; }
+.mensaje header { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .25rem 1rem; margin-bottom: .5rem; font-size: .9rem; }
+.mensaje header strong { color: var(--titulo); }
+.mensaje header .rol { font-size: .75rem; font-weight: 700; color: #fff; background: var(--principal); border-radius: 999px; padding: 0 .55rem; margin-left: .4rem; }
+.mensaje header time { color: var(--texto-suave); }
+.mensaje p { margin: 0 0 .6rem; }
+.mensaje p:last-of-type { margin-bottom: 0; }
+.adjuntos { list-style: none; margin: .8rem 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: .5rem; }
+.adjuntos a { display: inline-block; text-decoration: none; background: var(--gris); color: var(--texto); border-radius: 8px; padding: .3rem .7rem; font-size: .85rem; }
+.adjuntos a:hover { background: #e0d6ef; }
+.adjuntos small { color: var(--texto-suave); }
+.evento { text-align: center; font-size: .85rem; color: var(--texto-suave); display: flex; align-items: center; gap: .75rem; }
+.evento::before, .evento::after { content: ""; flex: 1; height: 1px; background: var(--gris); }
+.evento span { max-width: 80%; }
+
+/* Responder */
+.responder h2 { margin-bottom: .25rem; }
+.responder .ayuda { font-size: .9rem; color: var(--texto-suave); margin: 0 0 .75rem; }
+.responder label { display: block; font-weight: 600; margin-bottom: .3rem; }
+.responder textarea { width: 100%; min-height: 130px; padding: .65rem .8rem; font: inherit; color: var(--texto); border: 1px solid #b8bcc6; border-radius: 8px; resize: vertical; }
+.responder input[type=file] { width: 100%; padding: .7rem; border: 2px dashed #b8bcc6; border-radius: 8px; background: #fafafa; font: inherit; margin-top: .75rem; }
+.acciones { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 1rem; align-items: center; }
+.cierre { margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--gris); font-size: .9rem; color: var(--texto-suave); }
+.cierre p { margin: 0 0 .6rem; }
+
+/* Lateral */
+.detalles { margin: 0; }
+.detalles dt { font-size: .8rem; text-transform: uppercase; letter-spacing: .03em; color: var(--texto-suave); margin-top: .8rem; }
+.detalles dt:first-child { margin-top: 0; }
+.detalles dd { margin: .1rem 0 0; font-weight: 600; }
+.detalles dd small { display: block; font-weight: 400; color: var(--texto-suave); }
+.aviso { background: #f6f0fd; border-left: 4px solid var(--principal); padding: .75rem 1rem; border-radius: 6px; font-size: .9rem; margin-top: 1rem; }
+
+@media (max-width: 860px) {
+    .dos { grid-template-columns: minmax(0, 1fr); }
+    .cabecera-ticket { padding: 1rem; }
+    .cabecera-ticket h1 { font-size: 1.25rem; }
+}
+
+/* ---------- Móvil: cada fila de la tabla pasa a ser una tarjeta ---------- */
+@media (max-width: 860px) {
+    .marco { grid-template-columns: minmax(0, 1fr); }
+    .menu { border-right: 0; border-bottom: 1px solid var(--gris); display: flex; flex-wrap: wrap; align-content: flex-start; gap: .25rem; padding: .75rem 1rem; }
+    .menu .empresa { width: 100%; margin: 0 0 .25rem; }
+    main { padding: 1rem; }
+    .cabecera .usuario span { display: none; }
+    .resumen { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    table, thead, tbody, tr, td, caption { display: block; }
+    thead { position: absolute; left: -9999px; } /* cabecera oculta a la vista pero no a lectores de pantalla */
+    tr { padding: .8rem 1rem; border-bottom: 1px solid var(--gris); }
+    tr:last-child { border-bottom: 0; }
+    td { border: 0; padding: .15rem 0; }
+    td::before { content: attr(data-etiqueta) ": "; font-size: .8rem; color: var(--texto-suave); }
+    td.asunto-celda::before, td.num::before { content: ""; }
+    td.asunto-celda { order: -1; }
+}
+
+/* Móvil: la fila de la cuadrícula no debe estirarse hasta la altura mínima de la página (dejaba un hueco bajo el menú) */
+@media (max-width: 860px) { .marco { align-content: start; } }
+@media (max-width: 860px) {
+    .dos-columnas { grid-template-columns: minmax(0, 1fr); }
+    .departamentos { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Botón con aspecto de enlace (el «Salir» de la cabecera es un formulario POST por seguridad: cierra la sesión). */
+.enlace { background: none; border: 0; padding: 0; font: inherit; color: var(--principal); text-decoration: underline; cursor: pointer; }
+.cabecera form { margin: 0; }
+.error-campo { color: var(--error); font-size: .9rem; margin: .3rem 0 0; font-weight: 600; }
+/* El borde de color del departamento en la cabecera del detalle (en el mockup era el verde de Aplicaciones). */
+.cabecera-ticket.soporte { border-left-color: var(--dep-soporte); }
+.cabecera-ticket.apps { border-left-color: var(--dep-apps); }
+.cabecera-ticket.webs { border-left-color: var(--dep-webs); }
+.cabecera-ticket.otros { border-left-color: var(--dep-otros); }
