@@ -180,7 +180,7 @@ public/css/app.css   hoja de estilos base (CSS propio)
 scripts/             dev.sh (entorno de desarrollo), db-backup.sh y db-restore.sh (copias)
 resources/views/     vistas Blade
 docs/plan/           encuadre, conservación de datos, bitácoras (en git)
-docs/plan/mockups/   27 mockups HTML (25 validados el 2026-11-09 + d/e del cambio de departamento: implementada E, pendiente de que la usuaria la confirme)
+docs/plan/mockups/   27 mockups HTML (25 validados el 2026-11-09 + d/e del cambio de departamento: E implementada y confirmada, D descartada)
 tests/Feature/       tests de comportamiento
 phpstan.neon         configuración de Larastan
 ```
