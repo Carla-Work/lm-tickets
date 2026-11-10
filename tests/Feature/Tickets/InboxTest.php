@@ -61,7 +61,7 @@ class InboxTest extends TestCase
         $this->actingAs($baja)->get(route('inbox'))->assertRedirect(route('login'));
     }
 
-    #[TestDox('R13: el agente NO ve los tickets de «Otros» en la bandeja; el administrador sí')]
+    #[TestDox('R13: un agente de Soporte o de Desarrollo y Diseño NO ve los tickets de Contabilidad en la bandeja; el administrador sí')]
     public function test_agent_does_not_see_other_department_admin_does(): void
     {
         $this->conAsunto('Ticket-normal-visible');
@@ -73,7 +73,7 @@ class InboxTest extends TestCase
             ->assertSee('Ticket-normal-visible')->assertSee('Ticket-otros-secreto');
     }
 
-    #[TestDox('R13: ni los recuentos, ni el selector de empresas, ni el de departamentos delatan «Otros» a un agente')]
+    #[TestDox('R13: ni los recuentos, ni el selector de empresas, ni el de departamentos delatan Contabilidad a un agente de otro equipo')]
     public function test_agent_counters_and_filters_do_not_leak_other(): void
     {
         // La empresa B solo tiene tickets de «Otros»: un agente no debe enterarse de que tiene tickets.
@@ -91,7 +91,33 @@ class InboxTest extends TestCase
         $this->assertContains(Department::Other, $admin->viewData('departments'));
     }
 
-    #[TestDox('Un agente que filtra por «Otros» a mano no obtiene nada')]
+    #[TestDox('R11/R13: el agente de Contabilidad ve SOLO Contabilidad (lista, recuentos, filtros y detalle) y no puede abrir los de otros departamentos')]
+    public function test_accounting_agent_sees_only_accounting(): void
+    {
+        $this->conAsunto('Factura-de-conta', Department::Other);
+        $soporte = $this->conAsunto('Soporte-oculto', Department::Support);
+
+        $respuesta = $this->actingAs($this->a['agCon'])->get(route('inbox'))->assertOk()
+            ->assertSee('Factura-de-conta')->assertDontSee('Soporte-oculto')->assertSee('1 de 1 tickets');
+        $this->assertSame([Department::Other], array_values($respuesta->viewData('departments')));
+
+        $this->actingAs($this->a['agCon'])->get(route('inbox', ['departamento' => 'support']))->assertOk()->assertSee('0 de 1 tickets')->assertDontSee('Soporte-oculto');
+        $this->actingAs($this->a['agCon'])->get(route('tickets.show', $soporte))->assertForbidden();
+    }
+
+    #[TestDox('En el detalle solo se ofrecen para asignar los agentes que pueden atender ese departamento: en Contabilidad solo su equipo; en los demás, no el de Contabilidad')]
+    public function test_assign_list_offers_only_eligible_agents(): void
+    {
+        $conta = $this->conAsunto('Lista-conta', Department::Other);
+        $soporte = $this->conAsunto('Lista-soporte', Department::Support);
+
+        $this->actingAs($this->a['admin'])->get(route('tickets.show', $conta))->assertOk()
+            ->assertSee('Agente Contabilidad')->assertDontSee('Agente Soporte')->assertDontSee('Agente Aplicaciones');
+        $this->actingAs($this->a['agSup'])->get(route('tickets.show', $soporte))->assertOk()
+            ->assertSee('Agente Soporte')->assertSee('Agente Aplicaciones')->assertDontSee('Agente Contabilidad');
+    }
+
+    #[TestDox('Un agente de otro equipo que filtra por Contabilidad a mano no obtiene nada')]
     public function test_agent_filtering_by_other_gets_nothing(): void
     {
         $this->conAsunto('Otros-escondido', Department::Other);
@@ -166,7 +192,7 @@ class InboxTest extends TestCase
             ->assertSee('Panel interno')->assertDontSee('Nuevo ticket')->assertDontSee('Mis tickets');
     }
 
-    #[TestDox('El detalle de un ticket «Otros» sigue siendo 403 para un agente aunque llegue desde la bandeja (R13)')]
+    #[TestDox('El detalle de un ticket de Contabilidad sigue siendo 403 para un agente de otro equipo aunque llegue desde la bandeja (R13)')]
     public function test_agent_cannot_open_other_ticket_detail(): void
     {
         $ticket = $this->conAsunto('Otros-detalle', Department::Other);

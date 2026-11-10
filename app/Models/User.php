@@ -11,6 +11,7 @@
 
 namespace App\Models;
 
+use App\Enums\Department;
 use App\Enums\Team;
 use App\Enums\UserRole;
 use App\Notifications\ResetPasswordNotification;
@@ -89,6 +90,32 @@ class User extends Authenticatable
     public function assignedTickets(): HasMany
     {
         return $this->hasMany(Ticket::class, 'assigned_to');
+    }
+
+    /**
+     * Valores de los departamentos que este empleado puede ver y atender (R11, R13, revisadas 2026-11-10):
+     *  - el administrador, todos (ve y reasigna; no responde, R10);
+     *  - un agente de Contabilidad, SOLO Contabilidad;
+     *  - cualquier otro agente, todos menos Contabilidad.
+     * Una sola definición para el ámbito Ticket::visibleTo y la policy: si cambia, cambia en los dos a la vez.
+     *
+     * @return list<string>
+     */
+    public function workableDepartments(): array
+    {
+        $all = array_map(fn (Department $d) => $d->value, Department::cases());
+
+        return match (true) {
+            $this->hasRole(UserRole::Admin) => $all,
+            $this->hasRole(UserRole::Agent) && $this->team === Team::Accounting => [Department::Other->value],
+            $this->hasRole(UserRole::Agent) => array_values(array_diff($all, [Department::Other->value])),
+            default => [],
+        };
+    }
+
+    public function canWorkOn(Department $department): bool
+    {
+        return in_array($department->value, $this->workableDepartments(), true);
     }
 
     /** ¿Tiene alguno de estos roles? */

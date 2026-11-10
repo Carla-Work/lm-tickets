@@ -70,7 +70,7 @@
             <form class="tarjeta peligro" action="{{ route('admin.staff.transfer') }}" method="post" aria-label="Traspasar el rol de administrador" style="margin-top:1.25rem">
                 @csrf
                 <h2>Traspasar el rol de administrador</h2>
-                <p class="sub" style="color:var(--texto)">Solo puede haber un administrador. Si quieres dejar de serlo, elige antes a quién pasa el rol. Tú pasarás a ser agente y dejarás de ver los tickets de «Otros». Los tickets que llevara la persona elegida quedan sin asignar.</p>
+                <p class="sub" style="color:var(--texto)">Solo puede haber un administrador. Si quieres dejar de serlo, elige antes a quién pasa el rol. Tú pasarás a ser agente del equipo que elijas y solo verás los tickets de ese equipo. Los tickets que llevara la persona elegida quedan sin asignar.</p>
                 @if ($candidates->isEmpty())
                     <p class="ayuda">No hay ningún agente en activo al que traspasar el rol.</p>
                 @else

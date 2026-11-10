@@ -163,12 +163,12 @@ class TicketIntegrityTest extends TestCase
         $ticket->delete();
     }
 
-    #[TestDox('El equipo que atiende un ticket se deduce de su departamento, y «Otros» no tiene equipo (R13)')]
+    #[TestDox('El equipo que atiende un ticket se deduce de su departamento, y Contabilidad (valor `other`) tiene el suyo (R13)')]
     public function test_team_is_derived_from_department(): void
     {
-        $this->assertSame('support', Department::Support->team()?->value);
-        $this->assertSame('applications', Department::WebApps->team()?->value);
-        $this->assertSame('applications', Department::Websites->team()?->value);
-        $this->assertNull(Department::Other->team());
+        $this->assertSame('support', Department::Support->team()->value);
+        $this->assertSame('applications', Department::WebApps->team()->value);
+        $this->assertSame('applications', Department::Websites->team()->value);
+        $this->assertSame('accounting', Department::Other->team()->value);
     }
 }

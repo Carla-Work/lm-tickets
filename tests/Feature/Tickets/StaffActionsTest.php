@@ -3,8 +3,8 @@
 /*
  * Acciones del equipo sobre un ticket: responder, nota interna, estado, asignar y cambiar de departamento.
  * Reglas: R2 (la nota no llega al cliente), R4/R15 (nadie reabre), R5 (todo deja evento), R10 (el administrador
- * solo gestiona «Otros»), R11 (cualquier agente asigna a cualquiera), R12 (cambio de departamento visible al
- * cliente), R13 (el agente no ve «Otros»), R16 (resolver exige explicar cómo).
+ * nunca responde), R11 (cualquier agente asigna a quien pueda atender el departamento), R12 (cambio de departamento
+ * visible al cliente), R13 (Contabilidad solo la ve su equipo y el administrador), R16 (resolver exige explicar cómo).
  * Cuándo tocarlo: al cambiar esas reglas. NO se adapta un test para que pase.
  */
 
@@ -51,7 +51,7 @@ class StaffActionsTest extends TestCase
         $this->assertSame(TicketStatus::PendingCustomer, $ticket->fresh()->status);
     }
 
-    #[TestDox('Un agente que NO lleva el ticket no responde al cliente (403) pero sí puede dejar una nota; el administrador no responde fuera de «Otros» (R10)')]
+    #[TestDox('Un agente que NO lleva el ticket no responde al cliente (403) pero sí puede dejar una nota; el administrador no responde en ningún departamento (R10)')]
     public function test_only_the_handler_replies(): void
     {
         $ticket = $this->ticket(Department::Support, TicketStatus::InProgress, 'agSup');
@@ -64,27 +64,35 @@ class StaffActionsTest extends TestCase
         $this->assertSame(MessageKind::Internal, TicketMessage::query()->where('ticket_id', $ticket->id)->firstOrFail()->kind);
     }
 
-    #[TestDox('En «Otros» el administrador responde y escribe notas; fuera de «Otros» sus notas se rechazan (R10)')]
-    public function test_admin_handles_other_only(): void
+    #[TestDox('En Contabilidad responde su agente asignado; el administrador no responde ni deja notas en ningún departamento (R10, revisada 2026-11-10)')]
+    public function test_accounting_agent_handles_and_admin_does_not(): void
     {
-        $otros = $this->ticket(Department::Other, TicketStatus::Open);
+        $conta = $this->ticket(Department::Other, TicketStatus::Open, 'agCon');
         $normal = $this->ticket(Department::Support, TicketStatus::Open);
 
-        $this->as('admin')->post(route('tickets.messages.store', $otros), ['mensaje' => 'Le llamo mañana'])->assertRedirect();
-        $this->as('admin')->post(route('tickets.notes.store', $otros), ['mensaje' => 'nota'])->assertRedirect();
-        $this->as('admin')->post(route('tickets.notes.store', $normal), ['mensaje' => 'nota'])->assertForbidden();
+        $this->as('agCon')->post(route('tickets.messages.store', $conta), ['mensaje' => 'Le paso el presupuesto'])->assertRedirect();
+        $this->as('agCon')->post(route('tickets.notes.store', $conta), ['mensaje' => 'nota'])->assertRedirect();
+        foreach ([$conta, $normal] as $ticket) {
+            $this->as('admin')->post(route('tickets.messages.store', $ticket), ['mensaje' => 'x'])->assertForbidden();
+            $this->as('admin')->post(route('tickets.notes.store', $ticket), ['mensaje' => 'nota'])->assertForbidden();
+        }
 
-        $this->assertSame(2, TicketMessage::query()->where('ticket_id', $otros->id)->count());
+        $this->assertSame(2, TicketMessage::query()->where('ticket_id', $conta->id)->count());
         $this->assertSame(0, TicketMessage::query()->where('ticket_id', $normal->id)->count());
     }
 
-    #[TestDox('R13: un agente no escribe ni deja notas en un ticket de «Otros»')]
-    public function test_agent_cannot_write_in_other(): void
+    #[TestDox('R13: los agentes de Soporte y Desarrollo y Diseño no escriben ni dejan notas en Contabilidad, y el de Contabilidad no escribe en los demás departamentos')]
+    public function test_agents_cannot_write_outside_their_scope(): void
     {
-        $ticket = $this->ticket(Department::Other, TicketStatus::Open);
+        $conta = $this->ticket(Department::Other, TicketStatus::Open);
+        $soporte = $this->ticket(Department::Support, TicketStatus::Open, 'agCon'); // asignado a quien no puede atenderlo
 
-        $this->as('agSup')->post(route('tickets.messages.store', $ticket), ['mensaje' => 'x'])->assertForbidden();
-        $this->as('agSup')->post(route('tickets.notes.store', $ticket), ['mensaje' => 'x'])->assertForbidden();
+        foreach (['agSup', 'agApp'] as $agente) {
+            $this->as($agente)->post(route('tickets.messages.store', $conta), ['mensaje' => 'x'])->assertForbidden();
+            $this->as($agente)->post(route('tickets.notes.store', $conta), ['mensaje' => 'x'])->assertForbidden();
+        }
+        $this->as('agCon')->post(route('tickets.messages.store', $soporte), ['mensaje' => 'x'])->assertForbidden();
+        $this->as('agCon')->post(route('tickets.notes.store', $soporte), ['mensaje' => 'x'])->assertForbidden();
     }
 
     #[TestDox('R2: la nota interna nunca llega al cliente: ni por la ruta de notas, ni en su detalle; y un cliente no puede crear notas')]
@@ -170,7 +178,7 @@ class StaffActionsTest extends TestCase
         $this->assertNotNull($resuelto->fresh()->closed_at);
     }
 
-    #[TestDox('Quien no lleva el ticket, el administrador fuera de «Otros» y los clientes no cambian el estado (403)')]
+    #[TestDox('Quien no lleva el ticket, el administrador y los clientes no cambian el estado (403)')]
     public function test_others_cannot_change_status(): void
     {
         $ticket = $this->ticket(Department::Support, TicketStatus::Open, 'agSup');
@@ -209,18 +217,27 @@ class StaffActionsTest extends TestCase
         $this->as('agApp')->post(route('tickets.messages.store', $ticket), ['mensaje' => 'Ya lo miro yo'])->assertRedirect();
     }
 
-    #[TestDox('El administrador reasigna fuera de «Otros» pero no en «Otros»; los clientes no asignan')]
-    public function test_admin_assigns_outside_other_only(): void
+    #[TestDox('Se asigna solo a quien puede atender el departamento: Contabilidad solo a su equipo y su equipo solo Contabilidad; el administrador reasigna en todos (R11)')]
+    public function test_assignment_respects_who_can_attend(): void
     {
-        $normal = $this->ticket(Department::Support, TicketStatus::Open);
-        $otros = $this->ticket(Department::Other, TicketStatus::Open);
+        $soporte = $this->ticket(Department::Support, TicketStatus::Open);
+        $conta = $this->ticket(Department::Other, TicketStatus::Open);
 
-        $this->as('admin')->post(route('tickets.assignment.update', $normal), ['asignado' => $this->a['agSup']->id])->assertRedirect();
-        $this->as('admin')->post(route('tickets.assignment.update', $otros), ['asignado' => $this->a['agSup']->id])->assertForbidden();
-        $this->as('cuA')->post(route('tickets.assignment.update', $normal), ['asignado' => $this->a['agSup']->id])->assertForbidden();
+        $this->as('admin')->post(route('tickets.assignment.update', $soporte), ['asignado' => $this->a['agApp']->id])->assertRedirect();
+        $this->as('admin')->post(route('tickets.assignment.update', $conta), ['asignado' => $this->a['agCon']->id])->assertRedirect();
+        $this->assertSame($this->a['agApp']->id, $soporte->fresh()->assigned_to);
+        $this->assertSame($this->a['agCon']->id, $conta->fresh()->assigned_to);
 
-        $this->assertSame($this->a['agSup']->id, $normal->fresh()->assigned_to);
-        $this->assertNull($otros->fresh()->assigned_to);
+        // Lo que NO vale: un ticket de Contabilidad a otro equipo, o uno de otro departamento a Contabilidad.
+        $otro = $this->ticket(Department::Other, TicketStatus::Open);
+        $this->as('admin')->post(route('tickets.assignment.update', $otro), ['asignado' => $this->a['agSup']->id])->assertSessionHasErrors('asignado');
+        $this->as('agCon')->post(route('tickets.assignment.update', $otro), ['asignado' => $this->a['agApp']->id])->assertSessionHasErrors('asignado');
+        $libre = $this->ticket(Department::Websites, TicketStatus::Open);
+        $this->as('admin')->post(route('tickets.assignment.update', $libre), ['asignado' => $this->a['agCon']->id])->assertSessionHasErrors('asignado');
+        $this->as('cuA')->post(route('tickets.assignment.update', $libre), ['asignado' => $this->a['agSup']->id])->assertForbidden();
+
+        $this->assertNull($otro->fresh()->assigned_to);
+        $this->assertNull($libre->fresh()->assigned_to);
     }
 
     #[TestDox('Solo se asigna a un agente en activo: no a un cliente, ni al administrador, ni a una cuenta de baja, ni a un id inventado')]
@@ -291,8 +308,8 @@ class StaffActionsTest extends TestCase
         $this->assertSame($deWebs->id, $ticket->fresh()->category_id);
     }
 
-    #[TestDox('Pasar un ticket a «Otros» vacía la asignación, deja los dos eventos y el agente va a la bandeja (ya no lo ve, R13)')]
-    public function test_moving_to_other_clears_assignment_and_hides_it_from_agents(): void
+    #[TestDox('Pasar un ticket a Contabilidad vacía la asignación (el asignado no la atiende), deja los dos eventos y el agente va a la bandeja (ya no lo ve, R13)')]
+    public function test_moving_to_accounting_clears_assignment_and_hides_it_from_other_teams(): void
     {
         $ticket = $this->ticket(Department::Support, TicketStatus::InProgress, 'agSup');
         $categoria = $this->categoria(Department::Other);
@@ -302,24 +319,28 @@ class StaffActionsTest extends TestCase
 
         $this->assertNull($ticket->fresh()->assigned_to);
         $retirada = TicketEvent::query()->where('ticket_id', $ticket->id)->where('type', TicketEventType::Assigned->value)->firstOrFail();
-        $this->assertSame('moved_to_other', $retirada->data['reason']);
+        $this->assertSame('department_changed', $retirada->data['reason']);
         $this->assertFalse($retirada->visible_to_customer);
         $this->as('agSup')->get(route('tickets.show', $ticket))->assertForbidden();
+        $this->as('agCon')->get(route('tickets.show', $ticket))->assertOk();
         $this->as('admin')->get(route('tickets.show', $ticket))->assertOk();
     }
 
-    #[TestDox('El administrador solo reclasifica los de «Otros» (R10, R12): puede sacarlos de ahí, y no mover uno normal')]
-    public function test_admin_reclassifies_only_other(): void
+    #[TestDox('Sacar un ticket de Contabilidad lo deja sin asignar si lo llevaba su agente, que ya no lo ve y va a la bandeja; el administrador no reclasifica nunca (R10, R12)')]
+    public function test_moving_out_of_accounting_and_admin_cannot_reclassify(): void
     {
-        $otros = $this->ticket(Department::Other, TicketStatus::Open);
+        $conta = $this->ticket(Department::Other, TicketStatus::Open, 'agCon');
         $normal = $this->ticket(Department::Support, TicketStatus::Open);
         $categoria = $this->categoria(Department::WebApps);
 
         $this->as('admin')->post(route('tickets.department.update', $normal), ['categoria' => $categoria->id])->assertForbidden();
-        $this->as('admin')->post(route('tickets.department.update', $otros), ['categoria' => $categoria->id])->assertRedirect(route('tickets.show', $otros));
+        $this->as('admin')->post(route('tickets.department.update', $conta), ['categoria' => $categoria->id])->assertForbidden();
+        $this->assertSame(Department::Other, $conta->fresh()->department);
 
-        $this->assertSame(Department::WebApps, $otros->fresh()->department);
-        $this->assertNull($otros->fresh()->assigned_to, 'al sacarlo de «Otros» queda sin asignar');
+        $this->as('agCon')->post(route('tickets.department.update', $conta), ['categoria' => $categoria->id])->assertRedirect(route('inbox'));
+        $this->assertSame(Department::WebApps, $conta->fresh()->department);
+        $this->assertNull($conta->fresh()->assigned_to, 'el agente de Contabilidad no puede atender Aplicaciones');
+        $this->as('agCon')->get(route('tickets.show', $conta))->assertForbidden();
     }
 
     #[TestDox('Los clientes no cambian el departamento (403) y en un ticket final nadie lo cambia')]

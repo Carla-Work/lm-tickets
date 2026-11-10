@@ -7,11 +7,12 @@
  * Trampas:
  *  - La categoría CUELGA del departamento (R6): al cambiar de departamento hay que elegir una categoría del
  *    nuevo; si se dejara la antigua, el ticket quedaría incoherente. Se valida aquí, no solo en el formulario.
- *  - Pasar a «Otros» VACÍA la asignación (decidido 2026-11-10): «Otros» lo lleva solo el administrador y el
- *    agente deja de verlo (R13); un ticket con un agente asignado que ya no puede abrirlo sería un ticket
- *    perdido. Queda su propio evento interno de asignación.
+ *  - Si la persona asignada NO puede atender el departamento nuevo (p. ej. un ticket de Soporte pasa a Contabilidad,
+ *    que solo lleva su equipo, o al revés) la asignación se VACÍA (decidido 2026-11-10): sería un ticket con un
+ *    responsable que ya no puede abrirlo. Queda su propio evento interno de asignación (`reason` = department_changed).
  *  - El cambio es visible al cliente (R12: «se avisa al cliente»); el correo llega en el paso 5.
- *  - Tras el cambio quien lo hizo puede haber perdido acceso (agente → «Otros»): el controlador lo tiene en cuenta.
+ *  - Tras el cambio quien lo hizo puede haber perdido acceso (p. ej. un agente lo pasa a Contabilidad): el controlador
+ *    lo tiene en cuenta.
  */
 
 namespace App\Actions\Tickets;
@@ -52,7 +53,7 @@ class ChangeDepartment
 
             $ticket->department = $to;
             $ticket->category_id = $category->id;
-            $clearsAssignee = $to === Department::Other && $previousAssignee !== null;
+            $clearsAssignee = $previousAssignee !== null && ! $previousAssignee->canWorkOn($to);
             if ($clearsAssignee) {
                 $ticket->assigned_to = null;
             }
@@ -72,7 +73,7 @@ class ChangeDepartment
                 $unassigned->ticket_id = $ticket->id;
                 $unassigned->actor_id = $actor->id;
                 $unassigned->type = TicketEventType::Assigned;
-                $unassigned->data = ['from' => $previousAssignee->id, 'from_name' => $previousAssignee->name, 'to' => null, 'to_name' => null, 'reason' => 'moved_to_other'];
+                $unassigned->data = ['from' => $previousAssignee->id, 'from_name' => $previousAssignee->name, 'to' => null, 'to_name' => null, 'reason' => 'department_changed'];
                 $unassigned->visible_to_customer = false;
                 $unassigned->save();
             }

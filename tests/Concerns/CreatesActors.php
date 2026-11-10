@@ -40,6 +40,7 @@ trait CreatesActors
             'caB' => User::factory()->companyAdmin()->forCompany($this->empresaB)->create(['name' => 'Admin empresa B']),
             'agSup' => User::factory()->agent(Team::Support)->create(['name' => 'Agente Soporte']),
             'agApp' => User::factory()->agent(Team::Applications)->create(['name' => 'Agente Aplicaciones']),
+            'agCon' => User::factory()->agent(Team::Accounting)->create(['name' => 'Agente Contabilidad']),
             'admin' => User::factory()->admin()->create(['name' => 'Administrador']),
         ];
     }

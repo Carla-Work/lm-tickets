@@ -191,7 +191,7 @@
                             <select id="g-mover" name="categoria" required>
                                 @foreach (\App\Enums\Department::cases() as $department)
                                     @continue($department === $ticket->department)
-                                    <optgroup label="{{ $department === \App\Enums\Department::Other ? 'Otros (solo lo ve el administrador)' : $department->label() }}">
+                                    <optgroup label="{{ $department === \App\Enums\Department::Other ? 'Contabilidad (solo la ve su equipo y el administrador)' : $department->label() }}">
                                         @foreach ($categories[$department->value] ?? [] as $category)
                                             <option value="{{ $category->id }}" @selected((string) old('categoria') === (string) $category->id)>{{ $category->name }}</option>
                                         @endforeach
@@ -202,9 +202,7 @@
                             <button type="submit" class="boton secundario">Mover ticket</button>
                             <p class="nota-ayuda fuerte">Se avisará al cliente por correo y en su panel.</p>
                             <p class="nota-ayuda">Elige el tipo de incidencia: el departamento es el del grupo donde está. No aparece el departamento actual.</p>
-                            @if ($ticket->department !== \App\Enums\Department::Other)
-                                <p class="nota-ayuda">Si eliges un tipo de «Otros», solo lo verá el administrador, quedará sin asignar y tú dejarás de verlo.</p>
-                            @endif
+                            <p class="nota-ayuda">Si el departamento nuevo lo atiende otro equipo, dejarás de ver el ticket; y si lo llevaba alguien que no puede atenderlo, quedará sin asignar.</p>
                         </form>
                     @endif
                 </aside>

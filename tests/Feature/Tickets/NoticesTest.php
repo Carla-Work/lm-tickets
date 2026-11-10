@@ -92,7 +92,7 @@ class NoticesTest extends TestCase
         }
     }
 
-    #[TestDox('Aplicaciones y Páginas web avisan al equipo Desarrollo y Diseño; «Otros» solo al administrador (R13: ningún agente)')]
+    #[TestDox('Aplicaciones y Páginas web avisan al equipo Desarrollo y Diseño; Contabilidad solo a su equipo (R13: ningún otro agente ni el administrador)')]
     public function test_team_routing_by_department(): void
     {
         $this->abrirTicket('cuA', Department::WebApps);
@@ -101,7 +101,8 @@ class NoticesTest extends TestCase
 
         $this->assertSame(['new_unassigned', 'new_unassigned'], $this->avisos('agApp'));
         $this->assertSame([], $this->avisos('agSup'));
-        $this->assertSame(['new_unassigned'], $this->avisos('admin'));
+        $this->assertSame(['new_unassigned'], $this->avisos('agCon'));
+        $this->assertSame([], $this->avisos('admin'));
     }
 
     #[TestDox('Una cuenta de baja del equipo no recibe avisos')]
@@ -227,7 +228,7 @@ class NoticesTest extends TestCase
         $this->assertSame([], $this->avisos('agApp'), 'sigue asignado a agSup: no es "sin asignar"');
     }
 
-    #[TestDox('Si el ticket queda sin asignar tras el cambio de departamento, el equipo nuevo recibe «sin asignar»; pasar a «Otros» avisa al administrador, no a ningún agente')]
+    #[TestDox('Si el ticket queda sin asignar tras el cambio de departamento, el equipo nuevo recibe «sin asignar»; pasar a Contabilidad avisa a su equipo, no a los demás agentes')]
     public function test_department_change_on_unassigned_notifies_new_team(): void
     {
         $libre = $this->ticket(Department::Support, TicketStatus::Open);
@@ -236,7 +237,8 @@ class NoticesTest extends TestCase
 
         $llevado = $this->ticket(Department::Support, TicketStatus::InProgress, 'agSup');
         $this->as('agSup')->post(route('tickets.department.update', $llevado), ['categoria' => Category::factory()->forDepartment(Department::Other)->create()->id]);
-        $this->assertSame(['new_unassigned'], $this->avisos('admin'), 'la asignación se vació al pasar a Otros');
+        $this->assertSame(['new_unassigned'], $this->avisos('agCon'), 'la asignación se vació al pasar a Contabilidad');
+        $this->assertSame([], $this->avisos('admin'));
         $this->assertSame([], $this->avisos('agSup'), 'quien lo movió no se avisa a sí mismo');
     }
 

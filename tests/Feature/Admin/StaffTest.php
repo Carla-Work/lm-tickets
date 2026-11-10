@@ -93,6 +93,20 @@ class StaffTest extends TestCase
         $this->como('admin')->post(route('admin.staff.store'), ['name' => 'Otro', 'email' => 'otro@lingmarco.example', 'team' => 'inventado'])->assertSessionHasErrors('team');
     }
 
+    #[TestDox('Se puede crear un agente en el equipo Contabilidad y pasar a otro agente a Contabilidad; el agente queda confinado a ese departamento')]
+    public function test_accounting_team_can_be_assigned(): void
+    {
+        Notification::fake();
+
+        $this->como('admin')->post(route('admin.staff.store'), ['name' => 'Comercial', 'email' => 'comercial@lingmarco.example', 'team' => 'accounting'])->assertRedirect();
+        $nuevo = User::where('email', 'comercial@lingmarco.example')->firstOrFail();
+        $this->assertSame(Team::Accounting, $nuevo->team);
+        $this->assertSame(['other'], $nuevo->workableDepartments());
+
+        $this->como('admin')->post(route('admin.staff.team', $this->a['agSup']), ['team' => 'accounting'])->assertRedirect();
+        $this->assertSame(['other'], $this->a['agSup']->fresh()->workableDepartments());
+    }
+
     #[TestDox('Cambiar el equipo: solo de un agente, queda auditado y los tickets que lleva no se mueven')]
     public function test_change_team(): void
     {

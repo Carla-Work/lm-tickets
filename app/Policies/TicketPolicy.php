@@ -2,14 +2,15 @@
 
 /*
  * Quién puede hacer qué sobre un ticket. LA matriz está en docs/plan/autorizacion.md; esto la implementa.
- * Cuándo tocarlo: solo si la usuaria cambia una regla (R1, R2, R4, R10-R13, R15). Cada cambio exige
+ * Cuándo tocarlo: solo si la usuaria cambia una regla (R1, R2, R4, R10-R13, R15). R10/R11/R13 revisadas el
+ * 2026-11-10: «Otros» pasa a ser «Contabilidad», lo atiende un equipo propio y el administrador ya no tiene excepción. Cada cambio exige
  * cambiar la matriz del documento y el test de TicketActionsTest.
  *
  * Reglas de oro (no «simplificar» sin leer el documento):
  *  - Lo no permitido se deniega. Ante una duda sin decidir, lo más restrictivo.
  *  - Estas comprobaciones deben coincidir SIEMPRE con el ámbito Ticket::visibleTo (lo vigila
  *    TicketVisibilityTest): la policy responde por un ticket, el ámbito filtra las listas.
- *  - «Lo gestiona» = el agente ASIGNADO (ticket que no es de «Otros») o el administrador (solo «Otros»).
+ *  - «Lo gestiona» = el agente ASIGNADO que puede atender ese departamento. El administrador nunca.
  *    Un agente no responde en un ticket ajeno o sin asignar sin asignárselo antes.
  *  - Los estados finales (Resuelto, Cerrado) cierran puertas, y NADIE reabre (R15).
  *
@@ -36,8 +37,7 @@ class TicketPolicy
         return match ($user->getAttribute('role')) {
             UserRole::CompanyUser => $ticket->company_id === $user->company_id && $ticket->requester_id === $user->id,
             UserRole::CompanyAdmin => $ticket->company_id === $user->company_id,
-            UserRole::Agent => ! $ticket->isOther(),   // R13: los agentes no ven «Otros»
-            UserRole::Admin => true,
+            UserRole::Agent, UserRole::Admin => $user->canWorkOn($ticket->department), // R11, R13: según equipo; el administrador, todo
             default => false,
         };
     }
@@ -75,8 +75,7 @@ class TicketPolicy
 
         return match ($user->getAttribute('role')) {
             UserRole::Agent => $this->view($user, $ticket), // decidido: notas en cualquier ticket que ve, aunque sea ajeno
-            UserRole::Admin => $ticket->isOther(),          // R10: fuera de «Otros» es de solo lectura
-            default => false,
+            default => false,                               // R10: el administrador es de solo lectura (sin excepción desde 2026-11-10)
         };
     }
 
@@ -107,8 +106,9 @@ class TicketPolicy
     }
 
     /**
-     * Reasignar (R11): cualquier agente, cualquier ticket que ve (también del otro equipo). El administrador
-     * también puede (decidido) salvo en «Otros», que no tiene asignado. Bloqueado en estados finales.
+     * Reasignar (R11): cualquier agente, cualquier ticket que ve (también del otro equipo); el administrador, en
+     * cualquiera (decidido). A QUIÉN se puede asignar lo decide AssignTicket (que pueda atender el departamento).
+     * Bloqueado en estados finales.
      */
     public function assign(User $user, Ticket $ticket): bool
     {
@@ -116,16 +116,12 @@ class TicketPolicy
             return false;
         }
 
-        return match ($user->getAttribute('role')) {
-            UserRole::Agent => $this->view($user, $ticket),
-            UserRole::Admin => ! $ticket->isOther(),
-            default => false,
-        };
+        return $user->hasRole(UserRole::Agent, UserRole::Admin) && $this->view($user, $ticket);
     }
 
     /**
-     * Cambiar el departamento (R12): cualquier agente en lo que ve; el administrador SOLO en «Otros»
-     * (para sacar de ahí un ticket mal categorizado). Bloqueado en estados finales.
+     * Cambiar el departamento (R12): cualquier agente en lo que ve. El administrador NO (desde 2026-11-10 ve y
+     * reasigna, como en todos los departamentos). Bloqueado en estados finales.
      */
     public function changeDepartment(User $user, Ticket $ticket): bool
     {
@@ -135,7 +131,6 @@ class TicketPolicy
 
         return match ($user->getAttribute('role')) {
             UserRole::Agent => $this->view($user, $ticket),
-            UserRole::Admin => $ticket->isOther(),
             default => false,
         };
     }
@@ -162,13 +157,9 @@ class TicketPolicy
         return $ticket->requester_id === $user->id && $ticket->company_id === $user->company_id;
     }
 
-    /** «Lo gestiona»: el agente asignado (no «Otros») o el administrador (solo «Otros»). */
+    /** «Lo gestiona»: SOLO el agente asignado, y siempre que pueda atender el departamento. El administrador nunca (R10). */
     private function handles(User $user, Ticket $ticket): bool
     {
-        return match ($user->getAttribute('role')) {
-            UserRole::Agent => ! $ticket->isOther() && $ticket->assigned_to === $user->id,
-            UserRole::Admin => $ticket->isOther(),
-            default => false,
-        };
+        return $user->hasRole(UserRole::Agent) && $ticket->assigned_to === $user->id && $user->canWorkOn($ticket->department);
     }
 }

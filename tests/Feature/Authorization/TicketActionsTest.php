@@ -2,9 +2,11 @@
 
 /*
  * Quién puede HACER qué sobre un ticket, situación por situación. Es la matriz de
- * docs/plan/autorizacion.md convertida en test: reglas R1, R2, R4, R10, R11, R12, R13 y R15.
+ * docs/plan/autorizacion.md convertida en test: reglas R1, R2, R4, R10, R11, R12, R13 y R15 (con los equipos
+ * Soporte, Desarrollo y Diseño y Contabilidad).
  * Cuándo tocarlo: solo si la usuaria cambia una regla; cambiar la matriz del documento Y este test.
- * Si falla, se arregla la policy o se discute la regla: NO se adapta el test.
+ * Si falla, se arregla la policy o se discute la regla: NO se adapta el test. (Excepción documentada: el 2026-11-10 la
+ * usuaria cambió R10/R11/R13 —«Otros» pasa a «Contabilidad», con equipo propio— y por eso se reescribió esa sección.)
  *
  * CÓMO LEERLO: cada test describe UNA situación (departamento, estado, quién lo lleva) y lista, por
  * rol, lo que SE PUEDE hacer. Todo lo que no figure en la lista se comprueba como DENEGADO. Así es
@@ -158,46 +160,75 @@ class TicketActionsTest extends TestCase
         $this->assertFalse($this->a['agSup']->can('reply', $ticket->fresh()));
     }
 
-    // ---------- Otros: solo el administrador ----------
+    // ---------- Contabilidad (valor `other`): solo su equipo; el administrador ve y reasigna ----------
+    // Reglas revisadas el 2026-11-10 por decisión de la usuaria (antes «Otros» lo gestionaba solo el administrador).
 
-    #[TestDox('«Otros» abierto: lo gestiona SOLO el administrador (incluido pasarlo a otro departamento); ningún agente lo ve ni lo toca; nadie puede «asignarlo» (R13)')]
-    public function test_other_open(): void
+    #[TestDox('Contabilidad abierto y sin asignar: solo su equipo lo ve y lo toca (notas, asignar, reclasificar); los demás agentes no lo ven; el administrador ve y reasigna (R10, R13)')]
+    public function test_accounting_open_unassigned(): void
     {
         $this->assertPermissions($this->ticket(Department::Other, TicketStatus::Open), [
             'cuA' => ['view', 'reply', 'markResolved'],
             'caA' => ['view'],
-            'admin' => ['view', 'viewInternal', 'reply', 'addNote', 'resolve', 'updateStatus', 'changeDepartment'],
+            'agCon' => ['view', 'viewInternal', 'addNote', 'assign', 'changeDepartment'],
+            'admin' => ['view', 'viewInternal', 'assign'],
         ]);
     }
 
-    #[TestDox('«Otros» con un agente asignado de antes (p. ej. un ticket que se movió a «Otros»): el agente pierde TODO (R13)')]
-    public function test_other_with_stale_assignee(): void
+    #[TestDox('Contabilidad asignado a su agente: ese agente lo gestiona; el administrador sigue sin poder responder ni cambiar estados (R10)')]
+    public function test_accounting_assigned(): void
+    {
+        $this->assertPermissions($this->ticket(Department::Other, TicketStatus::InProgress, 'agCon'), [
+            'cuA' => ['view', 'reply', 'markResolved'],
+            'caA' => ['view'],
+            'agCon' => ['view', 'viewInternal', 'reply', 'addNote', 'resolve', 'updateStatus', 'assign', 'changeDepartment'],
+            'admin' => ['view', 'viewInternal', 'assign'],
+        ]);
+    }
+
+    #[TestDox('Contabilidad con un agente de otro equipo asignado de antes: ese agente pierde TODO (R13) y no puede gestionarlo aunque figure como responsable')]
+    public function test_accounting_with_stale_assignee(): void
     {
         $this->assertPermissions($this->ticket(Department::Other, TicketStatus::Open, 'agApp'), [
             'cuA' => ['view', 'reply', 'markResolved'],
             'caA' => ['view'],
-            'admin' => ['view', 'viewInternal', 'reply', 'addNote', 'resolve', 'updateStatus', 'changeDepartment'],
+            'agCon' => ['view', 'viewInternal', 'addNote', 'assign', 'changeDepartment'],
+            'admin' => ['view', 'viewInternal', 'assign'],
         ]);
     }
 
-    #[TestDox('«Otros» resuelto: el administrador escribe y cierra; ya no puede cambiarlo de departamento (estado final)')]
-    public function test_other_resolved(): void
+    #[TestDox('Contabilidad resuelto: su agente escribe y cierra pero no reasigna ni reclasifica (estado final); el administrador solo mira')]
+    public function test_accounting_resolved(): void
     {
-        $this->assertPermissions($this->ticket(Department::Other, TicketStatus::Resolved), [
+        $this->assertPermissions($this->ticket(Department::Other, TicketStatus::Resolved, 'agCon'), [
             'cuA' => ['view', 'createRelated'],
             'caA' => ['view', 'createRelated'],
-            'admin' => ['view', 'viewInternal', 'reply', 'addNote', 'close'],
-        ]);
-    }
-
-    #[TestDox('«Otros» cerrado: nadie escribe; el administrador solo mira')]
-    public function test_other_closed(): void
-    {
-        $this->assertPermissions($this->ticket(Department::Other, TicketStatus::Closed), [
-            'cuA' => ['view', 'createRelated'],
-            'caA' => ['view', 'createRelated'],
+            'agCon' => ['view', 'viewInternal', 'reply', 'addNote', 'close'],
             'admin' => ['view', 'viewInternal'],
         ]);
+    }
+
+    #[TestDox('Contabilidad cerrado: nadie escribe; su equipo y el administrador solo miran')]
+    public function test_accounting_closed(): void
+    {
+        $this->assertPermissions($this->ticket(Department::Other, TicketStatus::Closed, 'agCon'), [
+            'cuA' => ['view', 'createRelated'],
+            'caA' => ['view', 'createRelated'],
+            'agCon' => ['view', 'viewInternal'],
+            'admin' => ['view', 'viewInternal'],
+        ]);
+    }
+
+    #[TestDox('El agente de Contabilidad no tiene NINGÚN permiso sobre tickets de otros departamentos, ni siquiera si figura como asignado')]
+    public function test_accounting_agent_is_confined_to_accounting(): void
+    {
+        foreach ([Department::Support, Department::WebApps, Department::Websites] as $departamento) {
+            foreach (TicketStatus::cases() as $estado) {
+                $ticket = $this->ticket($departamento, $estado, 'agCon');
+                foreach (self::ABILITIES as $habilidad) {
+                    $this->assertFalse($this->a['agCon']->can($habilidad, $ticket), "agCon «{$habilidad}» ({$departamento->value}, {$estado->value})");
+                }
+            }
+        }
     }
 
     // ---------- Reglas transversales ----------

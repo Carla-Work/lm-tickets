@@ -68,10 +68,10 @@ class AttachmentAccessTest extends TestCase
         $this->assertDownloads($this->adjuntoEn($this->ticket(Department::WebApps, assignedTo: 'agApp'), nota: true), ['agApp', 'agSup', 'admin']);
     }
 
-    #[TestDox('Adjunto de un ticket de «Otros»: lo descargan el autor, su administrador de empresa y el administrador; ningún agente (R13)')]
+    #[TestDox('Adjunto de un ticket de Contabilidad: lo descargan el autor, su administrador de empresa, el administrador y el agente de Contabilidad; ningún otro agente (R13)')]
     public function test_other_ticket_attachment_download(): void
     {
-        $this->assertDownloads($this->adjuntoEn($this->ticket(Department::Other), nota: false), ['cuA', 'caA', 'admin']);
+        $this->assertDownloads($this->adjuntoEn($this->ticket(Department::Other), nota: false), ['cuA', 'caA', 'admin', 'agCon']);
     }
 
     #[TestDox('Un adjunto de un ticket que NO ve nadie de otra empresa tampoco se puede descargar aunque se conozca su identificador (R1)')]

@@ -59,12 +59,6 @@ class Ticket extends Model
         ];
     }
 
-    /** ¿Es un ticket del departamento «Otros»? Solo lo ven y lo atienden el administrador y el cliente (R13). */
-    public function isOther(): bool
-    {
-        return $this->getAttribute('department') === Department::Other;
-    }
-
     /**
      * Los tickets que este usuario puede VER (R1, R11, R13). ÚNICA vía permitida para construir una
      * lista, un buscador o un contador: sin este filtro, una consulta cualquiera entrega tickets ajenos.
@@ -82,7 +76,7 @@ class Ticket extends Model
         return match ($user->getAttribute('role')) {
             UserRole::CompanyUser => $query->where('company_id', $user->company_id)->where('requester_id', $user->id),
             UserRole::CompanyAdmin => $query->where('company_id', $user->company_id),
-            UserRole::Agent => $query->where('department', '!=', Department::Other->value),
+            UserRole::Agent => $query->whereIn('department', $user->workableDepartments()), // R11/R13: según su equipo
             UserRole::Admin => $query,
             default => $query->whereRaw('1 = 0'), // un rol desconocido no ve nada: ante la duda, denegar
         };

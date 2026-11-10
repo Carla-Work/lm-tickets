@@ -164,7 +164,8 @@ class TicketController extends Controller
                 'user' => $user, 'ticket' => $ticket, 'thread' => $thread, 'related' => $related,
                 // Para los formularios de «Gestión»: agentes a quienes asignar (nunca el administrador, ver AssignTicket)
                 // y categorías activas agrupadas por departamento (el cambio de departamento exige una del nuevo, R6).
-                'agents' => User::query()->where('role', UserRole::Agent->value)->whereNotNull('activated_at')->whereNull('deactivated_at')->orderBy('name')->get(),
+                'agents' => User::query()->where('role', UserRole::Agent->value)->whereNotNull('activated_at')->whereNull('deactivated_at')->orderBy('name')->get()
+                    ->filter(fn (User $agent) => $agent->canWorkOn($ticket->department))->values(), // solo quien puede atenderlo (AssignTicket)
                 'categories' => Category::query()->where('active', true)->orderBy('name')->get()->groupBy(fn (Category $c) => $c->department->value),
             ]);
         }

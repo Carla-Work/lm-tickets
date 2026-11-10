@@ -12,7 +12,8 @@
  *  - Las NOTAS INTERNAS no avisan a nadie (R2): ningún método de aquí se llama al escribir una nota.
  *  - El cambio automático de estado cuando el cliente responde (R14) no avisa: el aviso ya es el de la respuesta.
  *  - «Ticket sin asignar» va al equipo del departamento (propuesta): Soporte → equipo Soporte; Aplicaciones y
- *    Páginas web → equipo Desarrollo y Diseño; Otros → el administrador (R13: solo él lo lleva).
+ *    Páginas web → equipo Desarrollo y Diseño; Contabilidad → equipo Contabilidad (el administrador no recibe estos
+ *    avisos: ve todos los tickets en su bandeja).
  *  - El cliente que responde avisa a quien lo lleva; si nadie, al equipo del departamento.
  *  - Que el cliente marque «resuelto» avisa a quien lo lleva para que lo cierre (propuesta de Claude, no está en el mockup).
  *  - Un fallo al avisar (cola, correo) se registra con report() y NO deshace ni rompe la acción ya guardada.
@@ -120,7 +121,8 @@ class TicketNotifier
     }
 
     /**
-     * Agentes del equipo que atiende ese departamento; para «Otros», el administrador.
+     * Agentes del equipo que atiende ese departamento (Contabilidad tiene el suyo; el administrador no recibe estos avisos:
+     * ve todos los tickets en su bandeja).
      *
      * @return Collection<int, User>
      */
@@ -128,11 +130,7 @@ class TicketNotifier
     {
         $query = User::query()->whereNotNull('activated_at')->whereNull('deactivated_at');
 
-        return match ($department) {
-            Department::Other => $query->where('role', UserRole::Admin->value)->get(),
-            Department::Support => $query->where('role', UserRole::Agent->value)->where('team', 'support')->get(),
-            Department::WebApps, Department::Websites => $query->where('role', UserRole::Agent->value)->where('team', 'applications')->get(),
-        };
+        return $query->where('role', UserRole::Agent->value)->where('team', $department->team()->value)->get();
     }
 
     /**

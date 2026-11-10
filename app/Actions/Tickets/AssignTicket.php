@@ -5,11 +5,12 @@
  * Cuándo tocarla: al cambiar quién puede recibir un ticket o qué se registra al reasignar.
  *
  * Trampas:
- *  - Solo se puede asignar a un AGENTE operativo (no a un cliente, ni a una cuenta de baja, ni al administrador:
- *    el administrador no responde fuera de «Otros» (R10) y un ticket asignado a quien no puede atenderlo
- *    se quedaría sin dueño). El cambio de una persona a otra del OTRO equipo es válido (R11).
- *  - Quién puede asignar lo decide la policy `assign` (bloquea estados finales y «Otros»); se recomprueba
- *    aquí con el ticket releído y bloqueado.
+ *  - Solo se puede asignar a un AGENTE operativo QUE PUEDA ATENDER el departamento del ticket (no a un cliente, ni a
+ *    una cuenta de baja, ni al administrador, que no responde, R10; ni a un agente de Contabilidad un ticket de
+ *    otro departamento, ni a uno de otro equipo un ticket de Contabilidad): asignado a quien no puede abrirlo
+ *    se quedaría sin dueño. Pasar de un equipo a otro entre Soporte y Desarrollo y Diseño es válido (R11).
+ *  - Quién puede asignar lo decide la policy `assign` (bloquea estados finales); se recomprueba aquí con el
+ *    ticket releído y bloqueado.
  *  - El evento guarda los NOMBRES además de los ids: el historial debe seguir diciendo lo que pasó aunque
  *    la persona cambie de nombre. Es interno (no lo ve el cliente).
  */
@@ -36,8 +37,8 @@ class AssignTicket
             $ticket = Ticket::query()->lockForUpdate()->findOrFail($ticket->id);
             Gate::forUser($actor)->authorize('assign', $ticket);
 
-            if ($to !== null && ! ($to->hasRole(UserRole::Agent) && $to->isOperational())) {
-                throw ValidationException::withMessages(['asignado' => 'Solo se puede asignar a un agente en activo.']);
+            if ($to !== null && ! ($to->hasRole(UserRole::Agent) && $to->isOperational() && $to->canWorkOn($ticket->department))) {
+                throw ValidationException::withMessages(['asignado' => 'Solo se puede asignar a un agente en activo que atienda este departamento.']);
             }
             if ($ticket->assigned_to === $to?->id) {
                 throw ValidationException::withMessages(['asignado' => 'El ticket ya está así asignado.']);

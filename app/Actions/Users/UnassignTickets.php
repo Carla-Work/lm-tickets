@@ -4,8 +4,7 @@
  * Quita a una persona los tickets que lleva y no están cerrados, dejando constancia (R5) en cada uno.
  * Cuándo tocarlo: si cambia qué ocurre con los tickets de quien deja de poder llevarlos.
  *
- * Por qué existe: un agente de baja, o el agente que pasa a administrador (que no responde fuera de «Otros»,
- * R10), seguiría figurando como responsable de tickets que ya no puede atender; quedarían huérfanos de verdad
+ * Por qué existe: un agente de baja, o el agente que pasa a administrador (que nunca responde, R10), seguiría figurando como responsable de tickets que ya no puede atender; quedarían huérfanos de verdad
  * (nadie los ve en «Sin asignar»). Decisión de Claude (2026-11-10), pendiente de confirmar por la usuaria.
  *
  * Trampas:

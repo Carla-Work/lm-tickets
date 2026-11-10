@@ -225,17 +225,17 @@ class CriticalFlowTest extends TestCase
         // ---- Lo que no debe haber ocurrido en ningún momento ----
         $this->assertSame([], $this->avisos('cuB'), 'R1: otra empresa no recibió nada');
         $this->assertSame([], $this->avisos('caA'), 'el administrador de empresa no recibe avisos de tickets ajenos');
-        $this->assertSame([], $this->avisos('admin'), 'R13: el administrador no se entera de lo que no es «Otros»');
+        $this->assertSame([], $this->avisos('admin'), 'el administrador no recibe avisos de tickets nuevos: los ve en su bandeja');
         $this->assertSame(2, Ticket::query()->count());
         $this->assertSame([], Storage::disk('public')->allFiles());
     }
 
     // =====================================================================================================
-    //  «OTROS»: SOLO EL ADMINISTRADOR (R8–R13)
+    //  CONTABILIDAD (valor `other`): SOLO SU EQUIPO Y EL ADMINISTRADOR QUE VE Y REASIGNA (R10–R13, revisadas 2026-11-10)
     // =====================================================================================================
 
-    #[TestDox('Flujo de «Otros»: solo lo atiende el administrador; ningún agente lo ve ni se entera (R10, R13)')]
-    public function test_the_other_department_flow_belongs_to_the_admin(): void
+    #[TestDox('Flujo de Contabilidad: lo atiende su equipo; los otros agentes no lo ven ni se enteran y el administrador lo ve y reasigna pero no responde (R10, R13)')]
+    public function test_the_accounting_flow_belongs_to_its_team(): void
     {
         $categoria = Category::factory()->forDepartment(Department::Other)->create();
 
@@ -246,10 +246,13 @@ class CriticalFlowTest extends TestCase
         $ticket = Ticket::query()->firstOrFail();
         $this->salir();
 
-        // Los agentes: ni aviso, ni lista, ni detalle, ni adjuntos.
+        // Avisa al equipo de Contabilidad, no a los demás agentes ni al administrador.
         $this->assertSame([], $this->avisos('agSup'));
         $this->assertSame([], $this->avisos('agApp'));
-        $this->assertSame(['new_unassigned'], $this->avisos('admin'));
+        $this->assertSame(['new_unassigned'], $this->avisos('agCon'));
+        $this->assertSame([], $this->avisos('admin'));
+
+        // Los agentes de otros equipos: ni lista, ni detalle, ni escritura.
         foreach (['agSup', 'agApp'] as $agente) {
             $this->entrar($agente);
             $this->get(route('inbox'))->assertOk()->assertDontSee('Presupuesto de licencias');
@@ -259,9 +262,18 @@ class CriticalFlowTest extends TestCase
             $this->salir();
         }
 
-        // El administrador sí: lo ve, responde, deja nota, resuelve y cierra («Otros» no tiene asignado).
+        // El administrador lo ve, pero no responde ni cambia estados.
         $this->entrar('admin');
         $this->get(route('inbox'))->assertOk()->assertSee('Presupuesto de licencias');
+        $this->get(route('tickets.show', $ticket))->assertOk();
+        $this->post(route('tickets.messages.store', $ticket), ['mensaje' => 'x'])->assertForbidden();
+        $this->post(route('tickets.status.update', $ticket), ['estado' => 'in_progress'])->assertForbidden();
+        $this->salir();
+
+        // Su equipo lo recoge, responde, deja nota, resuelve y cierra.
+        $this->entrar('agCon');
+        $this->get(route('inbox'))->assertOk()->assertSee('Presupuesto de licencias');
+        $this->post(route('tickets.assignment.update', $ticket), ['asignado' => $this->a['agCon']->id])->assertRedirect();
         $this->post(route('tickets.messages.store', $ticket), ['mensaje' => 'Le llamo mañana.'])->assertRedirect();
         $this->post(route('tickets.notes.store', $ticket), ['mensaje' => 'Pedir CIF'])->assertRedirect();
         $this->post(route('tickets.status.update', $ticket), ['estado' => 'resolved', 'solucion' => 'Presupuesto enviado.'])->assertRedirect();

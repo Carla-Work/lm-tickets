@@ -45,16 +45,16 @@ class TicketVisibilityTest extends TestCase
         return $vistos;
     }
 
-    #[TestDox('Un ticket normal lo ven: su autor, el administrador de su empresa, los agentes de los DOS equipos y el administrador (R1, R11)')]
+    #[TestDox('Un ticket normal lo ven: su autor, el administrador de su empresa, los agentes de Soporte y de Desarrollo y Diseño y el administrador; NO el agente de Contabilidad (R1, R11)')]
     public function test_who_sees_a_normal_ticket(): void
     {
         $this->assertSame(['admin', 'agApp', 'agSup', 'caA', 'cuA'], $this->quienVe($this->ticket(Department::WebApps)));
     }
 
-    #[TestDox('Un ticket de «Otros» lo ven SOLO su autor, el administrador de su empresa y el administrador: ningún agente (R13)')]
+    #[TestDox('Un ticket de Contabilidad lo ven SOLO su autor, el administrador de su empresa, el administrador y el agente de Contabilidad: ningún otro agente (R13)')]
     public function test_who_sees_an_other_ticket(): void
     {
-        $this->assertSame(['admin', 'caA', 'cuA'], $this->quienVe($this->ticket(Department::Other)));
+        $this->assertSame(['admin', 'agCon', 'caA', 'cuA'], $this->quienVe($this->ticket(Department::Other)));
     }
 
     #[TestDox('Un compañero de la misma empresa NO ve el ticket de otro usuario (solo el administrador de empresa lo ve)')]
@@ -89,7 +89,7 @@ class TicketVisibilityTest extends TestCase
         }
     }
 
-    #[TestDox('Cambiar un ticket a «Otros» hace que los agentes dejen de verlo (R13)')]
+    #[TestDox('Cambiar un ticket a Contabilidad hace que los agentes de los otros equipos dejen de verlo y lo vea el de Contabilidad (R13)')]
     public function test_moving_to_other_hides_it_from_agents(): void
     {
         $ticket = $this->ticket(Department::WebApps);
@@ -100,6 +100,7 @@ class TicketVisibilityTest extends TestCase
         $this->assertFalse($this->a['agApp']->fresh()->can('view', $ticket->fresh()));
         $this->assertFalse($this->a['agSup']->fresh()->can('view', $ticket->fresh()));
         $this->assertTrue($this->a['admin']->can('view', $ticket->fresh()));
+        $this->assertTrue($this->a['agCon']->can('view', $ticket->fresh()));
     }
 
     #[TestDox('El ámbito visibleTo y la policy view dan EXACTAMENTE lo mismo en todas las combinaciones de rol, departamento y estado')]
@@ -137,7 +138,8 @@ class TicketVisibilityTest extends TestCase
         $this->assertSame(4, Ticket::visibleTo($this->a['caA'])->count(), 'caA: los 4 de su empresa');
         $this->assertSame(1, Ticket::visibleTo($this->a['cuB'])->count(), 'cuB: solo el suyo');
         $this->assertSame(1, Ticket::visibleTo($this->a['caB'])->count(), 'caB: el único de su empresa');
-        $this->assertSame(4, Ticket::visibleTo($this->a['agSup'])->count(), 'agente: 5 menos el de «Otros»');
+        $this->assertSame(4, Ticket::visibleTo($this->a['agSup'])->count(), 'agente: 5 menos el de Contabilidad');
+        $this->assertSame(1, Ticket::visibleTo($this->a['agCon'])->count(), 'agente de Contabilidad: solo el de Contabilidad');
         $this->assertSame(5, Ticket::visibleTo($this->a['admin'])->count(), 'administrador: todos');
     }
 
@@ -150,6 +152,7 @@ class TicketVisibilityTest extends TestCase
         $this->assertSame(0, Ticket::visibleTo($this->a['caB'])->where('company_id', $this->empresaA->id)->count());
         $this->assertSame(0, Ticket::visibleTo($this->a['cuA2'])->where('requester_id', $this->a['cuA']->id)->count());
         $this->assertSame(0, Ticket::visibleTo($this->a['agApp'])->where('department', 'other')->count());
+        $this->assertSame(0, Ticket::visibleTo($this->a['agCon'])->where('department', '!=', 'other')->count());
     }
 
     #[TestDox('Abrir tickets: solo los clientes pueden; empleados y administrador no (los abre el cliente)')]

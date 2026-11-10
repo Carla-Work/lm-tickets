@@ -6,7 +6,8 @@
  * R13). Si cambia, tocar también los CHECK de `tickets.department` y `categories.department`.
  *
  * `team()` es la tabla de correspondencia del encuadre: qué equipo interno atiende cada
- * departamento. «Otros» no tiene equipo: lo ve y lo responde solo el administrador (R13).
+ * departamento. «Contabilidad» (valor guardado `other`, antes «Otros») lo atiende solo el equipo Contabilidad;
+ * el resto de agentes no lo ve y el administrador lo ve y reasigna como cualquier otro (R10, R13, revisadas 2026-11-10).
  */
 
 namespace App\Enums;
@@ -24,7 +25,7 @@ enum Department: string
             self::Support => 'Soporte',
             self::WebApps => 'Aplicaciones',
             self::Websites => 'Páginas web',
-            self::Other => 'Otros',
+            self::Other => 'Contabilidad',
         };
     }
 
@@ -39,13 +40,13 @@ enum Department: string
         };
     }
 
-    /** Equipo que lo atiende; null = solo el administrador (R13). */
-    public function team(): ?Team
+    /** Equipo interno que atiende este departamento. */
+    public function team(): Team
     {
         return match ($this) {
             self::Support => Team::Support,
             self::WebApps, self::Websites => Team::Applications,
-            self::Other => null,
+            self::Other => Team::Accounting,
         };
     }
 }

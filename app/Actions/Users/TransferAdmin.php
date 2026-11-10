@@ -10,7 +10,7 @@
  *  - El antiguo pasa a agente y la base de datos exige que un agente tenga equipo: por eso el formulario lo pide.
  *  - Al antiguo se le borra el segundo factor (User::clearTwoFactor): ya no es administrador y el nuevo activará
  *    el suyo si quiere (R21). Se hace dentro de la transacción.
- *  - El nuevo administrador no lleva tickets (R10, solo responde «Otros»): se le quitan los que tuviera.
+ *  - El nuevo administrador no lleva tickets (R10: el administrador no responde): se le quitan los que tuviera.
  *  - Las sesiones abiertas de ambos cambian de permisos en la siguiente petición: el rol se lee en cada una.
  */
 

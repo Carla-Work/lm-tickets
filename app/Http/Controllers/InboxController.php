@@ -5,9 +5,9 @@
  * Cuándo tocarlo: al cambiar la bandeja. Mockup validado: bandeja-a-lista-tabla.html.
  *
  * Trampas:
- *  - Toda la lista parte de Ticket::visibleTo($usuario) (R1, R11, R13): un agente NO ve «Otros» por
- *    ninguna vía. Por eso también los recuentos, el selector de empresas y el de departamentos salen de
- *    ese mismo ámbito: un `Company::all()` le contaría a un agente qué empresas tienen tickets «Otros».
+ *  - Toda la lista parte de Ticket::visibleTo($usuario) (R1, R11, R13): un agente de otro equipo NO ve
+ *    Contabilidad por ninguna vía (y el de Contabilidad solo ve Contabilidad). Por eso también los recuentos, el selector de empresas y el de departamentos salen de
+ *    ese mismo ámbito: un `Company::all()` le contaría a un agente qué empresas tienen tickets de un departamento que no ve.
  *  - Solo entra el equipo. Un cliente que escriba /bandeja recibe 403 (su lista es /tickets).
  *  - Fuera de aquí, a propósito: la marca «Respuesta del cliente» y la campana de avisos necesitan saber
  *    qué ha leído cada persona (paso 5); el detalle interno con acciones (responder, estado, asignar)
@@ -84,9 +84,9 @@ class InboxController extends Controller
             'unread' => $user->unreadNotifications()->get(['data'])
                 ->groupBy(fn ($n) => (int) ($n->data['ticket_id'] ?? 0))
                 ->map(fn ($group) => $group->pluck('data.kind')->all())->all(),
-            // Un agente no tiene «Otros» en su lista (R13), tampoco como opción del filtro.
+            // Solo los departamentos que este empleado ve (R11, R13): un agente de Contabilidad solo Contabilidad, el resto sin ella.
             'departments' => collect(Department::cases())
-                ->reject(fn (Department $d) => $d === Department::Other && ! $user->hasRole(UserRole::Admin))
+                ->filter(fn (Department $d) => $user->canWorkOn($d))
                 ->values()->all(),
             'companies' => Company::query()->whereIn('id', (clone $base)->select('company_id'))->orderBy('name')->get(['id', 'name']),
             'staff' => User::query()->whereIn('role', [UserRole::Agent->value, UserRole::Admin->value])
