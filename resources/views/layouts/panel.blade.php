@@ -39,19 +39,24 @@
 
         <nav class="menu" aria-label="Menú del panel">
             @if ($internal)
-                <span class="etiqueta-panel">Panel interno</span>
-                <p class="empresa">Ling Marco &amp; Asociados<br>Rol: {{ mb_strtolower($user->role->label()) }}</p>
                 <a href="{{ route('inbox') }}" @if (request()->routeIs('inbox', 'tickets.show')) aria-current="page" @endif>Bandeja</a>
             @else
-                @if ($user->company)
-                    <p class="empresa">{{ $user->company->name }}<br>Rol: {{ mb_strtolower($user->role->label()) }}</p>
-                @endif
                 <a href="{{ route('tickets.index') }}" @if (request()->routeIs('tickets.index')) aria-current="page" @endif>
                     {{ $user->role === \App\Enums\UserRole::CompanyAdmin ? 'Tickets de mi empresa' : 'Mis tickets' }}
                 </a>
                 <a href="{{ route('tickets.create') }}" @if (request()->routeIs('tickets.create')) aria-current="page" @endif>Nuevo ticket</a>
             @endif
         </nav>
+
+        {{-- Pie de la barra: a quién pertenece esta sesión (panel interno o empresa) y con qué rol. --}}
+        <div class="pie-barra">
+            @if ($internal)
+                <span class="etiqueta-panel">Panel interno</span>
+                <p class="empresa">Ling Marco &amp; Asociados<br>Rol: {{ mb_strtolower($user->role->label()) }}</p>
+            @elseif ($user->company)
+                <p class="empresa">{{ $user->company->name }}<br>Rol: {{ mb_strtolower($user->role->label()) }}</p>
+            @endif
+        </div>
     </aside>
 
     <div class="columna">

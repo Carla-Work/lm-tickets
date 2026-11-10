@@ -25,7 +25,7 @@ class TicketMessageController extends Controller
         $user = $request->user();
         abort_unless($user !== null, 403);
 
-        $reply($user, $ticket, trim($request->string('mensaje')->toString()));
+        $reply($user, $ticket, trim($request->string('mensaje')->toString()), MessageKind::Public, $request->file('adjuntos', []));
 
         return redirect()->route('tickets.show', $ticket)->with('status', $user->isInternal()
             ? 'Respuesta enviada al cliente.'
@@ -39,6 +39,7 @@ class TicketMessageController extends Controller
         $user = $request->user();
         abort_unless($user !== null, 403);
 
+        // Las notas no llevan adjuntos (decidido): ReplyToTicket descarta cualquier archivo que llegue aquí.
         $reply($user, $ticket, trim($request->string('mensaje')->toString()), MessageKind::Internal);
 
         return redirect()->route('tickets.show', $ticket)->with('status', 'Nota guardada. Solo la ve el equipo de Ling Marco.');

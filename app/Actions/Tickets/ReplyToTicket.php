@@ -11,6 +11,8 @@
  *  - R14: si responde el CLIENTE y el ticket estaba «Pendiente de cliente», pasa solo a «En curso» y queda
  *    el evento (R5). Si responde el equipo el estado NO cambia solo (decidido): el agente lo elige a mano.
  *  - Mensaje + evento + última actividad van en UNA transacción: un mensaje sin su rastro rompe la lista.
+ *  - Adjuntos: solo en respuestas PÚBLICAS (las notas internas no llevan, decidido); si la transacción falla se
+ *    borran los ficheros ya escritos.
  */
 
 namespace App\Actions\Tickets;
@@ -18,18 +20,41 @@ namespace App\Actions\Tickets;
 use App\Enums\MessageKind;
 use App\Enums\TicketEventType;
 use App\Enums\TicketStatus;
+use App\Models\Attachment;
 use App\Models\Ticket;
 use App\Models\TicketEvent;
 use App\Models\TicketMessage;
 use App\Models\User;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 
 class ReplyToTicket
 {
-    public function __invoke(User $author, Ticket $ticket, string $body, MessageKind $kind = MessageKind::Public): TicketMessage
+    public function __construct(private readonly StoreAttachments $storeAttachments) {}
+
+    /** @param  list<UploadedFile>  $files */
+    public function __invoke(User $author, Ticket $ticket, string $body, MessageKind $kind = MessageKind::Public, array $files = []): TicketMessage
     {
-        return DB::transaction(function () use ($author, $ticket, $body, $kind): TicketMessage {
+        $paths = [];
+
+        try {
+            return $this->reply($author, $ticket, $body, $kind, $kind === MessageKind::Public ? $files : [], $paths);
+        } catch (\Throwable $e) {
+            Storage::disk(Attachment::DISK)->delete($paths); // sin esto quedarían ficheros de clientes sin dueño
+
+            throw $e;
+        }
+    }
+
+    /**
+     * @param  list<UploadedFile>  $files
+     * @param  list<string>  $paths
+     */
+    private function reply(User $author, Ticket $ticket, string $body, MessageKind $kind, array $files, array &$paths): TicketMessage
+    {
+        return DB::transaction(function () use ($author, $ticket, $body, $kind, $files, &$paths): TicketMessage {
             $ticket = Ticket::query()->lockForUpdate()->findOrFail($ticket->id);
             Gate::forUser($author)->authorize($kind === MessageKind::Internal ? 'addNote' : 'reply', $ticket);
 
@@ -38,6 +63,7 @@ class ReplyToTicket
             $message->author_id = $author->id;
             $message->kind = $kind;
             $message->save();
+            ($this->storeAttachments)($message, $author, $files, $paths);
 
             // R14: la respuesta del cliente devuelve el balón al equipo.
             if ($kind === MessageKind::Public && $author->isInternal() === false && $ticket->status === TicketStatus::PendingCustomer) {

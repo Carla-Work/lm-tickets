@@ -41,6 +41,7 @@
                                 </header>
                                 {{-- nl2br(e()): conserva los saltos de línea y escapa el HTML (el texto del usuario nunca se pinta crudo). --}}
                                 <p>{!! nl2br(e($item->body)) !!}</p>
+                                @include('tickets._adjuntos', ['attachments' => $item->attachments])
                             </article>
                         </li>
                     @else
@@ -61,11 +62,15 @@
                         Te avisaremos por correo y en el panel cuando responda el equipo.
                     @endif
                 </p>
-                <form action="{{ route('tickets.messages.store', $ticket) }}" method="post">
+                <form action="{{ route('tickets.messages.store', $ticket) }}" method="post" enctype="multipart/form-data">
                     @csrf
                     <label for="mensaje">Mensaje</label>
                     <textarea id="mensaje" name="mensaje" required maxlength="10000">{{ old('mensaje') }}</textarea>
                     @error('mensaje')<p class="error-campo">{{ $message }}</p>@enderror
+                    <input type="file" id="adjuntos" name="adjuntos[]" multiple aria-label="Adjuntar archivos">
+                    <p class="ayuda" style="margin-top:.3rem">Capturas, PDF, hojas de cálculo o ZIP. Hasta {{ config('access.attachments.max_files') }} archivos de {{ intdiv(config('access.attachments.max_kb'), 1024) }} MB cada uno.</p>
+                    @error('adjuntos')<p class="error-campo" role="alert">{{ $message }}</p>@enderror
+                    @foreach ($errors->get('adjuntos.*') as $messages)@foreach ($messages as $message)<p class="error-campo" role="alert">{{ $message }}</p>@endforeach @endforeach
                     <div class="acciones">
                         <button type="submit" class="boton principal">Enviar respuesta</button>
                     </div>
@@ -87,7 +92,10 @@
         @elseif ($ticket->status->isFinal())
             <section class="tarjeta responder" aria-label="Ticket {{ mb_strtolower($ticket->status->customerLabel()) }}">
                 <h2>Este ticket está {{ mb_strtolower($ticket->status->customerLabel()) }}</h2>
-                <p class="ayuda">Ya no se pueden añadir mensajes ni reabrirlo. Si el problema vuelve, abre un ticket nuevo desde «Nuevo ticket».</p>
+                <p class="ayuda">Ya no se pueden añadir mensajes ni reabrirlo. Si el problema vuelve, abre un ticket nuevo: lo relacionaremos con este para que el equipo tenga el contexto.</p>
+                @can('createRelated', $ticket)
+                    <div class="acciones"><a class="boton principal" href="{{ route('tickets.create', ['relacionado' => $ticket->id]) }}">Abrir un ticket nuevo</a></div>
+                @endcan
             </section>
         @endcan
         </div>
@@ -101,6 +109,10 @@
                 <dd>{{ $ticket->created_at?->timezone($tz)->translatedFormat('j M Y, H:i') }}</dd>
                 <dt>Departamento</dt>
                 <dd><span class="dep {{ $ticket->department->cssClass() }}">{{ $ticket->department->label() }}</span></dd>
+                @if ($related)
+                    <dt>Ticket relacionado</dt>
+                    <dd><a href="{{ route('tickets.show', $related) }}">#{{ $related->number }}</a><small>{{ $related->subject }}</small></dd>
+                @endif
                 @if ($ticket->product)
                     <dt>Producto</dt>
                     <dd>{{ $ticket->product->name }}</dd>

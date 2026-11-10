@@ -8,6 +8,7 @@
  * lo que cambia es el «broker», que se pasa como valor por defecto de la ruta.
  */
 
+use App\Http\Controllers\AttachmentController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\NewPasswordController;
@@ -75,5 +76,7 @@ Route::middleware(['auth', 'operational'])->group(function () {
     Route::post('/tickets/{ticket}/asignacion', [TicketAssignmentController::class, 'update'])->name('tickets.assignment.update');
     Route::post('/tickets/{ticket}/departamento', [TicketDepartmentController::class, 'update'])->name('tickets.department.update');
     Route::post('/tickets/{ticket}/resolver', [TicketStatusController::class, 'resolve'])->name('tickets.resolve');
+    // R3: la ÚNICA vía de descarga de adjuntos; autoriza con AttachmentPolicy::download.
+    Route::get('/adjuntos/{attachment}', [AttachmentController::class, 'download'])->name('attachments.download');
     Route::post('/salir', [LoginController::class, 'destroy'])->name('logout');
 });

@@ -17,6 +17,7 @@ namespace App\Http\Requests;
 use App\Enums\Department;
 use App\Models\Category;
 use App\Models\Ticket;
+use App\Support\AttachmentRules;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -47,7 +48,15 @@ class StoreTicketRequest extends FormRequest
                 : ['required', 'integer', Rule::in($companyProducts)],
             'subject' => ['required', 'string', 'max:200'],
             'description' => ['required', 'string', 'max:10000'],
-        ];
+            // R15/R16: solo se relaciona con un ticket final al que esta persona puede responder con uno nuevo
+            // (TicketPolicy::createRelated). Un id ajeno o inexistente da el MISMO error: no delata qué tickets hay.
+            'related_ticket_id' => ['nullable', 'integer', function (string $attribute, mixed $value, \Closure $fail): void {
+                $related = Ticket::query()->find((int) $value);
+                if ($related === null || ! ($this->user()?->can('createRelated', $related) ?? false)) {
+                    $fail('No puedes abrir un ticket relacionado con ese ticket.');
+                }
+            }],
+        ] + AttachmentRules::rules();
     }
 
     /** @return array<string, string> */
@@ -59,6 +68,7 @@ class StoreTicketRequest extends FormRequest
             'product_id' => 'producto o servicio',
             'subject' => 'asunto',
             'description' => 'descripción',
-        ];
+            'related_ticket_id' => 'ticket relacionado',
+        ] + AttachmentRules::attributes();
     }
 }

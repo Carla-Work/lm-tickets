@@ -38,6 +38,14 @@ class Attachment extends Model
         return $query->whereHas('message', fn (Builder $mensaje) => $mensaje->public());
     }
 
+    /** Tamaño para personas: «48 KB», «1,2 MB». */
+    public function humanSize(): string
+    {
+        return $this->size >= 1048576
+            ? number_format($this->size / 1048576, 1, ',', '.').' MB'
+            : max(1, (int) round($this->size / 1024)).' KB';
+    }
+
     /** @return BelongsTo<Ticket, $this> */
     public function ticket(): BelongsTo
     {

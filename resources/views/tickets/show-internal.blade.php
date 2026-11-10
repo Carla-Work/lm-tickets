@@ -32,6 +32,7 @@
         <div class="meta">
             <span>Abierto por <strong>{{ $ticket->requester->name }}</strong> · {{ $ticket->requester->company?->name }}</span>
             @if ($ticket->product)<span>Producto: <strong>{{ $ticket->product->name }}</strong></span>@endif
+            @if ($related)<span>Relacionado con <a href="{{ route('tickets.show', $related) }}"><strong>#{{ $related->number }}</strong></a></span>@endif
             <span>Asignado a: @if ($ticket->assignee)<strong>{{ $ticket->assignee->name }}</strong> ({{ $ticket->assignee->team?->label() ?? $ticket->assignee->role->label() }})@else<strong>Sin asignar</strong>@endif</span>
         </div>
     </section>
@@ -60,6 +61,7 @@
                                 @if ($isNote)<span class="solo-equipo">🔒 Solo equipo de Ling Marco</span>@endif
                                 {{-- nl2br(e()): conserva los saltos de línea y escapa el HTML (el texto del usuario nunca se pinta crudo). --}}
                                 <p>{!! nl2br(e($item->body)) !!}</p>
+                                @include('tickets._adjuntos', ['attachments' => $item->attachments])
                             </article>
                         </li>
                     @else
@@ -85,11 +87,15 @@
                 @endif
                 @if ($canReply)
                     <div class="panel resp responder">
-                        <form action="{{ route('tickets.messages.store', $ticket) }}" method="post">
+                        <form action="{{ route('tickets.messages.store', $ticket) }}" method="post" enctype="multipart/form-data">
                             @csrf
                             <label for="respuesta">Mensaje para {{ $ticket->requester->name }}</label>
                             <textarea id="respuesta" name="mensaje" required maxlength="10000">{{ old('mensaje') }}</textarea>
                             @error('mensaje')<p class="error-campo">{{ $message }}</p>@enderror
+                            <input type="file" id="adjuntos" name="adjuntos[]" multiple aria-label="Adjuntar archivos">
+                            <p class="ayuda" style="margin-top:.3rem">Capturas, PDF, hojas de cálculo o ZIP. Hasta {{ config('access.attachments.max_files') }} archivos de {{ intdiv(config('access.attachments.max_kb'), 1024) }} MB cada uno.</p>
+                            @error('adjuntos')<p class="error-campo" role="alert">{{ $message }}</p>@enderror
+                            @foreach ($errors->get('adjuntos.*') as $messages)@foreach ($messages as $message)<p class="error-campo" role="alert">{{ $message }}</p>@endforeach @endforeach
                             <p class="ayuda" style="margin:.3rem 0 0;font-size:.9rem;color:var(--texto-suave)">El estado no cambia solo: cámbialo en «Gestión» si hace falta (por ejemplo, a «Pendiente de cliente»). Los avisos por correo llegan en el paso 5.</p>
                             <div class="acciones"><button type="submit" class="boton principal">Enviar al cliente</button></div>
                         </form>

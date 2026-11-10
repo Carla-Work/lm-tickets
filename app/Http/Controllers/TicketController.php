@@ -91,10 +91,28 @@ class TicketController extends Controller
         $user = $request->user();
         abort_unless($user !== null, 403);
 
+        // «Abrir un ticket nuevo» desde uno resuelto o cerrado (R15/R16). Inexistente y ajeno dan el mismo 403:
+        // un 404 para uno y 403 para otro dejaría adivinar qué números de ticket existen.
+        $related = null;
+        if ($request->filled('relacionado')) {
+            $related = Ticket::query()->find($request->integer('relacionado'));
+            abort_unless($related !== null && $user->can('createRelated', $related), 403);
+        }
+        $products = $user->company?->products()->where('active', true)->orderBy('name')->get() ?? collect();
+        $categories = Category::query()->where('active', true)->orderBy('name')->get()->groupBy(fn (Category $c) => $c->department->value);
+
         return view('tickets.create', [
             'user' => $user,
-            'categories' => Category::query()->where('active', true)->orderBy('name')->get()->groupBy(fn (Category $c) => $c->department->value),
-            'products' => $user->company?->products()->where('active', true)->orderBy('name')->get() ?? collect(),
+            'categories' => $categories,
+            'products' => $products,
+            'related' => $related,
+            // Valores por defecto tomados del ticket original, SOLO si siguen siendo válidos hoy (una categoría
+            // desactivada o un producto que la empresa ya no tiene no se ofrecen: el servidor los rechazaría, R6).
+            'defaults' => $related === null ? [] : [
+                'department' => $related->department->value,
+                'category_id' => $categories->flatten()->contains('id', $related->category_id) ? $related->category_id : null,
+                'product_id' => $products->contains('id', $related->product_id) ? $related->product_id : null,
+            ],
         ]);
     }
 
@@ -111,6 +129,8 @@ class TicketController extends Controller
             $request->filled('product_id') ? Product::findOrFail($request->integer('product_id')) : null,
             $request->string('subject')->trim()->toString(),
             $request->string('description')->trim()->toString(),
+            $request->file('adjuntos', []),
+            $request->filled('related_ticket_id') ? Ticket::findOrFail($request->integer('related_ticket_id')) : null,
         );
 
         return redirect()->route('tickets.show', $ticket)->with('status', "Ticket #{$ticket->number} enviado. Te avisaremos cuando haya respuesta.");
@@ -122,10 +142,12 @@ class TicketController extends Controller
         $user = $request->user();
         abort_unless($user !== null, 403);
 
-        $ticket->load(['product', 'requester.company', 'assignee']);
+        $ticket->load(['product', 'requester.company', 'assignee', 'relatedTicket']);
+        // El enlace al ticket relacionado solo se pinta si quien mira PUEDE verlo (p. ej. un agente no ve «Otros», R13).
+        $related = $ticket->relatedTicket !== null && $user->can('view', $ticket->relatedTicket) ? $ticket->relatedTicket : null;
 
         // Mensajes y eventos mezclados por fecha: así el hilo cuenta la historia en orden (mockup).
-        $thread = TicketMessage::query()->visibleTo($user)->where('ticket_id', $ticket->id)->with('author')->get()
+        $thread = TicketMessage::query()->visibleTo($user)->where('ticket_id', $ticket->id)->with(['author', 'attachments' => fn ($q) => $q->visibleTo($user)])->get()
             ->toBase()->concat(TicketEvent::query()->visibleTo($user)->where('ticket_id', $ticket->id)->with('actor')->get())
             ->sortBy(fn ($item) => [$item->created_at?->getTimestamp(), $item instanceof TicketMessage ? 0 : 1, $item->id])
             ->values();
@@ -134,7 +156,7 @@ class TicketController extends Controller
         // filtro de qué entra en $thread ya lo hizo visibleTo: la vista solo decide cómo se pinta.
         if ($user->isInternal()) {
             return view('tickets.show-internal', [
-                'user' => $user, 'ticket' => $ticket, 'thread' => $thread,
+                'user' => $user, 'ticket' => $ticket, 'thread' => $thread, 'related' => $related,
                 // Para los formularios de «Gestión»: agentes a quienes asignar (nunca el administrador, ver AssignTicket)
                 // y categorías activas agrupadas por departamento (el cambio de departamento exige una del nuevo, R6).
                 'agents' => User::query()->where('role', UserRole::Agent->value)->whereNotNull('activated_at')->whereNull('deactivated_at')->orderBy('name')->get(),
@@ -142,6 +164,6 @@ class TicketController extends Controller
             ]);
         }
 
-        return view('tickets.show', ['user' => $user, 'ticket' => $ticket, 'thread' => $thread]);
+        return view('tickets.show', ['user' => $user, 'ticket' => $ticket, 'thread' => $thread, 'related' => $related]);
     }
 }
