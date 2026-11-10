@@ -41,7 +41,7 @@ class ChangeDepartment
 
             $from = $previous = $ticket->department;
             if ($from === $to) {
-                throw ValidationException::withMessages(['departamento' => 'El ticket ya está en ese departamento.']);
+                throw ValidationException::withMessages(['categoria' => 'El ticket ya está en ese departamento. Elige un tipo de otro departamento.']);
             }
             if ($category->department !== $to || ! $category->active) {
                 throw ValidationException::withMessages(['categoria' => 'Elige una categoría activa del departamento nuevo.']);

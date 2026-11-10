@@ -220,7 +220,7 @@ class NoticesTest extends TestCase
         $ticket = $this->ticket(Department::Support, TicketStatus::InProgress, 'agSup');
         $categoria = Category::factory()->forDepartment(Department::WebApps)->create();
 
-        $this->as('agSup')->post(route('tickets.department.update', $ticket), ['departamento' => 'web_apps', 'categoria' => $categoria->id])->assertRedirect();
+        $this->as('agSup')->post(route('tickets.department.update', $ticket), ['categoria' => $categoria->id])->assertRedirect();
 
         $this->assertSame(['department_changed'], $this->avisos('cuA'));
         $this->assertSame('De Soporte a Aplicaciones web', $this->a['cuA']->notifications()->firstOrFail()->data['detail']);
@@ -231,11 +231,11 @@ class NoticesTest extends TestCase
     public function test_department_change_on_unassigned_notifies_new_team(): void
     {
         $libre = $this->ticket(Department::Support, TicketStatus::Open);
-        $this->as('agSup')->post(route('tickets.department.update', $libre), ['departamento' => 'web_apps', 'categoria' => Category::factory()->forDepartment(Department::WebApps)->create()->id]);
+        $this->as('agSup')->post(route('tickets.department.update', $libre), ['categoria' => Category::factory()->forDepartment(Department::WebApps)->create()->id]);
         $this->assertSame(['new_unassigned'], $this->avisos('agApp'));
 
         $llevado = $this->ticket(Department::Support, TicketStatus::InProgress, 'agSup');
-        $this->as('agSup')->post(route('tickets.department.update', $llevado), ['departamento' => 'other', 'categoria' => Category::factory()->forDepartment(Department::Other)->create()->id]);
+        $this->as('agSup')->post(route('tickets.department.update', $llevado), ['categoria' => Category::factory()->forDepartment(Department::Other)->create()->id]);
         $this->assertSame(['new_unassigned'], $this->avisos('admin'), 'la asignación se vació al pasar a Otros');
         $this->assertSame([], $this->avisos('agSup'), 'quien lo movió no se avisa a sí mismo');
     }
@@ -250,7 +250,7 @@ class NoticesTest extends TestCase
         // agSup mueve a Soporte un ticket sin asignar: el equipo destino es el SUYO, pero él no se avisa; su compañero sí.
         $otroSoporte = User::factory()->agent(Team::Support)->create(['name' => 'Otro de Soporte']);
         $deApps = $this->ticket(Department::WebApps, TicketStatus::Open);
-        $this->as('agSup')->post(route('tickets.department.update', $deApps), ['departamento' => 'support', 'categoria' => Category::factory()->forDepartment(Department::Support)->create()->id])->assertRedirect();
+        $this->as('agSup')->post(route('tickets.department.update', $deApps), ['categoria' => Category::factory()->forDepartment(Department::Support)->create()->id])->assertRedirect();
 
         $this->assertSame([], $this->avisos('agSup'));
         $this->assertSame(['new_unassigned'], $otroSoporte->fresh()->notifications()->get()->pluck('data.kind')->all());

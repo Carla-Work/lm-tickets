@@ -261,7 +261,7 @@ class StaffActionsTest extends TestCase
         $ticket = $this->ticket(Department::Support, TicketStatus::InProgress, 'agSup');
         $categoria = $this->categoria(Department::WebApps);
 
-        $this->as('agApp')->post(route('tickets.department.update', $ticket), ['departamento' => 'web_apps', 'categoria' => $categoria->id])
+        $this->as('agApp')->post(route('tickets.department.update', $ticket), ['categoria' => $categoria->id])
             ->assertRedirect(route('tickets.show', $ticket));
 
         $ticket = $ticket->fresh();
@@ -273,19 +273,22 @@ class StaffActionsTest extends TestCase
         $this->as('cuA')->get(route('tickets.show', $ticket))->assertOk()->assertSee('cambiado el departamento');
     }
 
-    #[TestDox('R6: la categoría debe ser del departamento nuevo y estar activa; el mismo departamento se rechaza')]
-    public function test_department_requires_matching_category(): void
+    #[TestDox('R6: el departamento nuevo sale de la categoría (un `departamento` enviado aparte se ignora); categoría inactiva o del mismo departamento se rechazan')]
+    public function test_department_comes_from_category(): void
     {
         $ticket = $this->ticket(Department::Support, TicketStatus::InProgress, 'agSup');
-        $deOtroDep = $this->categoria(Department::Websites);
+        $deWebs = $this->categoria(Department::Websites);
         $inactiva = Category::factory()->forDepartment(Department::WebApps)->create(['active' => false]);
         $dePropio = $this->categoria(Department::Support);
 
-        $this->as('agSup')->post(route('tickets.department.update', $ticket), ['departamento' => 'web_apps', 'categoria' => $deOtroDep->id])->assertSessionHasErrors('categoria');
-        $this->as('agSup')->post(route('tickets.department.update', $ticket), ['departamento' => 'web_apps', 'categoria' => $inactiva->id])->assertSessionHasErrors('categoria');
-        $this->as('agSup')->post(route('tickets.department.update', $ticket), ['departamento' => 'support', 'categoria' => $dePropio->id])->assertSessionHasErrors('departamento');
-
+        $this->as('agSup')->post(route('tickets.department.update', $ticket), ['categoria' => $inactiva->id])->assertSessionHasErrors('categoria');
+        $this->as('agSup')->post(route('tickets.department.update', $ticket), ['categoria' => $dePropio->id])->assertSessionHasErrors('categoria');
         $this->assertSame(Department::Support, $ticket->fresh()->department);
+
+        // Un departamento incoherente enviado a mano no gana a la categoría.
+        $this->as('agSup')->post(route('tickets.department.update', $ticket), ['departamento' => 'web_apps', 'categoria' => $deWebs->id])->assertRedirect();
+        $this->assertSame(Department::Websites, $ticket->fresh()->department);
+        $this->assertSame($deWebs->id, $ticket->fresh()->category_id);
     }
 
     #[TestDox('Pasar un ticket a «Otros» vacía la asignación, deja los dos eventos y el agente va a la bandeja (ya no lo ve, R13)')]
@@ -294,7 +297,7 @@ class StaffActionsTest extends TestCase
         $ticket = $this->ticket(Department::Support, TicketStatus::InProgress, 'agSup');
         $categoria = $this->categoria(Department::Other);
 
-        $this->as('agSup')->post(route('tickets.department.update', $ticket), ['departamento' => 'other', 'categoria' => $categoria->id])
+        $this->as('agSup')->post(route('tickets.department.update', $ticket), ['categoria' => $categoria->id])
             ->assertRedirect(route('inbox'));
 
         $this->assertNull($ticket->fresh()->assigned_to);
@@ -312,8 +315,8 @@ class StaffActionsTest extends TestCase
         $normal = $this->ticket(Department::Support, TicketStatus::Open);
         $categoria = $this->categoria(Department::WebApps);
 
-        $this->as('admin')->post(route('tickets.department.update', $normal), ['departamento' => 'web_apps', 'categoria' => $categoria->id])->assertForbidden();
-        $this->as('admin')->post(route('tickets.department.update', $otros), ['departamento' => 'web_apps', 'categoria' => $categoria->id])->assertRedirect(route('tickets.show', $otros));
+        $this->as('admin')->post(route('tickets.department.update', $normal), ['categoria' => $categoria->id])->assertForbidden();
+        $this->as('admin')->post(route('tickets.department.update', $otros), ['categoria' => $categoria->id])->assertRedirect(route('tickets.show', $otros));
 
         $this->assertSame(Department::WebApps, $otros->fresh()->department);
         $this->assertNull($otros->fresh()->assigned_to, 'al sacarlo de «Otros» queda sin asignar');
@@ -326,8 +329,8 @@ class StaffActionsTest extends TestCase
         $vivo = $this->ticket(Department::Support, TicketStatus::Open);
         $final = $this->ticket(Department::Support, TicketStatus::Resolved, 'agSup');
 
-        $this->as('cuA')->post(route('tickets.department.update', $vivo), ['departamento' => 'web_apps', 'categoria' => $categoria->id])->assertForbidden();
-        $this->as('agSup')->post(route('tickets.department.update', $final), ['departamento' => 'web_apps', 'categoria' => $categoria->id])->assertForbidden();
+        $this->as('cuA')->post(route('tickets.department.update', $vivo), ['categoria' => $categoria->id])->assertForbidden();
+        $this->as('agSup')->post(route('tickets.department.update', $final), ['categoria' => $categoria->id])->assertForbidden();
     }
 
     // ---------- lo que se ve ----------
@@ -338,10 +341,10 @@ class StaffActionsTest extends TestCase
         $ticket = $this->ticket(Department::Support, TicketStatus::InProgress, 'agSup');
 
         $this->as('agSup')->get(route('tickets.show', $ticket))->assertOk()
-            ->assertSee('Enviar al cliente')->assertSee('Guardar nota')->assertSee('Cambiar estado')->assertSee('Reasignar')->assertSee('Cambiar departamento')->assertDontSee('Asignármelo');
+            ->assertSee('Enviar al cliente')->assertSee('Guardar nota')->assertSee('Cambiar estado')->assertSee('Reasignar')->assertSee('Mover ticket')->assertDontSee('Asignármelo');
         $this->as('agApp')->get(route('tickets.show', $ticket))->assertOk()
             ->assertSee('Asignármelo')->assertSee('Guardar nota')->assertDontSee('Enviar al cliente')->assertDontSee('Cambiar estado');
         $this->as('admin')->get(route('tickets.show', $ticket))->assertOk()
-            ->assertSee('Reasignar')->assertDontSee('Enviar al cliente')->assertDontSee('Guardar nota')->assertDontSee('Cambiar departamento');
+            ->assertSee('Reasignar')->assertDontSee('Enviar al cliente')->assertDontSee('Guardar nota')->assertDontSee('Mover ticket');
     }
 }

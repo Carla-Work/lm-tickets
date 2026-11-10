@@ -52,6 +52,7 @@ varios administradores por empresa, «Mi empresa» del usuario normal, confirmac
 - `docs/plan/mockups/ticket-detalle-interno-c-resuelto.html`: ticket resuelto no cerrado, vista interna. **Validado 2026-11-09.**
 - `docs/plan/mockups/ticket-detalle-interno-b-ajeno.html`: agente que no lleva el ticket, con «Asignármelo». **Validado 2026-11-09.**
 - Acceso: `acceso-a-entrar`, `acceso-b-entrar-error`, `acceso-c-recuperar`, `acceso-d-recuperar-enviado`, `acceso-e-nueva-contrasena`. **Validado 2026-11-09.**
+- `docs/plan/mockups/ticket-detalle-interno-d-…` y `…-e-…`: alternativas del formulario del cambio de departamento. **Implementada E** (un selector de tipo agrupado por departamento; el departamento sale de la categoría) el 2026-11-10 por indicación «implementa» de la usuaria, que no eligió expresamente: **pendiente de que confirme E**. D queda como referencia.
 - Administrador: `admin-empresas-a-lista`, `admin-empresa-b-detalle` (asigna productos), `admin-empresa-c-nueva`, `admin-usuarios-a-empleados` (con traspaso del rol), `admin-catalogo-a-productos-categorias`. **Validado 2026-11-09.**
 - Cliente: `cliente-mi-empresa-a-administrador`, `mis-tickets-b-administrador-empresa`, `mis-datos-a-cliente`, `avisos-a-cliente`. **Validado 2026-11-09.**
 - Interno: `mis-datos-b-interno`, `avisos-b-interno`. **Validado 2026-11-09.**

@@ -12,7 +12,6 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Tickets\ChangeDepartment;
-use App\Enums\Department;
 use App\Http\Requests\ChangeDepartmentRequest;
 use App\Models\Category;
 use App\Models\Ticket;
@@ -27,8 +26,10 @@ class TicketDepartmentController extends Controller
         $user = $request->user();
         abort_unless($user !== null, 403);
 
-        $to = Department::from($request->string('departamento')->toString());
-        $ticket = $change($user, $ticket, $to, Category::findOrFail($request->integer('categoria')));
+        // El departamento nuevo es el de la categoría elegida: no se recibe aparte (mockup E).
+        $category = Category::findOrFail($request->integer('categoria'));
+        $to = $category->department;
+        $ticket = $change($user, $ticket, $to, $category);
 
         if (! $user->can('view', $ticket)) {
             return redirect()->route('inbox')->with('status', "Ticket #{$ticket->number} movido a «{$to->label()}». Ya no lo ves: lo gestiona el administrador.");

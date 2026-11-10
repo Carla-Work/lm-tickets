@@ -138,7 +138,7 @@ El trabajo se hace en la rama del hito en curso; cada rama sale de la anterior, 
 - **El bloqueo (R20) se comprueba ANTES de mirar la contraseña** y se cuenta por correo + IP (solo por correo, cualquiera bloquearía a otros a propósito).
 - **El rol, la empresa y el equipo de un usuario NO se asignan en masa** (no están en `#[Fillable]`) — si un formulario pudiera rellenarlos, cualquiera se haría administrador. Los fija el código de servidor.
 - **Acciones sobre un ticket: dos capas de permiso.** El controlador autoriza con la policy (da el 403 limpio) Y la acción vuelve a autorizar con el ticket releído y `lockForUpdate` (carrera: un agente resuelve mientras el cliente escribe, R4). No quitar ninguna de las dos. La habilidad depende del DESTINO del estado (`resolve`, `close`, `updateStatus`).
-- **Cambio de departamento:** exige categoría del departamento nuevo (R6); pasar a «Otros» vacía la asignación (decidido 2026-11-10) y deja su evento; el agente que lo hace ya no lo ve (R13) y se le manda a la bandeja, no a un 403.
+- **Cambio de departamento:** el formulario envía SOLO la categoría y el departamento sale de ella (no aceptar un `departamento` aparte); exige categoría activa de otro departamento (R6); pasar a «Otros» vacía la asignación (decidido 2026-11-10) y deja su evento; el agente que lo hace ya no lo ve (R13) y se le manda a la bandeja, no a un 403.
 - **La vista decide qué botones salen con `@can`** (policy), no con `if` sobre el estado.
 - **Avisos (paso 5): TODO pasa por `App\Support\TicketNotifier`** (quién recibe qué y los textos); las acciones lo llaman DESPUÉS de su transacción. Nunca se avisa a quien actúa (salvo «Hemos recibido tu ticket») ni a cuentas no operativas; una NOTA INTERNA no llama al notificador (R2); al cliente se le avisa a su SOLICITANTE (no a compañeros ni al administrador de empresa). Ni el correo ni la campana llevan el CUERPO de los mensajes (el correo viaja en claro). `TicketNotice` va a la cola y `afterCommit`: **en producción el trabajador de colas tiene que estar en marcha** o no salen correos ni entradas de la campana. Un fallo al avisar se registra con `report()` y no rompe la acción. La campana y la página «Avisos» usan `User::visibleNotices()`: un aviso de un ticket que la persona ya no puede ver (R13) ni se enseña ni cuenta.
 - **Ticket relacionado (R15/R16):** `?relacionado={id}` y `related_ticket_id` solo valen con un ticket FINAL al que esa persona puede responder con uno nuevo (`TicketPolicy::createRelated`); solo el cliente. El servidor lo recomprueba en `StoreTicketRequest` (el campo oculto no es de fiar) y un id inexistente da el MISMO error que uno ajeno. El enlace al relacionado solo se pinta si quien mira puede VER ese ticket (un agente no ve «Otros», R13). Nunca se reabre el original.
@@ -180,7 +180,7 @@ public/css/app.css   hoja de estilos base (CSS propio)
 scripts/             dev.sh (entorno de desarrollo), db-backup.sh y db-restore.sh (copias)
 resources/views/     vistas Blade
 docs/plan/           encuadre, conservación de datos, bitácoras (en git)
-docs/plan/mockups/   25 mockups HTML validados el 2026-11-09
+docs/plan/mockups/   27 mockups HTML (25 validados el 2026-11-09 + d/e del cambio de departamento: implementada E, pendiente de que la usuaria la confirme)
 tests/Feature/       tests de comportamiento
 phpstan.neon         configuración de Larastan
 ```

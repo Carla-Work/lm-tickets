@@ -7,8 +7,9 @@
        assign / changeDepartment), no un `if` sobre el estado: si cambia la regla, cambia aquí sola.
      - R2/R13: $thread ya viene filtrado por visibleTo en el controlador; esta plantilla solo decide cómo se
        pinta. La nota interna lleva candado y rayado para que NADIE la confunda con un mensaje al cliente.
-     - DESVIACIÓN del mockup: «Cambiar departamento» lleva además un selector de CATEGORÍA, porque la categoría
-       cuelga del departamento (R6) y al cambiar uno hay que elegir otra del nuevo. Pendiente de validar.
+     - «Mover a otro departamento» es UN solo selector de categoría agrupado por departamento (mockup E,
+       ticket-detalle-interno-e-departamento-un-selector.html): el departamento se deduce de la categoría en
+       el servidor, así que no puede llegar una combinación incoherente (R6).
     Variables: $ticket (con product, requester.company, assignee), $thread, $agents, $categories.
 --}}
 @extends('layouts.panel')
@@ -186,29 +187,24 @@
                     @if ($canDepartment)
                         <form class="grupo" action="{{ route('tickets.department.update', $ticket) }}" method="post">
                             @csrf
-                            <label for="g-dep">Departamento</label>
-                            <select id="g-dep" name="departamento">
+                            <label for="g-mover">Mover a otro departamento</label>
+                            <select id="g-mover" name="categoria" required>
                                 @foreach (\App\Enums\Department::cases() as $department)
                                     @continue($department === $ticket->department)
-                                    <option value="{{ $department->value }}" @selected(old('departamento') === $department->value)>{{ $department->label() }}</option>
-                                @endforeach
-                            </select>
-                            <label for="g-cat">Categoría <span style="font-weight:400">(del departamento nuevo)</span></label>
-                            <select id="g-cat" name="categoria">
-                                @foreach (\App\Enums\Department::cases() as $department)
-                                    @continue($department === $ticket->department)
-                                    <optgroup label="{{ $department->label() }}">
+                                    <optgroup label="{{ $department === \App\Enums\Department::Other ? 'Otros (solo lo ve el administrador)' : $department->label() }}">
                                         @foreach ($categories[$department->value] ?? [] as $category)
                                             <option value="{{ $category->id }}" @selected((string) old('categoria') === (string) $category->id)>{{ $category->name }}</option>
                                         @endforeach
                                     </optgroup>
                                 @endforeach
                             </select>
-                            @error('departamento')<p class="error-campo">{{ $message }}</p>@enderror
                             @error('categoria')<p class="error-campo">{{ $message }}</p>@enderror
-                            <button type="submit" class="boton secundario">Cambiar departamento</button>
-                            <p class="nota-ayuda fuerte">Se avisará al cliente.</p>
-                            <p class="nota-ayuda">Elige la categoría de un departamento coincidente con el que pongas arriba. Si eliges «Otros», solo lo verá el administrador, quedará sin asignar y tú dejarás de verlo.</p>
+                            <button type="submit" class="boton secundario">Mover ticket</button>
+                            <p class="nota-ayuda fuerte">Se avisará al cliente por correo y en su panel.</p>
+                            <p class="nota-ayuda">Elige el tipo de incidencia: el departamento es el del grupo donde está. No aparece el departamento actual.</p>
+                            @if ($ticket->department !== \App\Enums\Department::Other)
+                                <p class="nota-ayuda">Si eliges un tipo de «Otros», solo lo verá el administrador, quedará sin asignar y tú dejarás de verlo.</p>
+                            @endif
                         </form>
                     @endif
                 </aside>
