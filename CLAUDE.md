@@ -137,6 +137,9 @@ El trabajo se hace en la rama del hito en curso; cada rama sale de la anterior, 
 - **Pruebas con procesos (`artisan serve`):** leer el puerto del mensaje «Server running on», NO el primero que aparezca (puede ser el de «ya está en uso», de otra app); y al terminar comprobar que no quedan procesos y matar por pid.
 - **El bloqueo (R20) se comprueba ANTES de mirar la contraseña** y se cuenta por correo + IP (solo por correo, cualquiera bloquearía a otros a propósito).
 - **El rol, la empresa y el equipo de un usuario NO se asignan en masa** (no están en `#[Fillable]`) — si un formulario pudiera rellenarlos, cualquiera se haría administrador. Los fija el código de servidor.
+- **Acciones sobre un ticket: dos capas de permiso.** El controlador autoriza con la policy (da el 403 limpio) Y la acción vuelve a autorizar con el ticket releído y `lockForUpdate` (carrera: un agente resuelve mientras el cliente escribe, R4). No quitar ninguna de las dos. La habilidad depende del DESTINO del estado (`resolve`, `close`, `updateStatus`).
+- **Cambio de departamento:** exige categoría del departamento nuevo (R6); pasar a «Otros» vacía la asignación (decidido 2026-11-10) y deja su evento; el agente que lo hace ya no lo ve (R13) y se le manda a la bandeja, no a un 403.
+- **La vista decide qué botones salen con `@can`** (policy), no con `if` sobre el estado.
 - **Notas internas (R2): todo lo que ve el cliente pasa por `TicketMessage::public()`** — un listado sin filtrar le entrega las notas.
 - **El historial de tickets solo se añade** (`ticket_events`, sin `updated_at`): no hay UPDATE ni DELETE de eventos (R5).
 - **Nada se borra en cascada** — las claves foráneas son RESTRICT; las bajas son `deactivated_at`/`active`.
@@ -153,12 +156,13 @@ El trabajo se hace en la rama del hito en curso; cada rama sale de la anterior, 
 app/Actions/Users/   InviteUser: única vía por la que nace una cuenta (R18)
 app/Http/Controllers/Auth/  entrar, recuperar contraseña, crear contraseña (invitación y recuperación)
 app/Notifications/   correos de recuperación e invitación
-app/Actions/Tickets/ casos de uso del ticket (CreateTicket…); una acción = una transacción
+app/Http/Controllers/ InboxController (bandeja del equipo), TicketController (cliente + detalle común), PanelController (solo reparte: equipo→/bandeja, cliente→/tickets)
+app/Actions/Tickets/ casos de uso del ticket (CreateTicket, ReplyToTicket, ChangeTicketStatus, AssignTicket, ChangeDepartment); una acción = una transacción que recomprueba el permiso con el ticket bloqueado
 app/Http/Requests/   validación de formularios (StoreTicketRequest: R6 en servidor)
-public/css/panel.css CSS del panel, sacado de los mockups validados (.dep = etiqueta, .dep-opcion = tarjeta del formulario)
+public/css/panel.css CSS del panel (cliente e interno, este último bajo `.interno`), sacado de los mockups validados (.dep = etiqueta, .dep-opcion = tarjeta del formulario)
 app/Policies/        quién puede hacer qué (TicketPolicy, UserPolicy, CompanyPolicy…); la matriz está en docs/plan/autorizacion.md
 app/Support/         LoginThrottle (bloqueo, R20), Totp (2FA, R21), RecoveryCodes, PendingLogin (acceso a medias)
-app/Http/Middleware/ EnsurePendingLogin (pantallas del 2FA); RequireAdminTwoFactor está SIN USO (pendiente de borrar)
+app/Http/Middleware/ EnsurePendingLogin (pantallas del 2FA)
 config/access.php    números de R17-R21 (intentos, bloqueo, longitud mínima)
 lang/es/             textos en español (auth, passwords, validation): sin ellos salen las claves en crudo
 public/img/          logos copiados de docs/marca lingmarco/ (la fuente de verdad es esa carpeta)
