@@ -1,7 +1,7 @@
 {{--
     «Mis tickets» (usuario de empresa) y «Tickets de mi empresa» (administrador de empresa).
     Mockups validados: mis-tickets-a-lista-tabla.html y mis-tickets-b-administrador-empresa.html.
-    Cuándo tocarlo: al cambiar la lista. Pendiente (paso 5): la marca «Respuesta nueva» necesita saber qué ha leído cada usuario.
+    Cuándo tocarlo: al cambiar la lista. «Respuesta nueva» y la fila en negrita salen de los avisos sin leer de esta persona ($unread).
     Variables: $tickets (paginado), $total, $summary, $filters, $products, $requesters (vacío salvo administrador de empresa).
 --}}
 @extends('layouts.panel')
@@ -84,10 +84,11 @@
             </thead>
             <tbody>
                 @forelse ($tickets as $ticket)
-                    <tr>
+                    <tr @class(['sin-leer' => isset($unread[$ticket->id])])>
                         <td class="num" data-etiqueta="Nº">#{{ $ticket->number }}</td>
                         <td class="asunto-celda" data-etiqueta="Asunto">
                             <a class="asunto" href="{{ route('tickets.show', $ticket) }}">{{ $ticket->subject }}</a>
+                            @if (collect($unread[$ticket->id] ?? [])->intersect(['replied', 'status_changed', 'department_changed'])->isNotEmpty())<span class="nuevo">Respuesta nueva</span>@endif
                             @if ($isCompanyAdmin && $ticket->product)<span class="secundario">Producto: {{ $ticket->product->name }}</span>@endif
                         </td>
                         @if ($isCompanyAdmin)

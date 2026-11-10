@@ -11,7 +11,8 @@
      - «Salir» es un formulario POST (un enlace GET no debe cerrar sesión; LoginTest lo vigila).
      - El menú del equipo solo enlaza lo que existe (Bandeja). «Empresas», «Productos y categorías»,
        «Usuarios» y «Mis datos» salen en el mockup pero NO se enlazan hasta implementarlos (sin enlaces rotos).
-    Pendiente (paso 5): la campana de «Avisos»; y «Mi empresa» / «Mis datos», pantallas aún sin implementar.
+    La campana de «Avisos» cuenta los avisos sin leer de tickets que esta persona puede ver (User::visibleNotices).
+    Pendiente: «Mi empresa» / «Mis datos», pantallas aún sin implementar.
     Variables: $user (quien ha entrado) y, en las hijas, @section('titulo'), @section('menu') y @section('contenido').
 --}}
 <!DOCTYPE html>
@@ -25,6 +26,7 @@
 </head>
 @php
     $internal = $user->isInternal();
+    $unreadNotices = $user->visibleNotices()->whereNull('read_at')->count();
     // Iniciales para el círculo de la cuenta: primera letra de las dos primeras palabras del nombre.
     $initials = collect(preg_split('/\s+/', trim($user->name)))->filter()->take(2)
         ->map(fn ($word) => mb_strtoupper(mb_substr($word, 0, 1)))->implode('');
@@ -69,6 +71,17 @@
                 @endif
             </span>
 
+            <div class="cabecera-derecha">
+            {{-- Campana: icono SVG en línea (sin dependencias). El texto accesible va en aria-label; el número es solo visual. --}}
+            <a class="campana" href="{{ route('notices.index') }}" @if (request()->routeIs('notices.*')) aria-current="page" @endif
+               aria-label="Avisos{{ $unreadNotices > 0 ? ': '.$unreadNotices.' sin leer' : '' }}" title="Avisos">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                    <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+                @if ($unreadNotices > 0)<b aria-hidden="true">{{ $unreadNotices > 9 ? '9+' : $unreadNotices }}</b>@endif
+            </a>
+
             <details class="cuenta">
                 <summary>
                     <span class="iniciales" aria-hidden="true">{{ $initials }}</span>
@@ -92,6 +105,7 @@
                     </form>
                 </div>
             </details>
+            </div>
         </header>
 
         <main>

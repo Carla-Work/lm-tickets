@@ -14,6 +14,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\InboxController;
+use App\Http\Controllers\NoticeController;
 use App\Http\Controllers\PanelController;
 use App\Http\Controllers\TicketAssignmentController;
 use App\Http\Controllers\TicketController;
@@ -61,6 +62,11 @@ Route::post('/invitacion', [NewPasswordController::class, 'store'])->defaults('b
 // (admin.2fa ya no se usa: el segundo factor es opcional desde 2026-11-09, ver User::requiresTwoFactor.)
 Route::middleware(['auth', 'operational'])->group(function () {
     Route::get('/panel', PanelController::class)->name('panel');
+
+    // Avisos (la campana). «leidos» va ANTES de {id}: si no, se leería como un id.
+    Route::get('/avisos', [NoticeController::class, 'index'])->name('notices.index');
+    Route::post('/avisos/leidos', [NoticeController::class, 'readAll'])->name('notices.read-all');
+    Route::get('/avisos/{id}', [NoticeController::class, 'open'])->name('notices.open');
 
     // Bandeja del equipo (agentes y administrador); un cliente recibe 403.
     Route::get('/bandeja', [InboxController::class, 'index'])->name('inbox');

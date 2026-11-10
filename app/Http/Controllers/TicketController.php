@@ -67,6 +67,7 @@ class TicketController extends Controller
             ->orderByDesc('last_activity_at')->orderByDesc('id');
 
         $company = $user->company;
+        $unread = $this->unreadByTicket($user);
 
         return view('tickets.index', [
             'user' => $user,
@@ -79,6 +80,7 @@ class TicketController extends Controller
                 'finished' => (int) (($counts[TicketStatus::Resolved->value] ?? 0) + ($counts[TicketStatus::Closed->value] ?? 0)),
             ],
             'filters' => $filters,
+            'unread' => $unread,
             'products' => $company?->products()->orderBy('name')->get() ?? collect(),
             'requesters' => $company !== null && $user->hasRole(UserRole::CompanyAdmin)
                 ? $company->users()->orderBy('name')->get(['id', 'name']) : collect(),
@@ -142,6 +144,9 @@ class TicketController extends Controller
         $user = $request->user();
         abort_unless($user !== null, 403);
 
+        // Verlo es leerlo: los avisos de este ticket pasan a leídos para esta persona (campana y marcas de las listas).
+        $user->unreadNotifications()->where('data->ticket_id', $ticket->id)->update(['read_at' => now()]);
+
         $ticket->load(['product', 'requester.company', 'assignee', 'relatedTicket']);
         // El enlace al ticket relacionado solo se pinta si quien mira PUEDE verlo (p. ej. un agente no ve «Otros», R13).
         $related = $ticket->relatedTicket !== null && $user->can('view', $ticket->relatedTicket) ? $ticket->relatedTicket : null;
@@ -165,5 +170,21 @@ class TicketController extends Controller
         }
 
         return view('tickets.show', ['user' => $user, 'ticket' => $ticket, 'thread' => $thread, 'related' => $related]);
+    }
+
+    /**
+     * Avisos sin leer de esta persona agrupados por ticket: [ticket_id => [tipos de aviso]]. Alimenta las marcas de las
+     * listas («Respuesta nueva», «Respuesta del cliente»). No decide qué tickets se ven: eso lo hace visibleTo.
+     *
+     * @return array<int, list<string>>
+     */
+    private function unreadByTicket(User $user): array
+    {
+        $map = [];
+        foreach ($user->unreadNotifications()->get(['data']) as $notice) {
+            $map[(int) ($notice->data['ticket_id'] ?? 0)][] = (string) ($notice->data['kind'] ?? '');
+        }
+
+        return $map;
     }
 }

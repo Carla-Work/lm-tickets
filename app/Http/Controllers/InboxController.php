@@ -81,6 +81,9 @@ class InboxController extends Controller
                 'finished' => (int) (($counts[TicketStatus::Resolved->value] ?? 0) + ($counts[TicketStatus::Closed->value] ?? 0)),
             ],
             'filters' => $filters,
+            'unread' => $user->unreadNotifications()->get(['data'])
+                ->groupBy(fn ($n) => (int) ($n->data['ticket_id'] ?? 0))
+                ->map(fn ($group) => $group->pluck('data.kind')->all())->all(),
             // Un agente no tiene «Otros» en su lista (R13), tampoco como opción del filtro.
             'departments' => collect(Department::cases())
                 ->reject(fn (Department $d) => $d === Department::Other && ! $user->hasRole(UserRole::Admin))

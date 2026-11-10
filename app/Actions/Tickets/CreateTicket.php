@@ -28,13 +28,14 @@ use App\Models\Ticket;
 use App\Models\TicketEvent;
 use App\Models\TicketMessage;
 use App\Models\User;
+use App\Support\TicketNotifier;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class CreateTicket
 {
-    public function __construct(private readonly StoreAttachments $storeAttachments) {}
+    public function __construct(private readonly StoreAttachments $storeAttachments, private readonly TicketNotifier $notifier) {}
 
     /** @param  list<UploadedFile>  $files */
     public function __invoke(User $requester, Department $department, Category $category, ?Product $product, string $subject, string $body, array $files = [], ?Ticket $related = null): Ticket
@@ -42,12 +43,16 @@ class CreateTicket
         $paths = [];
 
         try {
-            return $this->create($requester, $department, $category, $product, $subject, $body, $files, $related, $paths);
+            $ticket = $this->create($requester, $department, $category, $product, $subject, $body, $files, $related, $paths);
         } catch (\Throwable $e) {
             Storage::disk(Attachment::DISK)->delete($paths); // sin esto quedarían ficheros de clientes sin dueño
 
             throw $e;
         }
+
+        $this->notifier->created($ticket); // DESPUÉS de la transacción: si se deshace, no sale ningún aviso
+
+        return $ticket;
     }
 
     /**

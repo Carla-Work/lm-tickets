@@ -25,6 +25,7 @@ use App\Models\Ticket;
 use App\Models\TicketEvent;
 use App\Models\TicketMessage;
 use App\Models\User;
+use App\Support\TicketNotifier;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -32,7 +33,7 @@ use Illuminate\Support\Facades\Storage;
 
 class ReplyToTicket
 {
-    public function __construct(private readonly StoreAttachments $storeAttachments) {}
+    public function __construct(private readonly StoreAttachments $storeAttachments, private readonly TicketNotifier $notifier) {}
 
     /** @param  list<UploadedFile>  $files */
     public function __invoke(User $author, Ticket $ticket, string $body, MessageKind $kind = MessageKind::Public, array $files = []): TicketMessage
@@ -40,12 +41,19 @@ class ReplyToTicket
         $paths = [];
 
         try {
-            return $this->reply($author, $ticket, $body, $kind, $kind === MessageKind::Public ? $files : [], $paths);
+            $message = $this->reply($author, $ticket, $body, $kind, $kind === MessageKind::Public ? $files : [], $paths);
         } catch (\Throwable $e) {
             Storage::disk(Attachment::DISK)->delete($paths); // sin esto quedarían ficheros de clientes sin dueño
 
             throw $e;
         }
+
+        // R2: una NOTA INTERNA no avisa a nadie. Solo los mensajes públicos llegan al notificador.
+        if ($kind === MessageKind::Public) {
+            $this->notifier->replied($message->ticket()->firstOrFail(), $author);
+        }
+
+        return $message;
     }
 
     /**

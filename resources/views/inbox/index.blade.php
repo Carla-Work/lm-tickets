@@ -1,10 +1,10 @@
 {{--
     «Bandeja de tickets» del equipo (agentes y administrador). Mockup validado: bandeja-a-lista-tabla.html.
-    Cuándo tocarla: al cambiar la bandeja. Pendiente (paso 5): la marca «Respuesta del cliente» y la fila en
-    negrita de lo sin leer necesitan saber qué ha leído cada persona.
+    Cuándo tocarla: al cambiar la bandeja. La fila en negrita y «Respuesta del cliente» salen de los avisos sin leer
+    de ESTA persona ($unread: ticket_id → tipos de aviso); ver un ticket los marca leídos.
     Trampa (R13): $departments, $companies y $summary ya vienen limitados por Ticket::visibleTo en el
     controlador; esta plantilla no decide qué se ve, solo cómo se pinta.
-    Variables: $tickets (paginado), $total, $summary, $filters, $departments, $companies, $staff.
+    Variables: $tickets (paginado), $total, $summary, $filters, $unread, $departments, $companies, $staff.
 --}}
 @extends('layouts.panel')
 @section('titulo', 'Bandeja de tickets')
@@ -87,10 +87,11 @@
             </thead>
             <tbody>
                 @forelse ($tickets as $ticket)
-                    <tr>
+                    <tr @class(['sin-leer' => isset($unread[$ticket->id])])>
                         <td class="num" data-etiqueta="Nº">#{{ $ticket->number }}</td>
                         <td class="asunto-celda" data-etiqueta="Asunto">
                             <a class="asunto" href="{{ route('tickets.show', $ticket) }}">{{ $ticket->subject }}</a>
+                            @if (in_array('client_replied', $unread[$ticket->id] ?? [], true))<span class="aviso-cliente">Respuesta del cliente</span>@endif
                             @if ($ticket->product)<span class="secundario">Producto: {{ $ticket->product->name }}</span>@endif
                         </td>
                         <td class="solicitante" data-etiqueta="Abierto por"><strong>{{ $ticket->requester->name }}</strong><small>{{ $ticket->requester->company?->name }}</small></td>

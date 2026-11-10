@@ -50,13 +50,18 @@ body.panel { font-size: 13.5px; }
     display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0 1.5rem;
 }
 .cabecera .contexto { font-weight: 600; color: var(--titulo); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Campana de avisos: botón redondo con icono; el número de sin leer es una insignia en la esquina. */
 .campana {
-    position: relative; text-decoration: none; color: var(--texto);
-    padding: .35rem .6rem; border: 1px solid var(--gris); border-radius: 999px; background: var(--blanco);
+    position: relative; display: inline-flex; align-items: center; justify-content: center;
+    width: 2.25rem; height: 2.25rem; text-decoration: none; color: var(--texto-suave);
+    border: 1px solid var(--gris); border-radius: 50%; background: var(--blanco);
 }
+.campana:hover, .campana[aria-current="page"] { background: var(--gris); color: var(--titulo); }
+.campana:focus-visible { outline: 3px solid var(--principal-claro); outline-offset: 2px; }
 .campana b {
-    background: var(--principal); color: #fff; border-radius: 999px;
-    padding: 0 .45rem; font-size: .75rem; margin-left: .3rem;
+    position: absolute; top: -.35rem; right: -.35rem; min-width: 1.15rem; height: 1.15rem; padding: 0 .25rem;
+    border: 2px solid var(--blanco); border-radius: 999px; background: var(--principal); color: #fff;
+    font-size: .65rem; font-weight: 700; line-height: .85rem; text-align: center; box-sizing: border-box;
 }
 /* Menú de la cuenta: <details>, sin JavaScript. */
 .cuenta { position: relative; }
@@ -366,3 +371,20 @@ body.panel .filtros input, body.panel .filtros select { padding: .5rem .7rem; fo
 body.panel .boton { padding: .5rem 1.1rem; font-size: 13.5px; }
 body.panel .campo, body.panel fieldset { margin-bottom: 1rem; }
 body.panel .dos-columnas, body.panel .dos { gap: 1.25rem; }
+
+/* ---------- Avisos (paso 5): campana junto a la cuenta, lista de avisos y marcas de lo no leído (mockups avisos-a/b) ---------- */
+.cabecera-derecha { display: flex; align-items: center; gap: .75rem; }
+.titulo-fila .sub { margin: .2rem 0 0; color: var(--texto-suave); font-size: .95rem; }
+.avisos { list-style: none; margin: 0; padding: 0; }
+.avisos li { display: flex; gap: .9rem; padding: .9rem 1rem; border-bottom: 1px solid var(--gris); align-items: flex-start; }
+.avisos li:last-child { border-bottom: 0; }
+.avisos li.nuevo-aviso { background: #f6f0fd; }
+.avisos .punto { width: .7rem; height: .7rem; border-radius: 50%; background: var(--principal); flex: none; margin-top: .55rem; }
+.avisos li:not(.nuevo-aviso) .punto { background: transparent; border: 2px solid #b8bcc6; }
+.avisos .texto { flex: 1; min-width: 0; }
+.avisos .texto a { font-weight: 700; }
+.avisos .texto p { margin: .15rem 0 0; color: var(--texto-suave); font-size: .92rem; }
+.avisos time { color: var(--texto-suave); font-size: .85rem; white-space: nowrap; }
+@media (max-width: 860px) { .avisos li { flex-wrap: wrap; } }
+/* «Respuesta del cliente» en la bandeja del equipo */
+.aviso-cliente { display: inline-block; margin-left: .5rem; font-size: .75rem; font-weight: 700; color: var(--titulo); background: #efe5fb; border: 1.5px solid var(--principal); border-radius: 999px; padding: 0 .55rem; vertical-align: middle; }

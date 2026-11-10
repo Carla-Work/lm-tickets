@@ -22,19 +22,24 @@ use App\Models\Category;
 use App\Models\Ticket;
 use App\Models\TicketEvent;
 use App\Models\User;
+use App\Support\TicketNotifier;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 
 class ChangeDepartment
 {
+    public function __construct(private readonly TicketNotifier $notifier) {}
+
     public function __invoke(User $actor, Ticket $ticket, Department $to, Category $category): Ticket
     {
-        return DB::transaction(function () use ($actor, $ticket, $to, $category): Ticket {
+        $previous = null; // el departamento de ANTES, tomado del ticket bloqueado (no del que llegó, que puede estar desfasado)
+
+        $ticket = DB::transaction(function () use ($actor, $ticket, $to, $category, &$previous): Ticket {
             $ticket = Ticket::query()->lockForUpdate()->findOrFail($ticket->id);
             Gate::forUser($actor)->authorize('changeDepartment', $ticket);
 
-            $from = $ticket->department;
+            $from = $previous = $ticket->department;
             if ($from === $to) {
                 throw ValidationException::withMessages(['departamento' => 'El ticket ya está en ese departamento.']);
             }
@@ -74,5 +79,9 @@ class ChangeDepartment
 
             return $ticket;
         });
+
+        $this->notifier->departmentChanged($ticket, $actor, $previous); // después de la transacción
+
+        return $ticket;
     }
 }

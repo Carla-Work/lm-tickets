@@ -21,18 +21,21 @@ use App\Enums\TicketStatus;
 use App\Models\Ticket;
 use App\Models\TicketEvent;
 use App\Models\User;
+use App\Support\TicketNotifier;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 
 class ChangeTicketStatus
 {
+    public function __construct(private readonly TicketNotifier $notifier) {}
+
     /**
      * @param  string  $ability  habilidad de TicketPolicy que autoriza ESTE cambio (markResolved, resolve, close o updateStatus)
      */
     public function __invoke(User $actor, Ticket $ticket, TicketStatus $to, string $ability, ?string $resolution = null): Ticket
     {
-        return DB::transaction(function () use ($actor, $ticket, $to, $ability, $resolution): Ticket {
+        $ticket = DB::transaction(function () use ($actor, $ticket, $to, $ability, $resolution): Ticket {
             $ticket = Ticket::query()->lockForUpdate()->findOrFail($ticket->id);
             Gate::forUser($actor)->authorize($ability, $ticket);
 
@@ -72,5 +75,9 @@ class ChangeTicketStatus
 
             return $ticket;
         });
+
+        $this->notifier->statusChanged($ticket, $actor, $to); // después de la transacción
+
+        return $ticket;
     }
 }

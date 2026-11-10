@@ -21,15 +21,18 @@ use App\Enums\UserRole;
 use App\Models\Ticket;
 use App\Models\TicketEvent;
 use App\Models\User;
+use App\Support\TicketNotifier;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 
 class AssignTicket
 {
+    public function __construct(private readonly TicketNotifier $notifier) {}
+
     public function __invoke(User $actor, Ticket $ticket, ?User $to): Ticket
     {
-        return DB::transaction(function () use ($actor, $ticket, $to): Ticket {
+        $ticket = DB::transaction(function () use ($actor, $ticket, $to): Ticket {
             $ticket = Ticket::query()->lockForUpdate()->findOrFail($ticket->id);
             Gate::forUser($actor)->authorize('assign', $ticket);
 
@@ -55,5 +58,9 @@ class AssignTicket
 
             return $ticket;
         });
+
+        $this->notifier->assigned($ticket, $actor, $to); // después de la transacción
+
+        return $ticket;
     }
 }

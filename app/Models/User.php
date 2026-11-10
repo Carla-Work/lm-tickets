@@ -14,14 +14,18 @@ namespace App\Models;
 use App\Enums\Team;
 use App\Enums\UserRole;
 use App\Notifications\ResetPasswordNotification;
+use App\Notifications\TicketNotice;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
 
 #[Fillable(['name', 'email', 'password', 'phone'])]
 #[Hidden(['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes'])]
@@ -54,6 +58,19 @@ class User extends Authenticatable
     public function sendPasswordResetNotification(#[\SensitiveParameter] $token): void
     {
         $this->notify(new ResetPasswordNotification($token));
+    }
+
+    /**
+     * Avisos de tickets que esta persona PUEDE VER ahora. Una sola definición para la página «Avisos» y la campana:
+     * si a alguien le quitan acceso a un ticket (p. ej. pasa a «Otros», R13) su aviso antiguo deja de verse y de contar.
+     *
+     * @return MorphMany<DatabaseNotification, $this>
+     */
+    public function visibleNotices(): MorphMany
+    {
+        return $this->notifications()
+            ->where('type', TicketNotice::class)
+            ->whereIn(DB::raw("CAST(JSON_UNQUOTE(JSON_EXTRACT(`data`, '$.ticket_id')) AS UNSIGNED)"), Ticket::query()->visibleTo($this)->select('id'));
     }
 
     /** @return BelongsTo<Company, $this> */
