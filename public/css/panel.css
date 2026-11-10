@@ -38,7 +38,11 @@ body.panel { font-size: 13.5px; }
     content: ""; position: absolute; left: -.75rem; top: 50%; width: 3px; height: 1.5rem;
     transform: translateY(-50%); border-radius: 0 3px 3px 0; background: var(--principal-claro);
 }
-.menu .empresa { font-size: .78rem; color: #4a5568; margin: 0 .75rem 1rem; }
+/* Pie de la barra: queda abajo del todo porque .menu ocupa el espacio sobrante (flex: 1). */
+.pie-barra { flex: none; padding: .875rem 1.25rem; border-top: 1px solid var(--gris); }
+.pie-barra:empty { display: none; }
+.pie-barra .etiqueta-panel { margin: 0 0 .4rem; }
+.pie-barra .empresa { font-size: .78rem; color: #4a5568; margin: 0; }
 .columna { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .cabecera {
     position: sticky; top: 0; z-index: 10; height: 64px; flex: none;
@@ -101,25 +105,25 @@ input[type=file] { width: 100%; padding: .8rem; border: 2px dashed #b8bcc6; bord
 fieldset { border: 0; padding: 0; margin: 0 0 1.25rem; }
 legend { font-weight: 600; padding: 0; margin-bottom: .5rem; }
 .departamentos { display: grid; grid-template-columns: repeat(2, 1fr); gap: .75rem; }
-.dep { position: relative; }
-.dep input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
-.dep .caja {
+.dep-opcion { position: relative; }
+.dep-opcion input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
+.dep-opcion .caja {
     display: block; height: 100%; padding: .9rem 1rem .9rem 1.2rem;
     border: 2px solid var(--gris); border-left-width: 8px; border-radius: 10px; background: var(--blanco);
 }
-.dep strong { display: block; color: var(--titulo); }
-.dep small { color: #4a5568; }
-.dep:hover .caja { background: #fafafa; }
-.dep input:focus-visible + .caja { outline: 3px solid var(--principal-claro); outline-offset: 2px; }
-.dep.apps .caja { border-left-color: var(--dep-apps); }
-.dep.webs .caja { border-left-color: var(--dep-webs); }
-.dep.soporte .caja { border-left-color: var(--dep-soporte); }
-.dep.otros .caja { border-left-color: var(--dep-otros); }
-.dep.apps input:checked + .caja { border-color: var(--dep-apps); background: var(--dep-apps-fondo); }
-.dep.webs input:checked + .caja { border-color: var(--dep-webs); background: var(--dep-webs-fondo); }
-.dep.soporte input:checked + .caja { border-color: var(--dep-soporte); background: var(--dep-soporte-fondo); }
-.dep.otros input:checked + .caja { border-color: var(--dep-otros); background: var(--dep-otros-fondo); }
-.dep input:checked + .caja strong::after { content: " ✓"; }
+.dep-opcion strong { display: block; color: var(--titulo); }
+.dep-opcion small { color: #4a5568; }
+.dep-opcion:hover .caja { background: #fafafa; }
+.dep-opcion input:focus-visible + .caja { outline: 3px solid var(--principal-claro); outline-offset: 2px; }
+.dep-opcion.apps .caja { border-left-color: var(--dep-apps); }
+.dep-opcion.webs .caja { border-left-color: var(--dep-webs); }
+.dep-opcion.soporte .caja { border-left-color: var(--dep-soporte); }
+.dep-opcion.otros .caja { border-left-color: var(--dep-otros); }
+.dep-opcion.apps input:checked + .caja { border-color: var(--dep-apps); background: var(--dep-apps-fondo); }
+.dep-opcion.webs input:checked + .caja { border-color: var(--dep-webs); background: var(--dep-webs-fondo); }
+.dep-opcion.soporte input:checked + .caja { border-color: var(--dep-soporte); background: var(--dep-soporte-fondo); }
+.dep-opcion.otros input:checked + .caja { border-color: var(--dep-otros); background: var(--dep-otros-fondo); }
+.dep-opcion input:checked + .caja strong::after { content: " ✓"; }
 
 /* ---------- Panel lateral ---------- */
 .lateral h2 { font-size: 1.05rem; margin-bottom: .75rem; }
@@ -244,7 +248,7 @@ td .secundario { display: block; color: var(--texto-suave); font-size: .85rem; l
     .barra { position: static; height: auto; width: auto; border-right: 0; border-bottom: 1px solid var(--gris); }
     .logo { border-bottom: 0; height: 56px; }
     .menu { display: flex; flex-wrap: wrap; align-content: flex-start; gap: .25rem; padding: 0 1rem .75rem; overflow: visible; }
-    .menu .empresa { width: 100%; margin: 0 0 .25rem; }
+    .pie-barra { padding: .5rem 1rem; border-top: 0; }
     .menu a[aria-current="page"]::before { display: none; }
     .cabecera { position: static; height: 52px; padding: 0 1rem; }
     .cuenta .nombre { display: none; }
