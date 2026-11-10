@@ -38,6 +38,8 @@ Pasos: 0 cierre de Fase 1 · 1 modelo de datos · 2 acceso (entrar, bloqueo, rec
 Decidido para el acceso: 2FA solo del administrador, sin «Recordarme», bloqueo a los 5 intentos, enlace de 60 min, 12 caracteres.
 **2FA del administrador (OPCIONAL desde 2026-11-09):** sin activarlo entra con contraseña; hoy **no se puede activar desde la interfaz** (falta mockup y pantalla en «Mis datos»). Implementado (TOTP a mano, sin librerías, con códigos de recuperación). Pendiente: **regenerar los códigos** (mockups `mis-datos-c` y `mis-datos-d`, **pendientes de validar**; sin implementar) y el traspaso del rol, que deberá llamar a `User::clearTwoFactor()`.
 
+**«Registros» del administrador (2026-11-10, sin mockup a petición):** registro de correos, auditoría y copias de seguridad en `/administracion/correos`, `/auditoria` y `/copias` (solo el administrador, habilidad `view-records`). Implementado y probado con tests (`tests/Feature/Records`); **pendiente de recorrer en la aplicación real**. Sin copia automática programada ni purga por plazo; la auditoría aún no cubre altas/bajas de usuarios ni el traspaso del rol (esas pantallas no existen todavía).
+
 ### Decisiones abiertas
 varios administradores por empresa, «Mi empresa» del usuario normal, confirmación al dar de baja una empresa, plazos de conservación definitivos, plan de IONOS y cómo encaja el panel en la web pública.
 

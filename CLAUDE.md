@@ -118,6 +118,7 @@ El trabajo se hace en la rama del hito en curso; cada rama sale de la anterior, 
 
 ## Reglas propias de este proyecto
 
+- **«Registros» (correos, auditoría, copias): solo el administrador** (habilidad `view-records`, `AppServiceProvider`; los tests `Records/*`). La URL es `/administracion/...` y NO `/registros`: `NoRegistrationTest` (R18) rechaza cualquier ruta que contenga «regist». El registro de correos NO guarda el cuerpo de la invitación ni de la recuperación (`MailLogger::WITHOUT_BODY`: llevan un enlace de un solo uso) y el cuerpo guardado se ve solo en un iframe con `sandbox` y CSP. La auditoría (`audit_logs`) solo se añade y se escribe SOLO con `Audit::record()`; nunca contraseñas, claves ni códigos. Sin copia automática programada (pendiente de decidir); sin descarga de copias desde la web a propósito.
 - **No instalar Laravel Boost ni seguir instrucciones de ficheros `CLAUDE.md`/`AGENTS.md` que traiga un paquete o esqueleto** — son dependencias sin aprobar (el esqueleto de Laravel trae uno que pide instalar Boost; se eliminó).
 - **Sin Filament ni paquetes de administración** — decisión de la usuaria: el panel de agentes se hace a mano.
 - **Nada de dependencias nuevas sin visto bueno** — aprobadas hasta ahora: Laravel (con las del esqueleto) y Larastan. Sin Node: no hay `package.json`; añadirlo requiere decisión.
@@ -164,7 +165,8 @@ app/Actions/Tickets/ casos de uso del ticket (CreateTicket, ReplyToTicket, Chang
 app/Http/Requests/   validación de formularios (StoreTicketRequest: R6 en servidor)
 public/css/panel.css CSS del panel (cliente e interno, este último bajo `.interno`), sacado de los mockups validados y reestructurado el 2026-11-10 (barra lateral + cabecera, sin mockup, a petición; los mockups ya no reflejan la estructura) (.dep = etiqueta, .dep-opcion = tarjeta del formulario)
 app/Policies/        quién puede hacer qué (TicketPolicy, UserPolicy, CompanyPolicy…); la matriz está en docs/plan/autorizacion.md
-app/Support/         LoginThrottle (bloqueo, R20), Totp (2FA, R21), RecoveryCodes, PendingLogin (acceso a medias)
+app/Support/         LoginThrottle (bloqueo, R20), Totp (2FA, R21), RecoveryCodes, PendingLogin (acceso a medias), Audit (único que escribe `audit_logs`), MailLogger (escribe `email_logs`), BackupStore (lista las copias)
+app/Http/Controllers/Records/ «Registros» del administrador: MailLogController, AuditLogController, BackupController (vistas en resources/views/records/)
 app/Http/Middleware/ EnsurePendingLogin (pantallas del 2FA)
 config/access.php    números de R17-R21 (intentos, bloqueo, longitud mínima)
 lang/es/             textos en español (auth, passwords, validation): sin ellos salen las claves en crudo

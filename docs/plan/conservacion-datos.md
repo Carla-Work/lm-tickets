@@ -13,6 +13,8 @@ legal: los plazos definitivos deben validarse con la asesoría legal antes de pr
 | Usuarios de empresa dados de baja | 2 años desde la baja | Anonimizar para conservar el historial del ticket sin identificar a la persona |
 | Empresa cliente tras terminar la relación | 2 años | Depende de obligaciones contables/contractuales ❓ |
 | Registro de actividad (cambios de estado, accesos) | 2 años | Puede necesitar menos o más según su uso |
+| Registro de correos (`email_logs`: direcciones y asuntos; cuerpo solo de los avisos de tickets) | 2 años (provisional, igual que el registro de actividad) | **Purga programada PENDIENTE**: hoy no se borra nada |
+| Auditoría (`audit_logs`: accesos con IP, invitaciones, 2FA, copias) | 2 años (provisional) | **Purga programada PENDIENTE**; la tabla solo se añade, la purga será un comando propio |
 | Copias de seguridad | ❓ | Las copias contienen datos ya "borrados": su rotación fija el plazo real |
 
 ## Decisiones abiertas

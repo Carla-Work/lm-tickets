@@ -25,6 +25,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Notifications\RecoveryCodeUsedNotification;
+use App\Support\Audit;
 use App\Support\LoginThrottle;
 use App\Support\PendingLogin;
 use App\Support\RecoveryCodes;
@@ -86,6 +87,8 @@ class TwoFactorController extends Controller
             'two_factor_last_step' => $intervalo,
             'two_factor_recovery_codes' => RecoveryCodes::hashAll($codigos),
         ])->save();
+
+        Audit::record('two_factor_enabled', 'Ha activado el segundo factor.', $usuario, ip: $request->ip());
 
         // Los códigos en claro se ven UNA vez: viajan cifrados en la sesión hasta que se confirma que se guardaron.
         $request->session()->put('two_factor.codes', Crypt::encryptString((string) json_encode($codigos)));
@@ -188,6 +191,7 @@ class TwoFactorController extends Controller
 
         $usuario->forceFill(['two_factor_recovery_codes' => $restantes])->save(); // uso único
         $usuario->notify(new RecoveryCodeUsedNotification(count($restantes)));
+        Audit::record('recovery_code_used', 'Ha entrado con un código de recuperación.', $usuario, ip: $request->ip(), properties: ['remaining' => count($restantes)]);
 
         $request->session()->flash('status', 'Has entrado con un código de recuperación. Te quedan '.count($restantes).' sin usar.');
 
@@ -232,6 +236,7 @@ class TwoFactorController extends Controller
         Auth::login($usuario);
         PendingLogin::forget($request);
         $request->session()->regenerate();
+        Audit::record('login', 'Ha entrado en la aplicación (con segundo factor).', $usuario, ip: $request->ip());
 
         return redirect()->intended(route('panel'));
     }

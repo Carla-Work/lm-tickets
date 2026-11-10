@@ -16,6 +16,9 @@ use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\InboxController;
 use App\Http\Controllers\NoticeController;
 use App\Http\Controllers\PanelController;
+use App\Http\Controllers\Records\AuditLogController;
+use App\Http\Controllers\Records\BackupController;
+use App\Http\Controllers\Records\MailLogController;
 use App\Http\Controllers\TicketAssignmentController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\TicketDepartmentController;
@@ -85,4 +88,14 @@ Route::middleware(['auth', 'operational'])->group(function () {
     // R3: la ÚNICA vía de descarga de adjuntos; autoriza con AttachmentPolicy::download.
     Route::get('/adjuntos/{attachment}', [AttachmentController::class, 'download'])->name('attachments.download');
     Route::post('/salir', [LoginController::class, 'destroy'])->name('logout');
+
+    // «Registros» (correos, auditoría, copias): SOLO el administrador (habilidad view-records, AppServiceProvider).
+    // Trampa: la URL es /administracion y NO /registros: NoRegistrationTest (R18) rechaza cualquier ruta cuyo
+    // nombre o dirección contenga «regist», y no se adapta ese test para que pase.
+    Route::middleware('can:view-records')->prefix('administracion')->group(function () {
+        Route::get('/correos', [MailLogController::class, 'index'])->name('records.mail');
+        Route::get('/auditoria', [AuditLogController::class, 'index'])->name('records.audit');
+        Route::get('/copias', [BackupController::class, 'index'])->name('records.backups');
+        Route::post('/copias', [BackupController::class, 'store'])->name('records.backups.store');
+    });
 });

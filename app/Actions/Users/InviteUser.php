@@ -23,6 +23,8 @@ use App\Enums\UserRole;
 use App\Models\Company;
 use App\Models\User;
 use App\Notifications\InvitationNotification;
+use App\Support\Audit;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
@@ -51,5 +53,7 @@ class InviteUser
     {
         $token = Password::broker('invitations')->createToken($user);
         $user->notify(new InvitationNotification($token));
+        // Quien invita es quien tiene la sesión abierta (nulo si lo lanza un comando).
+        Audit::record('invited', "Invitación enviada a {$user->email}.", Auth::user(), $user);
     }
 }

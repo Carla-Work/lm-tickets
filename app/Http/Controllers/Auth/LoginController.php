@@ -18,6 +18,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\Audit;
 use App\Support\LoginThrottle;
 use App\Support\PendingLogin;
 use Illuminate\Contracts\View\View;
@@ -44,6 +45,7 @@ class LoginController extends Controller
         $clave = LoginThrottle::key($datos['email'], (string) $request->ip());
 
         if ($throttle->isLocked($clave)) {
+            Audit::record('login_locked', 'Intento de acceso mientras la cuenta está bloqueada (R20).', ip: $request->ip(), properties: ['email' => $datos['email']]);
             throw ValidationException::withMessages([
                 'email' => trans('auth.throttle', ['minutes' => (int) ceil($throttle->secondsLeft($clave) / 60)]),
             ]);
@@ -66,6 +68,8 @@ class LoginController extends Controller
 
         if (! $entra) {
             $throttle->fail($clave);
+            // Se anota el correo escrito (no la contraseña): sirve para ver quién prueba y a quién. Es dato personal.
+            Audit::record('login_failed', 'Intento de acceso fallido.', null, $usuario instanceof User ? $usuario : null, $request->ip(), ['email' => $datos['email']]);
             throw ValidationException::withMessages(['email' => trans('auth.failed')]);
         }
 
@@ -82,12 +86,14 @@ class LoginController extends Controller
         Auth::login($usuario);
         $throttle->clear($clave);
         $request->session()->regenerate();
+        Audit::record('login', 'Ha entrado en la aplicación.', $usuario, ip: $request->ip());
 
         return redirect()->intended(route('panel'));
     }
 
     public function destroy(Request $request): RedirectResponse
     {
+        Audit::record('logout', 'Ha salido de la aplicación.', $request->user(), ip: $request->ip());
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

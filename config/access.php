@@ -63,4 +63,12 @@ return [
         // Longitud mínima. Sin más exigencias (mayúsculas, símbolos): se prefiere una frase larga.
         'min_length' => 12,
     ],
+
+    // Sección «Registros» del administrador (correos, auditoría, copias).
+    'records' => [
+        // Dónde deja scripts/db-backup.sh las copias (contienen datos de clientes: fuera de public/ y de git).
+        'backups_path' => storage_path('backups'),
+        // Filas por página en correos y auditoría.
+        'per_page' => 15,
+    ],
 ];

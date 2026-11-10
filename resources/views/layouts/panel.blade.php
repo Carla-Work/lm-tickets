@@ -9,7 +9,7 @@
      - El menú de la cuenta es un <details>: se abre y cierra sin JavaScript (requisito: el contenido y
        «Salir» deben funcionar sin JS). No lo sustituyas por un desplegable con JS.
      - «Salir» es un formulario POST (un enlace GET no debe cerrar sesión; LoginTest lo vigila).
-     - El menú del equipo solo enlaza lo que existe (Bandeja). «Empresas», «Productos y categorías»,
+     - El menú del equipo solo enlaza lo que existe (Bandeja y Registros). «Empresas», «Productos y categorías»,
        «Usuarios» y «Mis datos» salen en el mockup pero NO se enlazan hasta implementarlos (sin enlaces rotos).
     La campana de «Avisos» cuenta los avisos sin leer de tickets que esta persona puede ver (User::visibleNotices).
     Pendiente: «Mi empresa» / «Mis datos», pantallas aún sin implementar.
@@ -42,6 +42,20 @@
         <nav class="menu" aria-label="Menú del panel">
             @if ($internal)
                 <a href="{{ route('inbox') }}" @if (request()->routeIs('inbox', 'tickets.show')) aria-current="page" @endif>Bandeja</a>
+
+                {{-- «Registros»: solo el administrador (habilidad view-records). <details>: se pliega sin JavaScript;
+                     abierto por defecto si estás dentro de una de sus pantallas. --}}
+                @can('view-records')
+                    <details class="seccion-menu" @if (request()->routeIs('records.*')) open @endif>
+                        <summary>Registros</summary>
+                        <a href="{{ route('records.mail') }}" @if (request()->routeIs('records.mail')) aria-current="page" @endif>
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>Registro de correos</a>
+                        <a href="{{ route('records.audit') }}" @if (request()->routeIs('records.audit')) aria-current="page" @endif>
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 6v5c0 4.5 3 8 7 10 4-2 7-5.5 7-10V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg>Auditoría</a>
+                        <a href="{{ route('records.backups') }}" @if (request()->routeIs('records.backups')) aria-current="page" @endif>
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/><path d="M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>Copias de seguridad</a>
+                    </details>
+                @endcan
             @else
                 <a href="{{ route('tickets.index') }}" @if (request()->routeIs('tickets.index')) aria-current="page" @endif>
                     {{ $user->role === \App\Enums\UserRole::CompanyAdmin ? 'Tickets de mi empresa' : 'Mis tickets' }}

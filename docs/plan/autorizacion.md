@@ -93,6 +93,7 @@ descarga irá por un controlador que llama a `AttachmentPolicy::download` (paso 
 | Cambiar el rol usuario ↔ admin. de empresa | No | De su empresa, no el suyo | No | Sí |
 | Cambiar el equipo de un agente | No | No | No | Sí |
 | **Traspasar el rol de administrador** (R9) | No | No | No | **Sí** |
+| **Ver «Registros»** (correos, auditoría, copias) y pedir una copia — habilidad `view-records` | No | No | No | **Sí** |
 
 - El administrador **no puede darse de baja ni degradarse a sí mismo**: antes traspasa el rol (R9).
 - Un administrador de empresa **nunca** toca nada de otra empresa (R1).

@@ -22,6 +22,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\Audit;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
@@ -65,7 +66,8 @@ class NewPasswordController extends Controller
                     ? fn (Builder $consulta) => $consulta->whereNull('activated_at')->whereNull('deactivated_at')
                     : fn (Builder $consulta) => $consulta->whereNotNull('activated_at')->whereNull('deactivated_at'),
             ],
-            function (User $usuario, string $contrasena): void {
+            function (User $usuario, string $contrasena) use ($request): void {
+                $wasActivated = $usuario->activated_at !== null;
                 $usuario->forceFill([
                     'password' => Hash::make($contrasena),
                     'remember_token' => Str::random(60),
@@ -73,6 +75,9 @@ class NewPasswordController extends Controller
                 ])->save();
 
                 event(new PasswordReset($usuario));
+                Audit::record($wasActivated ? 'password_reset' : 'activated',
+                    $wasActivated ? 'Ha cambiado su contraseña con el enlace de recuperación.' : 'Ha activado su cuenta eligiendo su contraseña.',
+                    $usuario, ip: $request->ip());
             },
         );
 
