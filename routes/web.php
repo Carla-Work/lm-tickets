@@ -12,8 +12,13 @@ use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\TwoFactorController;
+use App\Http\Controllers\InboxController;
 use App\Http\Controllers\PanelController;
+use App\Http\Controllers\TicketAssignmentController;
 use App\Http\Controllers\TicketController;
+use App\Http\Controllers\TicketDepartmentController;
+use App\Http\Controllers\TicketMessageController;
+use App\Http\Controllers\TicketStatusController;
 use Illuminate\Support\Facades\Route;
 
 // La raíz no tiene página propia: lleva al panel. Quien no ha iniciado sesión llega a /panel y el
@@ -56,10 +61,19 @@ Route::post('/invitacion', [NewPasswordController::class, 'store'])->defaults('b
 Route::middleware(['auth', 'operational'])->group(function () {
     Route::get('/panel', PanelController::class)->name('panel');
 
+    // Bandeja del equipo (agentes y administrador); un cliente recibe 403.
+    Route::get('/bandeja', [InboxController::class, 'index'])->name('inbox');
+
     // Pantallas del cliente. «nuevo» va ANTES de {ticket}: si no, «nuevo» se leería como el id de un ticket.
     Route::get('/tickets', [TicketController::class, 'index'])->name('tickets.index');
     Route::get('/tickets/nuevo', [TicketController::class, 'create'])->name('tickets.create');
     Route::post('/tickets', [TicketController::class, 'store'])->name('tickets.store');
     Route::get('/tickets/{ticket}', [TicketController::class, 'show'])->name('tickets.show');
+    Route::post('/tickets/{ticket}/mensajes', [TicketMessageController::class, 'store'])->name('tickets.messages.store');
+    Route::post('/tickets/{ticket}/notas', [TicketMessageController::class, 'storeNote'])->name('tickets.notes.store');
+    Route::post('/tickets/{ticket}/estado', [TicketStatusController::class, 'update'])->name('tickets.status.update');
+    Route::post('/tickets/{ticket}/asignacion', [TicketAssignmentController::class, 'update'])->name('tickets.assignment.update');
+    Route::post('/tickets/{ticket}/departamento', [TicketDepartmentController::class, 'update'])->name('tickets.department.update');
+    Route::post('/tickets/{ticket}/resolver', [TicketStatusController::class, 'resolve'])->name('tickets.resolve');
     Route::post('/salir', [LoginController::class, 'destroy'])->name('logout');
 });

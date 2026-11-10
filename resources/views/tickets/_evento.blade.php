@@ -21,6 +21,7 @@
         @break
     @case(\App\Enums\TicketEventType::Resolved)
         Ticket marcado como <strong>resuelto</strong>
+        @if (! empty($data['resolution']))<br>Solución: <em>«{{ $data['resolution'] }}»</em>@endif
         @break
     @case(\App\Enums\TicketEventType::Closed)
         Ticket <strong>cerrado</strong>

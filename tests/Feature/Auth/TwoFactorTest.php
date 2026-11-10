@@ -492,7 +492,7 @@ class TwoFactorTest extends TestCase
     {
         $admin = User::factory()->admin()->create();
 
-        $this->actingAs($admin)->get(route('panel'))->assertOk();
+        $this->actingAs($admin)->get(route('inbox'))->assertOk(); // /panel solo redirige a la bandeja desde el paso 4b
 
         $this->assertAuthenticatedAs($admin);
     }
@@ -502,7 +502,7 @@ class TwoFactorTest extends TestCase
     {
         [$admin] = $this->adminConDosFactores();
 
-        $this->actingAs($admin)->get(route('panel'))->assertOk();
+        $this->actingAs($admin)->get(route('inbox'))->assertOk(); // /panel solo redirige a la bandeja desde el paso 4b
     }
 
     #[TestDox('El traspaso del rol limpia el segundo factor de quien deja de ser administrador')]

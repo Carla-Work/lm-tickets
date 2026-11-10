@@ -144,10 +144,11 @@ class ClientScreensTest extends TestCase
         $this->actingAs($this->a['cuA'])->get(route('tickets.create'))->assertOk()->assertSee('ProductoPropio')->assertDontSee('ProductoAjeno');
     }
 
-    public function test_un_cliente_que_entra_al_panel_va_a_sus_tickets_y_el_equipo_no(): void
+    public function test_un_cliente_que_entra_al_panel_va_a_sus_tickets_y_el_equipo_a_la_bandeja(): void
     {
         $this->actingAs($this->a['cuA'])->get(route('panel'))->assertRedirect(route('tickets.index'));
-        $this->actingAs($this->a['agSup'])->get(route('panel'))->assertOk();
+        // Cambiado en el paso 4b: antes el equipo veía una página provisional (la bandeja aún no existía).
+        $this->actingAs($this->a['agSup'])->get(route('panel'))->assertRedirect(route('inbox'));
     }
 
     public function test_la_lista_y_el_detalle_exigen_sesion(): void

@@ -9,7 +9,8 @@
  *    ajenos. El detalle usa authorize('view') y cuenta lo mismo: un id ajeno da 403.
  *  - El hilo se lee con TicketMessage/TicketEvent::visibleTo: así las notas internas y los eventos
  *    internos no llegan a la vista del cliente (R2), aunque la plantilla se equivoque.
- *  - Los tickets de un agente o del administrador (bandeja) llegan en el paso 4b; aquí solo clientes.
+ *  - La bandeja del equipo es InboxController. El detalle sí es común: `show` elige la vista del equipo
+ *    (tickets/show-internal) o la del cliente según quién mira.
  */
 
 namespace App\Http\Controllers;
@@ -24,6 +25,7 @@ use App\Models\Product;
 use App\Models\Ticket;
 use App\Models\TicketEvent;
 use App\Models\TicketMessage;
+use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -124,9 +126,21 @@ class TicketController extends Controller
 
         // Mensajes y eventos mezclados por fecha: así el hilo cuenta la historia en orden (mockup).
         $thread = TicketMessage::query()->visibleTo($user)->where('ticket_id', $ticket->id)->with('author')->get()
-            ->toBase()->concat(TicketEvent::query()->visibleTo($user)->where('ticket_id', $ticket->id)->get())
+            ->toBase()->concat(TicketEvent::query()->visibleTo($user)->where('ticket_id', $ticket->id)->with('actor')->get())
             ->sortBy(fn ($item) => [$item->created_at?->getTimestamp(), $item instanceof TicketMessage ? 0 : 1, $item->id])
             ->values();
+
+        // El equipo ve su propio detalle (con notas internas y todo el historial); el cliente, el suyo. El
+        // filtro de qué entra en $thread ya lo hizo visibleTo: la vista solo decide cómo se pinta.
+        if ($user->isInternal()) {
+            return view('tickets.show-internal', [
+                'user' => $user, 'ticket' => $ticket, 'thread' => $thread,
+                // Para los formularios de «Gestión»: agentes a quienes asignar (nunca el administrador, ver AssignTicket)
+                // y categorías activas agrupadas por departamento (el cambio de departamento exige una del nuevo, R6).
+                'agents' => User::query()->where('role', UserRole::Agent->value)->whereNotNull('activated_at')->whereNull('deactivated_at')->orderBy('name')->get(),
+                'categories' => Category::query()->where('active', true)->orderBy('name')->get()->groupBy(fn (Category $c) => $c->department->value),
+            ]);
+        }
 
         return view('tickets.show', ['user' => $user, 'ticket' => $ticket, 'thread' => $thread]);
     }

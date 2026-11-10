@@ -1,9 +1,9 @@
 <?php
 
 /*
- * Página a la que llega cualquiera tras entrar. Los CLIENTES van a «Mis tickets».
- * Cuándo tocarlo: en la entrega 4b, cuando exista la «Bandeja» del equipo (mockup bandeja-a): hasta
- * entonces los agentes y el administrador ven aún la página provisional del paso 2.
+ * Página a la que llega cualquiera tras entrar: reparte a cada persona a su lista. Los CLIENTES van a
+ * «Mis tickets»; agentes y administrador, a la «Bandeja».
+ * Cuándo tocarlo: al cambiar a dónde aterriza cada rol (o al crear un panel de inicio real).
  */
 
 namespace App\Http\Controllers;
@@ -18,10 +18,11 @@ class PanelController extends Controller
     {
         $user = $request->user();
 
-        if ($user !== null && ! $user->isInternal()) {
-            return redirect()->route('tickets.index');
+        if ($user === null) {
+            abort(403);
         }
 
-        return view('panel', ['usuario' => $user]);
+        // Cada uno aterriza en su lista: el equipo en la bandeja, los clientes en «Mis tickets».
+        return redirect()->route($user->isInternal() ? 'inbox' : 'tickets.index');
     }
 }
