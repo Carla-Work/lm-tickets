@@ -57,7 +57,7 @@ class TicketActionsTest extends TestCase
         }
     }
 
-    // ---------- Aplicaciones web, abierto ----------
+    // ---------- Aplicaciones, abierto ----------
 
     #[TestDox('Abierto y SIN asignar: ningún agente puede responder ni cambiar el estado; antes debe asignárselo (R11)')]
     public function test_open_unassigned(): void
@@ -133,7 +133,7 @@ class TicketActionsTest extends TestCase
 
     // ---------- Soporte: cobertura entre equipos ----------
 
-    #[TestDox('Un ticket de Soporte asignado a su agente: el agente de Aplicaciones tiene los permisos de «compañero», no de gestor (cubrir ausencias)')]
+    #[TestDox('Un ticket de Soporte asignado a su agente: el agente de Desarrollo y Diseño tiene los permisos de «compañero», no de gestor (cubrir ausencias)')]
     public function test_support_ticket_seen_by_the_other_team(): void
     {
         $this->assertPermissions($this->ticket(Department::Support, TicketStatus::Open, 'agSup'), [

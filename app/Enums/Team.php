@@ -17,7 +17,7 @@ enum Team: string
     {
         return match ($this) {
             self::Support => 'Soporte',
-            self::Applications => 'Aplicaciones',
+            self::Applications => 'Desarrollo y Diseño',
         };
     }
 }

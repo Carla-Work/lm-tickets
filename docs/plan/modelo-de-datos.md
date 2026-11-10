@@ -32,8 +32,8 @@ Si cambias el esquema, actualiza esto.
 | `attachments` | Adjuntos de un mensaje | Solo guarda la ruta en almacenamiento **privado** (R3). |
 | `notifications` | Avisos en el panel | Tabla estándar de Laravel. |
 
-Los 4 **departamentos** (Soporte, Aplicaciones web, Páginas web, Otros) y los 2 **equipos**
-(Soporte, Aplicaciones) son fijos y viven en `app/Enums/`, no en tablas: llevan los colores de marca
+Los 4 **departamentos** (Soporte, Aplicaciones, Páginas web, Otros) y los 2 **equipos**
+(Soporte, Desarrollo y Diseño) son fijos y viven en `app/Enums/`, no en tablas: llevan los colores de marca
 y definen quién ve qué (R13); cambiarlos es cambiar código, a propósito.
 
 ## Usuarios

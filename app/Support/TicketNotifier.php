@@ -11,8 +11,8 @@
  *    cuentas no operativas (de baja, empresa de baja).
  *  - Las NOTAS INTERNAS no avisan a nadie (R2): ningún método de aquí se llama al escribir una nota.
  *  - El cambio automático de estado cuando el cliente responde (R14) no avisa: el aviso ya es el de la respuesta.
- *  - «Ticket sin asignar» va al equipo del departamento (propuesta): Soporte → equipo Soporte; Aplicaciones web y
- *    Páginas web → equipo Aplicaciones; Otros → el administrador (R13: solo él lo lleva).
+ *  - «Ticket sin asignar» va al equipo del departamento (propuesta): Soporte → equipo Soporte; Aplicaciones y
+ *    Páginas web → equipo Desarrollo y Diseño; Otros → el administrador (R13: solo él lo lleva).
  *  - El cliente que responde avisa a quien lo lleva; si nadie, al equipo del departamento.
  *  - Que el cliente marque «resuelto» avisa a quien lo lleva para que lo cierre (propuesta de Claude, no está en el mockup).
  *  - Un fallo al avisar (cola, correo) se registra con report() y NO deshace ni rompe la acción ya guardada.

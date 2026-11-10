@@ -22,7 +22,7 @@ enum Department: string
     {
         return match ($this) {
             self::Support => 'Soporte',
-            self::WebApps => 'Aplicaciones web',
+            self::WebApps => 'Aplicaciones',
             self::Websites => 'Páginas web',
             self::Other => 'Otros',
         };

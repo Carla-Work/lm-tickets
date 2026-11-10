@@ -92,7 +92,7 @@ class NoticesTest extends TestCase
         }
     }
 
-    #[TestDox('Aplicaciones web y Páginas web avisan al equipo Aplicaciones; «Otros» solo al administrador (R13: ningún agente)')]
+    #[TestDox('Aplicaciones y Páginas web avisan al equipo Desarrollo y Diseño; «Otros» solo al administrador (R13: ningún agente)')]
     public function test_team_routing_by_department(): void
     {
         $this->abrirTicket('cuA', Department::WebApps);
@@ -214,7 +214,7 @@ class NoticesTest extends TestCase
         $this->assertSame([], $this->avisos('cuA'));
     }
 
-    #[TestDox('R12: el cliente recibe aviso del cambio de departamento («De Soporte a Aplicaciones web»)')]
+    #[TestDox('R12: el cliente recibe aviso del cambio de departamento («De Soporte a Aplicaciones»)')]
     public function test_department_change_notifies_client(): void
     {
         $ticket = $this->ticket(Department::Support, TicketStatus::InProgress, 'agSup');
@@ -223,7 +223,7 @@ class NoticesTest extends TestCase
         $this->as('agSup')->post(route('tickets.department.update', $ticket), ['categoria' => $categoria->id])->assertRedirect();
 
         $this->assertSame(['department_changed'], $this->avisos('cuA'));
-        $this->assertSame('De Soporte a Aplicaciones web', $this->a['cuA']->notifications()->firstOrFail()->data['detail']);
+        $this->assertSame('De Soporte a Aplicaciones', $this->a['cuA']->notifications()->firstOrFail()->data['detail']);
         $this->assertSame([], $this->avisos('agApp'), 'sigue asignado a agSup: no es "sin asignar"');
     }
 

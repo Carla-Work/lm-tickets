@@ -77,7 +77,7 @@ class TicketVisibilityTest extends TestCase
         }
     }
 
-    #[TestDox('Un agente que ve un ticket de otro equipo también lo ve: Soporte ve el de Aplicaciones y al revés (R11)')]
+    #[TestDox('Un agente que ve un ticket de otro equipo también lo ve: Soporte ve el de Desarrollo y Diseño y al revés (R11)')]
     public function test_agents_see_both_teams(): void
     {
         $deSoporte = $this->ticket(Department::Support);

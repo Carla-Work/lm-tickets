@@ -6,7 +6,7 @@
  *
  *   Empresa A: cuA (usuario, el que abre los tickets de prueba), cuA2 (otro usuario), caA (administrador de empresa)
  *   Empresa B: cuB (usuario), caB (administrador de empresa)
- *   Equipo:    agSup (agente de Soporte), agApp (agente de Aplicaciones), admin (administrador)
+ *   Equipo:    agSup (agente de Soporte), agApp (agente de Desarrollo y Diseño), admin (administrador)
  */
 
 namespace Tests\Concerns;

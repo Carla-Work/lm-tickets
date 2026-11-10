@@ -19,7 +19,7 @@ Departamentos, con los colores del logo (`docs/marca lingmarco/logo-LM.svg`):
 
 | Departamento | Color | Tono de marca (relleno) | Tono para texto |
 |---|---|---|---|
-| Aplicaciones web | Verde | `#7eba28` | `#486330` |
+| Aplicaciones | Verde | `#7eba28` | `#486330` |
 | Páginas web | Rosa | `#e6318a` | `#a00860` |
 | Soporte | Azul | `#3c76ba` | `#1f4f8c` |
 | Otros (antes «Comercial y contable») | Amarillo | `#ffe90b` | `#6b5a00` |
@@ -111,27 +111,27 @@ Clientes (pertenecen a una empresa):
 
 Equipo interno:
 Equipos internos (decidido 2026-11-09): hay **dos equipos**, **Soporte** (dos empleados) y
-**Aplicaciones**, que lleva Aplicaciones web y Páginas web. No coinciden uno a uno con los cuatro
-«departamentos» que elige el cliente (Soporte, Aplicaciones web, Páginas web, Otros): esos son
+**Desarrollo y Diseño**, que lleva los departamentos Aplicaciones y Páginas web. No coinciden uno a uno con los cuatro
+«departamentos» que elige el cliente (Soporte, Aplicaciones, Páginas web, Otros): esos son
 una etiqueta del ticket, y el equipo es dónde trabaja cada empleado.
 
 | Departamento que elige el cliente | Equipo interno que lo atiende |
 |---|---|
 | Soporte | Soporte |
-| Aplicaciones web | Aplicaciones |
-| Páginas web | Aplicaciones |
+| Aplicaciones | Desarrollo y Diseño |
+| Páginas web | Desarrollo y Diseño |
 | Otros | **Ninguno: solo el administrador** (el jefe de Ling Marco) lo ve y lo responde |
 
 El cliente puede equivocarse de departamento. Por eso (decidido 2026-11-09):
-- **Cualquier agente puede reasignar** un ticket a alguien del otro equipo (Soporte ↔ Aplicaciones).
+- **Cualquier agente puede reasignar** un ticket a alguien del otro equipo (Soporte ↔ Desarrollo y Diseño).
 - **Cualquier agente puede corregir el departamento** del ticket. Queda registrado (R5) y **se
   avisa al cliente** por email y en el panel (R12).
 
 **Otros es un caso aparte:** lo ve y lo responde **solo el administrador**. Los agentes no lo ven
 (R13).
 
-- **Agente** (empleado de Soporte o de Aplicaciones): atiende tickets, escribe respuestas y notas
-  internas. **Ve todos los tickets de Soporte, Aplicaciones web y Páginas web**, no solo los de
+- **Agente** (empleado de Soporte o de Desarrollo y Diseño): atiende tickets, escribe respuestas y notas
+  internas. **Ve todos los tickets de Soporte, Aplicaciones y Páginas web**, no solo los de
   su equipo (decidido): sirve para detectar incidencias parecidas y cubrir a un compañero
   ausente. **No ve los de «Otros»** (R13). Puede asignar un ticket a cualquier otro agente,
   también del otro equipo, o asignárselo a sí mismo (R11), y corregir el departamento (R12).
@@ -261,7 +261,7 @@ Matriz completa en `docs/plan/autorizacion.md`. Lo implementado como **lo más r
 | R8 | Solo el administrador de la aplicación crea, desactiva o cambia el rol de empleados internos; nadie puede darse a sí mismo un rol superior | Política de autorización + test |
 | R9 | Siempre existe exactamente un administrador activo: no puede eliminarse, desactivarse ni degradarse sin traspasar antes el rol a otro empleado interno | Validación en servidor + test (incluido el intento de saltarlo) |
 | R10 | El administrador ve todos los tickets y puede reasignarlos (R11), pero no responder ni cambiar su estado, salvo en los de «Otros» (R13) | Política de autorización + test de que todas las acciones de escritura devuelven denegado |
-| R11 | Un agente o el administrador puede asignar un ticket a cualquier agente, de su equipo o del otro (Soporte ↔ Aplicaciones), o asignárselo a sí mismo; cada reasignación queda registrada con quién, cuándo y de quién a quién, y avisa a la persona que lo recibe | Test + historial (R5) |
+| R11 | Un agente o el administrador puede asignar un ticket a cualquier agente, de su equipo o del otro (Soporte ↔ Desarrollo y Diseño), o asignárselo a sí mismo; cada reasignación queda registrada con quién, cuándo y de quién a quién, y avisa a la persona que lo recibe | Test + historial (R5) |
 | R12 | Cualquier agente puede corregir el departamento de un ticket; queda registrado (quién, cuándo, de cuál a cuál) y se avisa al cliente por email y en el panel | Test + historial (R5) + test del aviso |
 | R13 | Los tickets del departamento «Otros» solo los ven y gestionan el administrador y el cliente que los abrió; los agentes no los ven (ni en listas, ni en búsquedas, ni en contadores, ni por URL directa). Si un agente corrige un ticket a «Otros», deja de verlo | Política de autorización + test de cada vía de acceso |
 | R14 | Cuando el cliente responde en un ticket «Pendiente de cliente», el estado pasa solo a «En curso» | Test |
