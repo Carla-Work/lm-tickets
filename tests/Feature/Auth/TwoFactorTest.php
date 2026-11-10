@@ -50,6 +50,16 @@ class TwoFactorTest extends TestCase
         return $this->post(route('login.store'), ['email' => $usuario->email, 'password' => $clave]);
     }
 
+    /**
+     * Deja a `$usuario` en el acceso «a medias» sin pasar por el formulario. Hace falta porque un
+     * administrador sin segundo factor ya entra directo (es opcional) y las pantallas de activación solo
+     * se abren con ese acceso a medias. La clave de sesión es la de PendingLogin::KEY.
+     */
+    private function accesoAMedias(User $usuario): void
+    {
+        $this->withSession(['login.pending' => ['id' => $usuario->id, 'at' => now()->timestamp]]);
+    }
+
     private function codigoActual(string $secreto, int $desfaseSegundos = 0): string
     {
         return $this->totp()->code($secreto, now()->timestamp + $desfaseSegundos);
@@ -90,14 +100,14 @@ class TwoFactorTest extends TestCase
         $this->get(route('panel'))->assertRedirect(route('login'));
     }
 
-    #[TestDox('Un administrador SIN el segundo factor activado va a activarlo, no al panel')]
-    public function test_admin_without_two_factor_is_sent_to_setup(): void
+    #[TestDox('Un administrador SIN el segundo factor activado entra solo con la contraseña (es opcional)')]
+    public function test_admin_without_two_factor_logs_in_with_password_only(): void
     {
         $admin = User::factory()->admin()->create();
 
-        $this->entrar($admin)->assertRedirect(route('two-factor.setup'));
+        $this->entrar($admin)->assertRedirect(route('panel'));
 
-        $this->assertGuest();
+        $this->assertAuthenticatedAs($admin);
     }
 
     #[TestDox('Un agente o un cliente entran sin segundo factor (solo lo exige el administrador)')]
@@ -156,7 +166,7 @@ class TwoFactorTest extends TestCase
     public function test_setup_page_shows_key_and_link_without_qr(): void
     {
         $admin = User::factory()->admin()->create();
-        $this->entrar($admin);
+        $this->accesoAMedias($admin);
 
         $respuesta = $this->get(route('two-factor.setup'))->assertOk()->assertSee('Activa la verificación en dos pasos');
         $clave = $admin->fresh()->two_factor_secret;
@@ -170,7 +180,7 @@ class TwoFactorTest extends TestCase
     public function test_secret_is_stored_encrypted(): void
     {
         $admin = User::factory()->admin()->create();
-        $this->entrar($admin);
+        $this->accesoAMedias($admin);
         $this->get(route('two-factor.setup'));
 
         $enClaro = $admin->fresh()->two_factor_secret;
@@ -186,7 +196,7 @@ class TwoFactorTest extends TestCase
     public function test_wrong_code_at_setup_does_not_enable(): void
     {
         $admin = User::factory()->admin()->create();
-        $this->entrar($admin);
+        $this->accesoAMedias($admin);
         $this->get(route('two-factor.setup'));
 
         $this->post(route('two-factor.setup.confirm'), ['codigo' => $this->codigoMalo($admin->fresh()->two_factor_secret)])->assertSessionHasErrors('codigo');
@@ -200,7 +210,7 @@ class TwoFactorTest extends TestCase
     public function test_full_setup_flow(): void
     {
         $admin = User::factory()->admin()->create();
-        $this->entrar($admin);
+        $this->accesoAMedias($admin);
         $this->get(route('two-factor.setup'));
         $secreto = $admin->fresh()->two_factor_secret;
 
@@ -220,7 +230,7 @@ class TwoFactorTest extends TestCase
     public function test_recovery_codes_are_stored_hashed(): void
     {
         $admin = User::factory()->admin()->create();
-        $this->entrar($admin);
+        $this->accesoAMedias($admin);
         $this->get(route('two-factor.setup'));
         $this->post(route('two-factor.setup.confirm'), ['codigo' => $this->codigoActual($admin->fresh()->two_factor_secret)]);
 
@@ -239,7 +249,7 @@ class TwoFactorTest extends TestCase
     public function test_finish_requires_the_checkbox(): void
     {
         $admin = User::factory()->admin()->create();
-        $this->entrar($admin);
+        $this->accesoAMedias($admin);
         $this->get(route('two-factor.setup'));
         $this->post(route('two-factor.setup.confirm'), ['codigo' => $this->codigoActual($admin->fresh()->two_factor_secret)]);
 
@@ -252,7 +262,7 @@ class TwoFactorTest extends TestCase
     public function test_recovery_codes_cannot_be_viewed_again(): void
     {
         $admin = User::factory()->admin()->create();
-        $this->entrar($admin);
+        $this->accesoAMedias($admin);
         $this->get(route('two-factor.setup'));
         $this->post(route('two-factor.setup.confirm'), ['codigo' => $this->codigoActual($admin->fresh()->two_factor_secret)]);
         $this->post(route('two-factor.finish'), ['guardados' => '1']);
@@ -477,14 +487,14 @@ class TwoFactorTest extends TestCase
 
     // ---------- el rol y la sesión ----------
 
-    #[TestDox('Un administrador SIN segundo factor activado que ya tiene la sesión abierta (p. ej. recién ascendido) es expulsado (R21)')]
-    public function test_admin_without_two_factor_is_logged_out_mid_session(): void
+    #[TestDox('Un administrador SIN segundo factor activado con la sesión abierta (p. ej. recién ascendido) NO es expulsado: el segundo factor es opcional')]
+    public function test_admin_without_two_factor_keeps_session(): void
     {
         $admin = User::factory()->admin()->create();
 
-        $this->actingAs($admin)->get(route('panel'))->assertRedirect(route('login'));
+        $this->actingAs($admin)->get(route('panel'))->assertOk();
 
-        $this->assertGuest();
+        $this->assertAuthenticatedAs($admin);
     }
 
     #[TestDox('Un administrador CON segundo factor activado con la sesión abierta usa el panel con normalidad')]

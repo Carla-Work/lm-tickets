@@ -100,10 +100,15 @@ class User extends Authenticatable
         return $this->company_id === null || ($this->company !== null && $this->company->isActive());
     }
 
-    /** R21: solo el administrador entra con segundo factor. */
+    /**
+     * R21 (revisada 2026-11-09): el segundo factor es OPCIONAL para el administrador, pero si lo tiene
+     * activado se le exige en cada acceso. Solo el administrador puede activarlo (agentes y clientes no).
+     * Trampa: no devolver `true` solo por ser administrador; volvería a bloquear la entrada a quien
+     * nunca lo activó (la usuaria decidió que no sea obligatorio).
+     */
     public function requiresTwoFactor(): bool
     {
-        return $this->hasRole(UserRole::Admin);
+        return $this->hasRole(UserRole::Admin) && $this->hasTwoFactorEnabled();
     }
 
     /** El segundo factor está ACTIVADO: la persona demostró que su app genera códigos válidos. */

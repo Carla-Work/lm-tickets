@@ -69,13 +69,14 @@ class LoginController extends Controller
             throw ValidationException::withMessages(['email' => trans('auth.failed')]);
         }
 
-        // R21: el administrador NO queda autenticado todavía; debe pasar el segundo factor. Y NO se borran
+        // R21 (opcional desde 2026-11-09): el administrador que HA ACTIVADO el segundo factor NO queda
+        // autenticado todavía; debe pasar el código. Sin 2FA activado entra como los demás. Y NO se borran
         // sus fallos: si se borraran aquí, quien conoce la contraseña reiniciaría el contador a voluntad
         // y podría probar códigos sin límite (ver TwoFactorController).
         if ($usuario->requiresTwoFactor()) {
             PendingLogin::start($request, $usuario);
 
-            return redirect()->route($usuario->hasTwoFactorEnabled() ? 'two-factor.challenge' : 'two-factor.setup');
+            return redirect()->route('two-factor.challenge');
         }
 
         Auth::login($usuario);

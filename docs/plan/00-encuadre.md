@@ -271,7 +271,7 @@ Matriz completa en `docs/plan/autorizacion.md`. Lo implementado como **lo más r
 | R18 | No hay registro libre: toda cuenta (empresa, usuario de empresa, empleado) se crea por invitación por correo y quien la recibe elige su contraseña | Test de que no existe ruta de registro público |
 | R19 | Un producto asignado a alguna empresa no se borra, solo se desactiva; los tickets antiguos conservan su producto | Test |
 | R20 | Tras 5 intentos fallidos de acceso se bloquea el acceso un tiempo | Test (el sexto intento, aun con la contraseña buena, se rechaza) |
-| R21 | La cuenta de administrador exige un segundo factor TOTP (RFC 6238) para entrar; el código sirve una vez por ventana de tiempo y los códigos de recuperación se usan una sola vez | Tests contra los vectores oficiales del RFC 6238, de bloqueo (R20) y de un solo uso |
+| R21 | (Revisada 2026-11-09: **opcional**, decisión de la usuaria.) El administrador puede activar un segundo factor TOTP (RFC 6238); si lo activa, se le exige para entrar; el código sirve una vez por ventana de tiempo y los códigos de recuperación se usan una sola vez | Tests contra los vectores oficiales del RFC 6238, de bloqueo (R20) y de un solo uso |
 
 Fuente: requisitos de la usuaria y RGPD (R1–R3 por confidencialidad de datos de clientes).
 
