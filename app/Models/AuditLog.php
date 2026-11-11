@@ -19,6 +19,7 @@ class AuditLog extends Model
         'login' => 'Entrada',
         'login_failed' => 'Intento de acceso fallido',
         'login_locked' => 'Acceso bloqueado',
+        'attachment_denied' => 'Descarga de adjunto denegada',
         'logout' => 'Salida',
         'invited' => 'Invitación enviada',
         'activated' => 'Cuenta activada',

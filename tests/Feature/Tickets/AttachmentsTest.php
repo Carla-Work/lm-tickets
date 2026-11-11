@@ -16,6 +16,7 @@ use App\Enums\Department;
 use App\Enums\MessageKind;
 use App\Enums\TicketStatus;
 use App\Models\Attachment;
+use App\Models\AuditLog;
 use App\Models\Category;
 use App\Models\Ticket;
 use App\Models\TicketMessage;
@@ -274,6 +275,23 @@ class AttachmentsTest extends TestCase
         foreach (['cuB', 'caB', 'cuA2'] as $quien) {
             $this->actingAs($this->a[$quien])->get(route('attachments.download', $adjunto))->assertForbidden();
         }
+    }
+
+    #[TestDox('Una descarga denegada queda en la auditoría (quién y qué adjunto, sin nombre de fichero); una permitida no deja rastro (D-4)')]
+    public function test_denied_download_is_audited(): void
+    {
+        $adjunto = $this->conAdjunto();
+
+        $this->actingAs($this->a['cuA'])->get(route('attachments.download', $adjunto))->assertOk();
+        $this->assertSame(0, AuditLog::where('event', 'attachment_denied')->count(), 'permitida: sin rastro');
+
+        $this->app['auth']->forgetGuards();
+        $this->actingAs($this->a['cuB'])->get(route('attachments.download', $adjunto))->assertForbidden();
+
+        $registro = AuditLog::where('event', 'attachment_denied')->firstOrFail();
+        $this->assertSame($this->a['cuB']->id, $registro->actor_id);
+        $this->assertSame($adjunto->id, $registro->properties['attachment_id']);
+        $this->assertStringNotContainsString((string) $adjunto->original_name, json_encode($registro->toArray()) ?: '');
     }
 
     #[TestDox('R2: el adjunto de una NOTA interna es solo del equipo: el cliente recibe 403 y no ve ni el nombre')]
