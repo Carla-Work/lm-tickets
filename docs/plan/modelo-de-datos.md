@@ -26,6 +26,8 @@ Si cambias el esquema, actualiza esto.
 | `company_product` | Productos contratados por cada empresa | Clave primaria compuesta; `RESTRICT` en ambos lados (R19). |
 | `categories` | Categorías, colgadas de un departamento | Único por (departamento, nombre). Editables por el administrador. |
 | `tickets` | El ticket | Ver «Tickets». |
+| `tags` | Etiquetas internas (catálogo cerrado del administrador) | Nombre único; `active`: se desactivan, no se borran. Ver «Prioridad y etiquetas internas». |
+| `ticket_tag` | Etiquetas de cada ticket | Clave primaria compuesta (ticket, etiqueta); `RESTRICT` en ambos lados. |
 | `ticket_sequences` | Contador del número de ticket por año | Ver «Número de ticket». |
 | `ticket_messages` | Hilo: mensajes públicos y notas internas | Ver «Notas internas (R2)». |
 | `ticket_events` | Historial de cambios (R5) | Solo se añade: no tiene `updated_at`. |
@@ -79,6 +81,14 @@ hilo se ordena por fecha mezclando ambos y partir en dos tablas obligaría a uni
 **El riesgo** es obvio: un `SELECT` olvidado filtra una nota al cliente. Por eso:
 `TicketMessage::scopePublic()` es la única vía permitida en todo lo que ve el cliente, y el paso 3
 (autorización) lleva tests que recorren cada vista, correo y aviso del cliente buscando notas (R2).
+
+### Prioridad y etiquetas internas (P1)
+
+`tickets.priority` (`low`/`normal`/`high`/`urgent`, `NOT NULL DEFAULT 'normal'`, con su CHECK) y las etiquetas (`tags` +
+`ticket_tag`) son **internas**: el cliente no las ve en ninguna pantalla, correo o aviso. **El riesgo** es el mismo que con las
+notas: una vista olvidada que las pinte. Por eso solo se cargan para el equipo (`TicketController::show`), los cambios
+generan eventos con `visible_to_customer = false`, no tocan `last_activity_at` (que ordena la lista del cliente), y
+`PriorityAndTagsTest` recorre lista, detalle y avisos del cliente buscando cualquier rastro.
 
 ## Cómo se comprueba
 
