@@ -77,13 +77,13 @@
                     <div class="cols2">
                         <div class="campo">
                             <label for="nuevo-adm">Nuevo administrador</label>
-                            <select id="nuevo-adm" name="nuevo" required>
+                            <select id="nuevo-adm" name="nuevo" @errorAttrs('nuevo') required>
                                 <option value="">Elige un empleado</option>
                                 @foreach ($candidates as $candidate)
                                     <option value="{{ $candidate->id }}" @selected((string) old('nuevo') === (string) $candidate->id)>{{ $candidate->name }}</option>
                                 @endforeach
                             </select>
-                            @error('nuevo')<p class="error-campo" role="alert">{{ $message }}</p>@enderror
+                            @error('nuevo')<p class="error-campo" id="err-nuevo" role="alert">{{ $message }}</p>@enderror
                         </div>
                         <div class="campo">
                             <label for="equipo-saliente">Tu equipo cuando seas agente</label>
@@ -95,8 +95,8 @@
                         </div>
                         <div class="campo">
                             <label for="conf">Escribe TRASPASAR para confirmar</label>
-                            <input type="text" id="conf" name="confirmacion" autocomplete="off" required>
-                            @error('confirmacion')<p class="error-campo" role="alert">{{ $message }}</p>@enderror
+                            <input type="text" id="conf" name="confirmacion" @errorAttrs('confirmacion') autocomplete="off" required>
+                            @error('confirmacion')<p class="error-campo" id="err-confirmacion" role="alert">{{ $message }}</p>@enderror
                         </div>
                     </div>
                     <button type="submit" class="boton peligro-b">Traspasar el rol</button>
@@ -108,14 +108,14 @@
             <form class="tarjeta" action="{{ route('admin.staff.store') }}" method="post" aria-label="Nuevo empleado">
                 @csrf
                 <h2>Nuevo empleado</h2>
-                <div class="campo"><label for="en">Nombre y apellidos <span class="oblig" aria-hidden="true">*</span></label><input type="text" id="en" name="name" value="{{ old('name') }}" required maxlength="255">@error('name')<p class="error-campo" role="alert">{{ $message }}</p>@enderror</div>
-                <div class="campo"><label for="ee">Correo de Ling Marco <span class="oblig" aria-hidden="true">*</span></label><input type="email" id="ee" name="email" value="{{ old('email') }}" required maxlength="255"><p class="ayuda">Recibirá aquí la invitación para crear su contraseña.</p>@error('email')<p class="error-campo" role="alert">{{ $message }}</p>@enderror</div>
+                <div class="campo"><label for="en">Nombre y apellidos <span class="oblig" aria-hidden="true">*</span></label><input type="text" id="en" name="name" @errorAttrs('name') value="{{ old('name') }}" required maxlength="255">@error('name')<p class="error-campo" id="err-name" role="alert">{{ $message }}</p>@enderror</div>
+                <div class="campo"><label for="ee">Correo de Ling Marco <span class="oblig" aria-hidden="true">*</span></label><input type="email" id="ee" name="email" @errorAttrs('email') value="{{ old('email') }}" required maxlength="255"><p class="ayuda">Recibirá aquí la invitación para crear su contraseña.</p>@error('email')<p class="error-campo" id="err-email" role="alert">{{ $message }}</p>@enderror</div>
                 <div class="campo">
                     <label for="eq">Equipo <span class="oblig" aria-hidden="true">*</span></label>
-                    <select id="eq" name="team" required>
+                    <select id="eq" name="team" @errorAttrs('team') required>
                         @foreach (\App\Enums\Team::cases() as $team)<option value="{{ $team->value }}" @selected(old('team') === $team->value)>{{ $team->label() }}</option>@endforeach
                     </select>
-                    @error('team')<p class="error-campo" role="alert">{{ $message }}</p>@enderror
+                    @error('team')<p class="error-campo" id="err-team" role="alert">{{ $message }}</p>@enderror
                 </div>
                 <div class="campo"><label for="ne-rol">Rol</label><input type="text" id="ne-rol" value="Agente" readonly><p class="ayuda">Solo existe un administrador; se cambia con el traspaso.</p></div>
                 <button type="submit" class="boton principal">Crear y enviar invitación</button>

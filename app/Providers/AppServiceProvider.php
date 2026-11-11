@@ -13,6 +13,7 @@ use App\Support\MailLogger;
 use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Queue\Events\JobFailed;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -33,6 +34,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Accesibilidad de los formularios: `@errorAttrs('campo')` dentro de un <input>/<select>/<textarea> escribe
+        // aria-invalid y aria-describedby SOLO si ese campo tiene error, apuntando al <p class="error-campo" id="err-campo">
+        // que lo explica. Sin ello un lector de pantalla no sabe qué campo falló. El id es SIEMPRE «err-» + nombre del
+        // campo: si cambias uno de los dos lados, cambia el otro (lo vigila Accessibility/FieldErrorsTest).
+        Blade::directive('errorAttrs', fn (string $campo): string => "<?php if (\$errors->has({$campo})) { echo 'aria-invalid=\"true\" aria-describedby=\"err-'.e({$campo}).'\"'; } ?>");
+
         // Antes de cualquier policy: una cuenta que NO es operativa (de baja, sin activar, o de una empresa
         // de baja) no puede nada, aunque tenga una sesión abierta de antes de la baja. Devolver null deja
         // que sigan las policies; devolver false deniega sin más. NUNCA devolver true aquí.

@@ -16,9 +16,9 @@
             @csrf
             <h2>Datos personales</h2>
             <div class="cols2">
-                <div class="campo"><label for="nom">Nombre y apellidos</label><input type="text" id="nom" name="name" value="{{ old('name', $user->name) }}" required maxlength="255">@error('name')<p class="error-campo" role="alert">{{ $message }}</p>@enderror</div>
+                <div class="campo"><label for="nom">Nombre y apellidos</label><input type="text" id="nom" name="name" @errorAttrs('name') value="{{ old('name', $user->name) }}" required maxlength="255">@error('name')<p class="error-campo" id="err-name" role="alert">{{ $message }}</p>@enderror</div>
                 @unless ($user->isInternal())
-                    <div class="campo"><label for="tel">Teléfono</label><input type="tel" id="tel" name="phone" value="{{ old('phone', $user->phone) }}" maxlength="30">@error('phone')<p class="error-campo" role="alert">{{ $message }}</p>@enderror</div>
+                    <div class="campo"><label for="tel">Teléfono</label><input type="tel" id="tel" name="phone" @errorAttrs('phone') value="{{ old('phone', $user->phone) }}" maxlength="30">@error('phone')<p class="error-campo" id="err-phone" role="alert">{{ $message }}</p>@enderror</div>
                 @endunless
                 <div class="campo"><label for="em">Correo electrónico</label><input type="email" id="em" value="{{ $user->email }}" readonly>@unless ($user->isInternal())<p class="ayuda">Para cambiarlo, habla con el administrador de tu empresa.</p>@endunless</div>
                 @if ($user->isInternal())
@@ -63,7 +63,7 @@
         <form class="tarjeta" action="{{ route('profile.password') }}" method="post" aria-label="Cambiar contraseña">
             @csrf
             <h2>Cambiar contraseña</h2>
-            <div class="campo"><label for="actual">Contraseña actual</label><div class="pw"><input type="password" id="actual" name="current_password" autocomplete="current-password" required>@include('partials.ojo-contrasena', ['para' => 'actual'])</div>@error('current_password')<p class="error-campo" role="alert">{{ $message }}</p>@enderror</div>
+            <div class="campo"><label for="actual">Contraseña actual</label><div class="pw"><input type="password" id="actual" name="current_password" @errorAttrs('current_password') autocomplete="current-password" required>@include('partials.ojo-contrasena', ['para' => 'actual'])</div>@error('current_password')<p class="error-campo" id="err-current_password" role="alert">{{ $message }}</p>@enderror</div>
             <div class="cols2">
                 <div class="campo"><label for="nueva">Contraseña nueva</label><div class="pw"><input type="password" id="nueva" name="password" autocomplete="new-password" required>@include('partials.ojo-contrasena', ['para' => 'nueva'])</div><p class="ayuda">Al menos {{ config('access.password.min_length') }} caracteres.</p>@error('password')<p class="error-campo" role="alert">{{ $message }}</p>@enderror</div>
                 <div class="campo"><label for="repite">Repite la nueva</label><div class="pw"><input type="password" id="repite" name="password_confirmation" autocomplete="new-password" required>@include('partials.ojo-contrasena', ['para' => 'repite'])</div></div>

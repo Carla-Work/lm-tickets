@@ -96,10 +96,10 @@
                             @csrf
                             <label for="respuesta">Mensaje para {{ $ticket->requester->name }}</label>
                             <textarea id="respuesta" name="mensaje" required maxlength="10000">{{ old('mensaje') }}</textarea>
-                            @error('mensaje')<p class="error-campo">{{ $message }}</p>@enderror
+                            @error('mensaje')<p class="error-campo" id="err-mensaje">{{ $message }}</p>@enderror
                             <input type="file" id="adjuntos" name="adjuntos[]" multiple aria-label="Adjuntar archivos">
                             <p class="ayuda" style="margin-top:.3rem">Capturas, PDF, hojas de cálculo o ZIP. Hasta {{ config('access.attachments.max_files') }} archivos de {{ intdiv(config('access.attachments.max_kb'), 1024) }} MB cada uno.</p>
-                            @error('adjuntos')<p class="error-campo" role="alert">{{ $message }}</p>@enderror
+                            @error('adjuntos')<p class="error-campo" id="err-adjuntos" role="alert">{{ $message }}</p>@enderror
                             @foreach ($errors->get('adjuntos.*') as $messages)@foreach ($messages as $message)<p class="error-campo" role="alert">{{ $message }}</p>@endforeach @endforeach
                             <p class="ayuda" style="margin:.3rem 0 0;font-size:.9rem;color:var(--texto-suave)">El estado no cambia solo: cámbialo en «Gestión» si hace falta (por ejemplo, a «Pendiente de cliente»). El cliente recibirá un aviso por correo y en su panel.</p>
                             <div class="acciones"><button type="submit" class="boton principal">Enviar al cliente</button></div>
@@ -157,17 +157,17 @@
                         <form class="grupo" action="{{ route('tickets.status.update', $ticket) }}" method="post">
                             @csrf
                             <label for="g-estado">Estado</label>
-                            <select id="g-estado" name="estado">
+                            <select id="g-estado" name="estado" @errorAttrs('estado')>
                                 @foreach ($targets as $target)
                                     <option value="{{ $target->value }}" @selected(old('estado') === $target->value)>{{ $target->label() }}</option>
                                 @endforeach
                             </select>
                             @if (in_array(\App\Enums\TicketStatus::Resolved, $targets, true))
                                 <label for="g-solucion" style="margin-top:.4rem">Cómo se ha resuelto <span style="font-weight:400">(obligatorio al pasar a «Resuelto»)</span></label>
-                                <textarea id="g-solucion" name="solucion" maxlength="5000" placeholder="Qué se ha hecho para solucionarlo">{{ old('solucion') }}</textarea>
+                                <textarea id="g-solucion" name="solucion" @errorAttrs('solucion') maxlength="5000" placeholder="Qué se ha hecho para solucionarlo">{{ old('solucion') }}</textarea>
                             @endif
-                            @error('estado')<p class="error-campo">{{ $message }}</p>@enderror
-                            @error('solucion')<p class="error-campo">{{ $message }}</p>@enderror
+                            @error('estado')<p class="error-campo" id="err-estado">{{ $message }}</p>@enderror
+                            @error('solucion')<p class="error-campo" id="err-solucion">{{ $message }}</p>@enderror
                             <button type="submit" class="boton secundario">Cambiar estado</button>
                         </form>
                     @elseif (! $canStatus && $ticket->status !== \App\Enums\TicketStatus::Closed)
@@ -178,12 +178,12 @@
                         <form class="grupo" action="{{ route('tickets.priority.update', $ticket) }}" method="post">
                             @csrf
                             <label for="g-prio">Prioridad <span style="font-weight:400">(solo la ve el equipo)</span></label>
-                            <select id="g-prio" name="prioridad">
+                            <select id="g-prio" name="prioridad" @errorAttrs('prioridad')>
                                 @foreach (\App\Enums\Priority::cases() as $priority)
                                     <option value="{{ $priority->value }}" @selected($ticket->priority === $priority)>{{ $priority->label() }}</option>
                                 @endforeach
                             </select>
-                            @error('prioridad')<p class="error-campo">{{ $message }}</p>@enderror
+                            @error('prioridad')<p class="error-campo" id="err-prioridad">{{ $message }}</p>@enderror
                             <button type="submit" class="boton secundario">Cambiar prioridad</button>
                         </form>
                     @endif
@@ -199,7 +199,7 @@
                                     <p class="nota-ayuda">Todavía no hay etiquetas. Las crea el administrador.</p>
                                 @endforelse
                             </div>
-                            @error('etiquetas')<p class="error-campo">{{ $message }}</p>@enderror
+                            @error('etiquetas')<p class="error-campo" id="err-etiquetas">{{ $message }}</p>@enderror
                             @if ($tagChoices->isNotEmpty())
                                 <button type="submit" class="boton secundario">Guardar etiquetas</button>
                                 <p class="nota-ayuda">Las etiquetas las define el administrador en «Etiquetas».</p>
@@ -221,7 +221,7 @@
                                     </optgroup>
                                 @endforeach
                             </select>
-                            @error('asignado')<p class="error-campo">{{ $message }}</p>@enderror
+                            @error('asignado')<p class="error-campo" id="err-asignado">{{ $message }}</p>@enderror
                             <button type="submit" class="boton secundario">Reasignar</button>
                             <p class="nota-ayuda">Puedes asignarlo a cualquiera, también del otro equipo. Queda registrado.</p>
                         </form>
@@ -231,7 +231,7 @@
                         <form class="grupo" action="{{ route('tickets.department.update', $ticket) }}" method="post">
                             @csrf
                             <label for="g-mover">Mover a otro departamento</label>
-                            <select id="g-mover" name="categoria" required>
+                            <select id="g-mover" name="categoria" @errorAttrs('categoria') required>
                                 @foreach (\App\Enums\Department::cases() as $department)
                                     @continue($department === $ticket->department)
                                     <optgroup label="{{ $department === \App\Enums\Department::Other ? 'Contabilidad (solo la ve su equipo y el administrador)' : $department->label() }}">
@@ -241,7 +241,7 @@
                                     </optgroup>
                                 @endforeach
                             </select>
-                            @error('categoria')<p class="error-campo">{{ $message }}</p>@enderror
+                            @error('categoria')<p class="error-campo" id="err-categoria">{{ $message }}</p>@enderror
                             <button type="submit" class="boton secundario">Mover ticket</button>
                             <p class="nota-ayuda fuerte">Se avisará al cliente por correo y en su panel.</p>
                             <p class="nota-ayuda">Elige el tipo de incidencia: el departamento es el del grupo donde está. No aparece el departamento actual.</p>

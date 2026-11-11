@@ -20,10 +20,10 @@
         <div class="tarjeta">
             <h2>Datos de la empresa</h2>
             <div class="cols2">
-                <div class="campo"><label for="name">Nombre o razón social <span class="oblig" aria-hidden="true">*</span></label><input type="text" id="name" name="name" value="{{ old('name') }}" required maxlength="255" placeholder="Talleres Marrero S.L.">@error('name')<p class="error-campo" role="alert">{{ $message }}</p>@enderror</div>
-                <div class="campo"><label for="tax_id">CIF <span class="oblig" aria-hidden="true">*</span></label><input type="text" id="tax_id" name="tax_id" value="{{ old('tax_id') }}" required maxlength="20" placeholder="B00000000">@error('tax_id')<p class="error-campo" role="alert">{{ $message }}</p>@enderror</div>
-                <div class="campo"><label for="phone">Teléfono</label><input type="tel" id="phone" name="phone" value="{{ old('phone') }}" maxlength="30">@error('phone')<p class="error-campo" role="alert">{{ $message }}</p>@enderror</div>
-                <div class="campo"><label for="contact_email">Correo de contacto</label><input type="email" id="contact_email" name="contact_email" value="{{ old('contact_email') }}" maxlength="255">@error('contact_email')<p class="error-campo" role="alert">{{ $message }}</p>@enderror</div>
+                <div class="campo"><label for="name">Nombre o razón social <span class="oblig" aria-hidden="true">*</span></label><input type="text" id="name" name="name" @errorAttrs('name') value="{{ old('name') }}" required maxlength="255" placeholder="Talleres Marrero S.L.">@error('name')<p class="error-campo" id="err-name" role="alert">{{ $message }}</p>@enderror</div>
+                <div class="campo"><label for="tax_id">CIF <span class="oblig" aria-hidden="true">*</span></label><input type="text" id="tax_id" name="tax_id" @errorAttrs('tax_id') value="{{ old('tax_id') }}" required maxlength="20" placeholder="B00000000">@error('tax_id')<p class="error-campo" id="err-tax_id" role="alert">{{ $message }}</p>@enderror</div>
+                <div class="campo"><label for="phone">Teléfono</label><input type="tel" id="phone" name="phone" @errorAttrs('phone') value="{{ old('phone') }}" maxlength="30">@error('phone')<p class="error-campo" id="err-phone" role="alert">{{ $message }}</p>@enderror</div>
+                <div class="campo"><label for="contact_email">Correo de contacto</label><input type="email" id="contact_email" name="contact_email" @errorAttrs('contact_email') value="{{ old('contact_email') }}" maxlength="255">@error('contact_email')<p class="error-campo" id="err-contact_email" role="alert">{{ $message }}</p>@enderror</div>
             </div>
         </div>
 
@@ -39,8 +39,8 @@
             <h2>Primer usuario (administrador de la empresa)</h2>
             <p class="sub">Será quien gestione los demás usuarios de su empresa.</p>
             <div class="cols2">
-                <div class="campo"><label for="user_name">Nombre y apellidos <span class="oblig" aria-hidden="true">*</span></label><input type="text" id="user_name" name="user_name" value="{{ old('user_name') }}" required maxlength="255">@error('user_name')<p class="error-campo" role="alert">{{ $message }}</p>@enderror</div>
-                <div class="campo"><label for="user_email">Correo electrónico <span class="oblig" aria-hidden="true">*</span></label><input type="email" id="user_email" name="user_email" value="{{ old('user_email') }}" required maxlength="255"><p class="ayuda">Recibirá aquí la invitación.</p>@error('user_email')<p class="error-campo" role="alert">{{ $message }}</p>@enderror</div>
+                <div class="campo"><label for="user_name">Nombre y apellidos <span class="oblig" aria-hidden="true">*</span></label><input type="text" id="user_name" name="user_name" @errorAttrs('user_name') value="{{ old('user_name') }}" required maxlength="255">@error('user_name')<p class="error-campo" id="err-user_name" role="alert">{{ $message }}</p>@enderror</div>
+                <div class="campo"><label for="user_email">Correo electrónico <span class="oblig" aria-hidden="true">*</span></label><input type="email" id="user_email" name="user_email" @errorAttrs('user_email') value="{{ old('user_email') }}" required maxlength="255"><p class="ayuda">Recibirá aquí la invitación.</p>@error('user_email')<p class="error-campo" id="err-user_email" role="alert">{{ $message }}</p>@enderror</div>
             </div>
         </div>
 

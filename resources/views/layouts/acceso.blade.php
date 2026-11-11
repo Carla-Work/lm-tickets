@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="{{ asset('css/acceso.css') }}">
 </head>
 <body>
+<a class="saltar" href="#contenido">Saltar al contenido</a>
 <div class="acceso2">
     <section class="acceso-marca" aria-label="Ling Marco">
         <div>
@@ -25,7 +26,7 @@
             <p>Abre un ticket, sigue su estado y habla con el equipo de Ling Marco desde un único sitio. Te avisamos por correo y en el panel en cuanto haya novedades.</p>
         </div>
     </section>
-    <main class="acceso-form">
+    <main class="acceso-form" id="contenido" tabindex="-1">
         <div class="acceso-form-int">
             @yield('contenido')
             <p class="pie-acceso">

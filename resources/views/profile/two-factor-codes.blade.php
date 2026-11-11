@@ -25,7 +25,7 @@
         <form action="{{ route('profile.two-factor.finish') }}" method="post">
             @csrf
             <label style="display:flex;gap:.55rem;align-items:center;margin:0 0 1rem;font-size:.95rem"><input type="checkbox" name="guardados" value="1" required style="width:1.1rem;height:1.1rem"> He guardado estos códigos</label>
-            @error('guardados')<p class="error-campo" role="alert">{{ $message }}</p>@enderror
+            @error('guardados')<p class="error-campo" id="err-guardados" role="alert">{{ $message }}</p>@enderror
             <button type="submit" class="boton principal">Continuar</button>
         </form>
     </section>

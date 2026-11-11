@@ -29,10 +29,10 @@
                 @csrf
                 <h2>Datos de la empresa</h2>
                 <div class="cols2">
-                    <div class="campo"><label for="name">Nombre o razón social <span class="oblig" aria-hidden="true">*</span></label><input type="text" id="name" name="name" value="{{ old('name', $company->name) }}" required maxlength="255">@error('name')<p class="error-campo" role="alert">{{ $message }}</p>@enderror</div>
-                    <div class="campo"><label for="tax_id">CIF <span class="oblig" aria-hidden="true">*</span></label><input type="text" id="tax_id" name="tax_id" value="{{ old('tax_id', $company->tax_id) }}" required maxlength="20">@error('tax_id')<p class="error-campo" role="alert">{{ $message }}</p>@enderror</div>
-                    <div class="campo"><label for="phone">Teléfono</label><input type="tel" id="phone" name="phone" value="{{ old('phone', $company->phone) }}" maxlength="30">@error('phone')<p class="error-campo" role="alert">{{ $message }}</p>@enderror</div>
-                    <div class="campo"><label for="contact_email">Correo de contacto</label><input type="email" id="contact_email" name="contact_email" value="{{ old('contact_email', $company->contact_email) }}" maxlength="255">@error('contact_email')<p class="error-campo" role="alert">{{ $message }}</p>@enderror</div>
+                    <div class="campo"><label for="name">Nombre o razón social <span class="oblig" aria-hidden="true">*</span></label><input type="text" id="name" name="name" @errorAttrs('name') value="{{ old('name', $company->name) }}" required maxlength="255">@error('name')<p class="error-campo" id="err-name" role="alert">{{ $message }}</p>@enderror</div>
+                    <div class="campo"><label for="tax_id">CIF <span class="oblig" aria-hidden="true">*</span></label><input type="text" id="tax_id" name="tax_id" @errorAttrs('tax_id') value="{{ old('tax_id', $company->tax_id) }}" required maxlength="20">@error('tax_id')<p class="error-campo" id="err-tax_id" role="alert">{{ $message }}</p>@enderror</div>
+                    <div class="campo"><label for="phone">Teléfono</label><input type="tel" id="phone" name="phone" @errorAttrs('phone') value="{{ old('phone', $company->phone) }}" maxlength="30">@error('phone')<p class="error-campo" id="err-phone" role="alert">{{ $message }}</p>@enderror</div>
+                    <div class="campo"><label for="contact_email">Correo de contacto</label><input type="email" id="contact_email" name="contact_email" @errorAttrs('contact_email') value="{{ old('contact_email', $company->contact_email) }}" maxlength="255">@error('contact_email')<p class="error-campo" id="err-contact_email" role="alert">{{ $message }}</p>@enderror</div>
                 </div>
                 <button type="submit" class="boton secundario">Guardar datos</button>
             </form>
@@ -95,8 +95,8 @@
                     <p class="sub" style="color:var(--texto)">Sus usuarios ya no podrán acceder. Los tickets se conservan según el plan de conservación de datos (provisional: 2 años) y luego se borran o anonimizan.</p>
                     <div class="campo">
                         <label for="confirmacion">Para confirmar, escribe «{{ $company->name }}»</label>
-                        <input type="text" id="confirmacion" name="confirmacion" required autocomplete="off">
-                        @error('confirmacion')<p class="error-campo" role="alert">{{ $message }}</p>@enderror
+                        <input type="text" id="confirmacion" name="confirmacion" @errorAttrs('confirmacion') required autocomplete="off">
+                        @error('confirmacion')<p class="error-campo" id="err-confirmacion" role="alert">{{ $message }}</p>@enderror
                     </div>
                     <button type="submit" class="boton peligro-b">Dar de baja</button>
                 </form>

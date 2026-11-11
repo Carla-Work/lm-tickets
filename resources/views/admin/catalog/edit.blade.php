@@ -15,9 +15,9 @@
     <form class="tarjeta" style="max-width:560px;margin-top:1rem" method="post"
           action="{{ $isProduct ? route('admin.catalog.products.update', $item) : route('admin.catalog.categories.update', $item) }}">
         @csrf
-        <div class="campo"><label for="name">Nombre <span class="oblig" aria-hidden="true">*</span></label><input type="text" id="name" name="name" value="{{ old('name', $item->name) }}" required maxlength="{{ $isProduct ? 255 : 100 }}">@error('name')<p class="error-campo" role="alert">{{ $message }}</p>@enderror</div>
+        <div class="campo"><label for="name">Nombre <span class="oblig" aria-hidden="true">*</span></label><input type="text" id="name" name="name" @errorAttrs('name') value="{{ old('name', $item->name) }}" required maxlength="{{ $isProduct ? 255 : 100 }}">@error('name')<p class="error-campo" id="err-name" role="alert">{{ $message }}</p>@enderror</div>
         @if ($isProduct)
-            <div class="campo"><label for="description">Descripción corta</label><input type="text" id="description" name="description" value="{{ old('description', $item->description) }}" maxlength="200">@error('description')<p class="error-campo" role="alert">{{ $message }}</p>@enderror</div>
+            <div class="campo"><label for="description">Descripción corta</label><input type="text" id="description" name="description" @errorAttrs('description') value="{{ old('description', $item->description) }}" maxlength="200">@error('description')<p class="error-campo" id="err-description" role="alert">{{ $message }}</p>@enderror</div>
         @else
             <p class="ayuda">Departamento: <span class="dep {{ $item->department->cssClass() }}">{{ $item->department->label() }}</span> (no se puede cambiar: los tickets que la usan quedarían incoherentes).</p>
         @endif

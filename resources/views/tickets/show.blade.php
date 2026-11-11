@@ -65,11 +65,11 @@
                 <form action="{{ route('tickets.messages.store', $ticket) }}" method="post" enctype="multipart/form-data">
                     @csrf
                     <label for="mensaje">Mensaje</label>
-                    <textarea id="mensaje" name="mensaje" required maxlength="10000">{{ old('mensaje') }}</textarea>
-                    @error('mensaje')<p class="error-campo">{{ $message }}</p>@enderror
+                    <textarea id="mensaje" name="mensaje" @errorAttrs('mensaje') required maxlength="10000">{{ old('mensaje') }}</textarea>
+                    @error('mensaje')<p class="error-campo" id="err-mensaje">{{ $message }}</p>@enderror
                     <input type="file" id="adjuntos" name="adjuntos[]" multiple aria-label="Adjuntar archivos">
                     <p class="ayuda" style="margin-top:.3rem">Capturas, PDF, hojas de cálculo o ZIP. Hasta {{ config('access.attachments.max_files') }} archivos de {{ intdiv(config('access.attachments.max_kb'), 1024) }} MB cada uno.</p>
-                    @error('adjuntos')<p class="error-campo" role="alert">{{ $message }}</p>@enderror
+                    @error('adjuntos')<p class="error-campo" id="err-adjuntos" role="alert">{{ $message }}</p>@enderror
                     @foreach ($errors->get('adjuntos.*') as $messages)@foreach ($messages as $message)<p class="error-campo" role="alert">{{ $message }}</p>@endforeach @endforeach
                     <div class="acciones">
                         <button type="submit" class="boton principal">Enviar respuesta</button>
@@ -81,9 +81,9 @@
                         <form action="{{ route('tickets.resolve', $ticket) }}" method="post">
                             @csrf
                             <label for="solucion">¿Cómo se ha resuelto? <span aria-hidden="true">*</span></label>
-                            <textarea id="solucion" name="solucion" required maxlength="5000" style="min-height:80px" placeholder="Por ejemplo: «Ya funciona después de actualizar el fichero»">{{ old('solucion') }}</textarea>
-                            @error('solucion')<p class="error-campo">{{ $message }}</p>@enderror
-                            @error('estado')<p class="error-campo">{{ $message }}</p>@enderror
+                            <textarea id="solucion" name="solucion" @errorAttrs('solucion') required maxlength="5000" style="min-height:80px" placeholder="Por ejemplo: «Ya funciona después de actualizar el fichero»">{{ old('solucion') }}</textarea>
+                            @error('solucion')<p class="error-campo" id="err-solucion">{{ $message }}</p>@enderror
+                            @error('estado')<p class="error-campo" id="err-estado">{{ $message }}</p>@enderror
                             <div class="acciones"><button type="submit" class="boton secundario">Marcar como resuelto</button></div>
                         </form>
                     </div>
@@ -115,10 +115,10 @@
                                     <label><input type="radio" name="puntuacion" value="{{ $score }}" required @checked((int) old('puntuacion') === $score)><span class="est" aria-hidden="true">{{ \App\Models\TicketRating::stars($score) }}</span>{{ $score }} · {{ $label }}</label>
                                 @endforeach
                             </fieldset>
-                            @error('puntuacion')<p class="error-campo" role="alert">{{ $message }}</p>@enderror
+                            @error('puntuacion')<p class="error-campo" id="err-puntuacion" role="alert">{{ $message }}</p>@enderror
                             <label for="valoracion-comentario">Comentario <span style="font-weight:400">(opcional, hasta {{ \App\Models\TicketRating::COMMENT_MAX }} caracteres)</span></label>
-                            <textarea id="valoracion-comentario" name="comentario" maxlength="{{ \App\Models\TicketRating::COMMENT_MAX }}" style="min-height:80px" placeholder="¿Qué ha ido bien o qué podríamos mejorar?">{{ old('comentario') }}</textarea>
-                            @error('comentario')<p class="error-campo" role="alert">{{ $message }}</p>@enderror
+                            <textarea id="valoracion-comentario" name="comentario" @errorAttrs('comentario') maxlength="{{ \App\Models\TicketRating::COMMENT_MAX }}" style="min-height:80px" placeholder="¿Qué ha ido bien o qué podríamos mejorar?">{{ old('comentario') }}</textarea>
+                            @error('comentario')<p class="error-campo" id="err-comentario" role="alert">{{ $message }}</p>@enderror
                             <div class="acciones"><button type="submit" class="boton secundario">Enviar valoración</button></div>
                         </form>
                     </section>

@@ -20,8 +20,8 @@
             @csrf
             <div class="campo" style="max-width:340px">
                 <label for="codigo">Código de 6 dígitos <span class="oblig" aria-hidden="true">*</span></label>
-                <input type="text" id="codigo" name="codigo" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9 ]*" maxlength="7" required placeholder="123 456" style="font-size:1.35rem;letter-spacing:.25em;text-align:center">
-                @error('codigo')<p class="error-campo" role="alert">{{ $message }}</p>@enderror
+                <input type="text" id="codigo" name="codigo" @errorAttrs('codigo') inputmode="numeric" autocomplete="one-time-code" pattern="[0-9 ]*" maxlength="7" required placeholder="123 456" style="font-size:1.35rem;letter-spacing:.25em;text-align:center">
+                @error('codigo')<p class="error-campo" id="err-codigo" role="alert">{{ $message }}</p>@enderror
             </div>
             <div class="acciones">
                 <button type="submit" class="boton principal">Activar</button>

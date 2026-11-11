@@ -8,6 +8,7 @@
     Trampas:
      - El menú de la cuenta es un <details>: se abre y cierra sin JavaScript (requisito: el contenido y
        «Salir» deben funcionar sin JS). No lo sustituyas por un desplegable con JS.
+     - El enlace «Saltar al contenido» (primero del <body>) y <main id="contenido"> van juntos: quita uno y el otro apunta a nada (AccessibilityTest).
      - «Salir» es un formulario POST (un enlace GET no debe cerrar sesión; LoginTest lo vigila).
      - El menú del equipo solo enlaza lo que existe (Bandeja, Administración › Empresas / Productos y categorías / Usuarios, Registros).
 
@@ -32,6 +33,7 @@
         ->map(fn ($word) => mb_strtoupper(mb_substr($word, 0, 1)))->implode('');
 @endphp
 <body class="panel @if ($internal) interno @endif">
+<a class="saltar" href="#contenido">Saltar al contenido</a>
 <div class="app">
     <aside class="barra">
         {{-- Mismo alto y mismo borde inferior que la cabecera, para que la línea no se corte al llegar a la barra. --}}
@@ -140,7 +142,7 @@
             </div>
         </header>
 
-        <main>
+        <main id="contenido" tabindex="-1">
             @if (session('status'))
                 <div class="alerta ok" role="status">{{ session('status') }}</div>
             @endif

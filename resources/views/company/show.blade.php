@@ -64,8 +64,8 @@
                     @csrf
                     <h2>Añadir un usuario</h2>
                     <div class="cols2">
-                        <div class="campo"><label for="nn">Nombre y apellidos <span class="oblig" aria-hidden="true">*</span></label><input type="text" id="nn" name="name" value="{{ old('name') }}" required maxlength="255">@error('name')<p class="error-campo" role="alert">{{ $message }}</p>@enderror</div>
-                        <div class="campo"><label for="ne">Correo electrónico <span class="oblig" aria-hidden="true">*</span></label><input type="email" id="ne" name="email" value="{{ old('email') }}" required maxlength="255">@error('email')<p class="error-campo" role="alert">{{ $message }}</p>@enderror</div>
+                        <div class="campo"><label for="nn">Nombre y apellidos <span class="oblig" aria-hidden="true">*</span></label><input type="text" id="nn" name="name" @errorAttrs('name') value="{{ old('name') }}" required maxlength="255">@error('name')<p class="error-campo" id="err-name" role="alert">{{ $message }}</p>@enderror</div>
+                        <div class="campo"><label for="ne">Correo electrónico <span class="oblig" aria-hidden="true">*</span></label><input type="email" id="ne" name="email" @errorAttrs('email') value="{{ old('email') }}" required maxlength="255">@error('email')<p class="error-campo" id="err-email" role="alert">{{ $message }}</p>@enderror</div>
                         <div class="campo">
                             <label for="nr">Rol</label>
                             <select id="nr" name="role">
@@ -73,7 +73,7 @@
                                 <option value="company_admin" @selected(old('role') === 'company_admin')>Administrador de empresa</option>
                             </select>
                             <p class="ayuda">Un usuario solo ve sus tickets. Un administrador de empresa ve los de toda la empresa.</p>
-                            @error('role')<p class="error-campo" role="alert">{{ $message }}</p>@enderror
+                            @error('role')<p class="error-campo" id="err-role" role="alert">{{ $message }}</p>@enderror
                         </div>
                     </div>
                     <button type="submit" class="boton principal">Enviar invitación</button>
