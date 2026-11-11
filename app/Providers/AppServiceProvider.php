@@ -44,6 +44,10 @@ class AppServiceProvider extends ServiceProvider
         // clientes y el cuerpo de los avisos; un agente no los necesita. Ver docs/plan/autorizacion.md.
         Gate::define('view-records', fn (User $usuario): bool => $usuario->hasRole(UserRole::Admin));
 
+        // Informes (P1): todo el equipo (agentes y administrador), cada cual solo con lo que ve (R11, R13); el cliente, no. La tabla
+        // «por agente» la limita TicketReport al administrador.
+        Gate::define('view-reports', fn (User $usuario): bool => $usuario->isInternal());
+
         // Registro de correos: se abre antes de enviar y se cierra al confirmarse (ver App\Support\MailLogger).
         Event::listen(MessageSending::class, [MailLogger::class, 'sending']);
         Event::listen(MessageSent::class, [MailLogger::class, 'sent']);

@@ -42,6 +42,7 @@
         <nav class="menu" aria-label="Menú del panel">
             @if ($internal)
                 <a href="{{ route('inbox') }}" @if (request()->routeIs('inbox', 'tickets.show')) aria-current="page" @endif>Bandeja</a>
+                <a href="{{ route('reports.index') }}" @if (request()->routeIs('reports.*')) aria-current="page" @endif>Informes</a>
 
                 {{-- «Administración»: solo el administrador (policies). Cada entrada sale cuando existe su pantalla. --}}
                 @can('viewAny', \App\Models\Company::class)

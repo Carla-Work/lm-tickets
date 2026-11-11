@@ -26,6 +26,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Records\AuditLogController;
 use App\Http\Controllers\Records\BackupController;
 use App\Http\Controllers\Records\MailLogController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\TicketAssignmentController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\TicketDepartmentController;
@@ -84,6 +85,7 @@ Route::middleware(['auth', 'operational'])->group(function () {
 
     // Bandeja del equipo (agentes y administrador); un cliente recibe 403.
     Route::get('/bandeja', [InboxController::class, 'index'])->name('inbox');
+    Route::get('/informes', [ReportController::class, 'index'])->name('reports.index'); // cifras del equipo (P1); el cliente recibe 403
 
     // Pantallas del cliente. «nuevo» va ANTES de {ticket}: si no, «nuevo» se leería como el id de un ticket.
     Route::get('/tickets', [TicketController::class, 'index'])->name('tickets.index');
