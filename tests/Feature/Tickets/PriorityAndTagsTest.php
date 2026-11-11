@@ -4,7 +4,7 @@
  * Prioridad interna y etiquetas internas de los tickets (P1; docs/plan/p1-prioridades-y-etiquetas.md).
  * Cuándo tocarlo: al cambiar quién puede cambiarlas o qué ve cada rol. Lo que de verdad vigila:
  *  - el CLIENTE no ve nunca ni la prioridad ni las etiquetas (ni en listas, detalle, avisos, filtros u orden);
- *  - solo un agente que atiende el departamento las cambia (administrador, cliente y agente de otro equipo, no);
+ *  - solo un agente que atiende el departamento las cambia (cliente y agente de otro equipo, no). La PRIORIDAD también la fija el administrador (2026-11-11); las etiquetas, no;
  *  - cada cambio deja evento INTERNO y no toca la fecha de actividad (que ordena la lista del cliente).
  * Si falla, se arregla el código o se discute la regla: NO se adapta el test.
  */
@@ -91,13 +91,43 @@ class PriorityAndTagsTest extends TestCase
         $this->assertSame(Priority::Low, $ticket->fresh()->priority);
     }
 
-    #[TestDox('Ni el administrador, ni el cliente, ni el administrador de empresa, ni el agente de Contabilidad (en Soporte) pueden cambiar prioridad ni etiquetas: 403, sin mensajes de validación aunque los datos sean inválidos')]
+    #[TestDox('El administrador fija la prioridad en cualquier ticket no final (también en Contabilidad): evento INTERNO a su nombre, sin avisos ni mover la actividad; pero NO toca las etiquetas')]
+    public function test_admin_changes_priority_but_not_tags(): void
+    {
+        Notification::fake();
+        $etiqueta = Tag::factory()->create();
+        $soporte = $this->ticketDe(extra: ['last_activity_at' => now()->subDays(5)]);
+        $antes = $soporte->fresh()->last_activity_at;
+        $contabilidad = $this->ticketDe(Department::Other);
+
+        foreach ([$soporte, $contabilidad] as $ticket) {
+            $this->como('admin')->post(route('tickets.priority.update', $ticket), ['prioridad' => 'urgent'])->assertRedirect(route('tickets.show', $ticket));
+            $this->assertSame(Priority::Urgent, $ticket->fresh()->priority);
+            $evento = TicketEvent::where('ticket_id', $ticket->id)->where('type', TicketEventType::PriorityChanged->value)->firstOrFail();
+            $this->assertSame($this->a['admin']->id, $evento->actor_id);
+            $this->assertFalse($evento->visible_to_customer);
+
+            // Etiquetas: sigue siendo cosa del agente (R10: el administrador no gestiona).
+            $this->como('admin')->post(route('tickets.tags.update', $ticket), ['etiquetas' => [$etiqueta->id]])->assertForbidden();
+            $this->assertSame(0, $ticket->tags()->count());
+        }
+        $this->assertEquals($antes, $soporte->fresh()->last_activity_at, 'la prioridad es interna: no mueve la actividad');
+        Notification::assertNothingSent();
+
+        // En un ticket final, ni el administrador.
+        $cerrado = $this->ticketDe(estado: TicketStatus::Closed);
+        $this->como('admin')->post(route('tickets.priority.update', $cerrado), ['prioridad' => 'low'])->assertForbidden();
+    }
+
+    #[TestDox('Ni el cliente, ni el administrador de empresa, ni el agente de Contabilidad (en Soporte) pueden cambiar prioridad ni etiquetas, y el administrador no cambia etiquetas: 403, sin mensajes de validación aunque los datos sean inválidos')]
     public function test_everyone_else_is_forbidden(): void
     {
         $ticket = $this->ticketDe();
         $etiqueta = Tag::factory()->create();
 
-        foreach (['admin', 'cuA', 'caA', 'cuB', 'agCon'] as $quien) {
+        $this->como('admin')->post(route('tickets.tags.update', $ticket), ['etiquetas' => ['no-es-un-id']])->assertForbidden();
+
+        foreach (['cuA', 'caA', 'cuB', 'agCon'] as $quien) {
             $this->como($quien)->post(route('tickets.priority.update', $ticket), ['prioridad' => 'inventada'])->assertForbidden();
             $this->como($quien)->post(route('tickets.tags.update', $ticket), ['etiquetas' => ['no-es-un-id']])->assertForbidden();
             $this->como($quien)->post(route('tickets.priority.update', $ticket), ['prioridad' => 'urgent'])->assertForbidden();
@@ -204,7 +234,7 @@ class PriorityAndTagsTest extends TestCase
         $this->como('cuA')->get(route('tickets.index'))->assertDontSee('Prioridad (urgentes primero)');
     }
 
-    #[TestDox('El detalle del equipo enseña prioridad y etiquetas; el agente que atiende tiene los formularios, el administrador solo lo ve')]
+    #[TestDox('El detalle del equipo enseña prioridad y etiquetas; el agente tiene los dos formularios; el administrador solo el de prioridad')]
     public function test_internal_detail(): void
     {
         $etiqueta = Tag::factory()->create(['name' => 'Requiere visita']);
@@ -217,7 +247,7 @@ class PriorityAndTagsTest extends TestCase
             ->assertSee('cambió la prioridad de')->assertSee('añadió la etiqueta');
 
         $this->como('admin')->get(route('tickets.show', $ticket))->assertOk()
-            ->assertSee('▲ Alta')->assertSee('Requiere visita')->assertDontSee('Cambiar prioridad')->assertDontSee('Guardar etiquetas');
+            ->assertSee('▲ Alta')->assertSee('Requiere visita')->assertSee('Cambiar prioridad')->assertDontSee('Guardar etiquetas');
     }
 
     #[TestDox('Los nombres de etiqueta se escapan (también en el historial): un nombre con HTML no se ejecuta')]

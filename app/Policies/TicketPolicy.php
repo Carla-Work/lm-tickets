@@ -136,11 +136,17 @@ class TicketPolicy
     }
 
     /**
-     * Cambiar la prioridad INTERNA (P1): cualquier agente que atienda el departamento, como mover de departamento (R12).
-     * El administrador NO (R10: ve y reasigna, no gestiona) y el cliente nunca la ve ni la toca. Bloqueado en finales.
+     * Cambiar la prioridad INTERNA (P1): cualquier agente que atienda el departamento, como mover de departamento (R12),
+     * Y el administrador en cualquier ticket que ve (decidido por la usuaria 2026-11-11: la importancia la fijan agente
+     * y administrador). Es la ÚNICA acción de «gestión» que tiene el administrador además de reasignar (R10): no responde,
+     * no cambia estado, no mueve de departamento ni toca etiquetas. El cliente nunca la ve ni la toca. Bloqueado en finales.
      */
     public function changePriority(User $user, Ticket $ticket): bool
     {
+        if ($user->hasRole(UserRole::Admin)) {
+            return ! $ticket->status->isFinal() && $this->view($user, $ticket);
+        }
+
         return $this->canClassify($user, $ticket);
     }
 

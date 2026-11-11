@@ -2,7 +2,8 @@
 
 /*
  * Cambiar la prioridad interna de un ticket y sus etiquetas (P1). Cuándo tocarlo: al cambiar esas acciones.
- * Permiso: TicketPolicy::changePriority / changeTags (agente que atiende el departamento; nunca administrador ni cliente).
+ * Permiso: TicketPolicy::changePriority (agente que atiende el departamento Y el administrador) / changeTags (solo el agente;
+ * nunca administrador ni cliente).
  * Trampa: ninguna de las dos acciones avisa al cliente ni toca su lista; la lógica está en ChangePriority y ChangeTags.
  */
 
