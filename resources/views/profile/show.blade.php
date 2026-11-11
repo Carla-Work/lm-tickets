@@ -2,6 +2,7 @@
     «Mis datos» (todos los roles). Mockups validados: mis-datos-a-cliente, mis-datos-b-interno, mis-datos-c-administrador.
     Cuándo tocarla: al cambiar la pantalla. Variables: $user.
     «Verificación en dos pasos» (mockups validados mis-datos-c/d/e/f/g/h): solo el administrador (R21, opcional).
+    Los campos de contraseña llevan el «ojo» (partials/ojo-contrasena + js/acceso.js, mejora progresiva).
     Trampas: el teléfono solo se pide al
     cliente; correo, empresa, equipo y rol son de solo lectura (los cambia otra persona).
 --}}
@@ -45,7 +46,7 @@
                     <p style="margin:0 0 .8rem"><span class="estado-cuenta">✓ Activada</span> · App de autenticación</p>
                     <p style="margin:0 0 1rem">Te quedan <strong>{{ $user->remainingRecoveryCodes() }}</strong> códigos de recuperación sin usar. Cada uno sirve una sola vez.</p>
                     <div class="aviso" style="margin-bottom:1rem"><strong>Si generas códigos nuevos, los anteriores dejan de valer</strong> (los {{ $user->remainingRecoveryCodes() }} que te quedan también). Los nuevos se te mostrarán una sola vez.</div>
-                    <div class="campo" style="max-width:340px"><label for="clave-conf">Tu contraseña actual <span class="oblig" aria-hidden="true">*</span></label><input type="password" id="clave-conf" name="password" autocomplete="current-password" required><p class="ayuda">Te la pedimos para confirmar que eres tú.</p>@error('password')<p class="error-campo" role="alert">{{ $message }}</p>@enderror</div>
+                    <div class="campo" style="max-width:340px"><label for="clave-conf">Tu contraseña actual <span class="oblig" aria-hidden="true">*</span></label><div class="pw"><input type="password" id="clave-conf" name="password" autocomplete="current-password" required>@include('partials.ojo-contrasena', ['para' => 'clave-conf'])</div><p class="ayuda">Te la pedimos para confirmar que eres tú.</p>@error('password')<p class="error-campo" role="alert">{{ $message }}</p>@enderror</div>
                     <button type="submit" class="boton secundario">Generar códigos nuevos</button>
                 </form>
 
@@ -53,7 +54,7 @@
                     @csrf
                     <h2>Desactivar la verificación en dos pasos</h2>
                     <p class="sub" style="color:var(--texto)">Volverás a entrar solo con tu contraseña y se borrarán la clave y los códigos de recuperación. Podrás activarla de nuevo cuando quieras.</p>
-                    <div class="campo" style="max-width:340px"><label for="clave-des">Tu contraseña actual <span class="oblig" aria-hidden="true">*</span></label><input type="password" id="clave-des" name="password" autocomplete="current-password" required><p class="ayuda">Te la pedimos para confirmar que eres tú.</p></div>
+                    <div class="campo" style="max-width:340px"><label for="clave-des">Tu contraseña actual <span class="oblig" aria-hidden="true">*</span></label><div class="pw"><input type="password" id="clave-des" name="password" autocomplete="current-password" required>@include('partials.ojo-contrasena', ['para' => 'clave-des'])</div><p class="ayuda">Te la pedimos para confirmar que eres tú.</p></div>
                     <button type="submit" class="boton peligro-b">Desactivar</button>
                 </form>
             @endif
@@ -62,10 +63,10 @@
         <form class="tarjeta" action="{{ route('profile.password') }}" method="post" aria-label="Cambiar contraseña">
             @csrf
             <h2>Cambiar contraseña</h2>
-            <div class="campo"><label for="actual">Contraseña actual</label><input type="password" id="actual" name="current_password" autocomplete="current-password" required>@error('current_password')<p class="error-campo" role="alert">{{ $message }}</p>@enderror</div>
+            <div class="campo"><label for="actual">Contraseña actual</label><div class="pw"><input type="password" id="actual" name="current_password" autocomplete="current-password" required>@include('partials.ojo-contrasena', ['para' => 'actual'])</div>@error('current_password')<p class="error-campo" role="alert">{{ $message }}</p>@enderror</div>
             <div class="cols2">
-                <div class="campo"><label for="nueva">Contraseña nueva</label><input type="password" id="nueva" name="password" autocomplete="new-password" required><p class="ayuda">Al menos {{ config('access.password.min_length') }} caracteres.</p>@error('password')<p class="error-campo" role="alert">{{ $message }}</p>@enderror</div>
-                <div class="campo"><label for="repite">Repite la nueva</label><input type="password" id="repite" name="password_confirmation" autocomplete="new-password" required></div>
+                <div class="campo"><label for="nueva">Contraseña nueva</label><div class="pw"><input type="password" id="nueva" name="password" autocomplete="new-password" required>@include('partials.ojo-contrasena', ['para' => 'nueva'])</div><p class="ayuda">Al menos {{ config('access.password.min_length') }} caracteres.</p>@error('password')<p class="error-campo" role="alert">{{ $message }}</p>@enderror</div>
+                <div class="campo"><label for="repite">Repite la nueva</label><div class="pw"><input type="password" id="repite" name="password_confirmation" autocomplete="new-password" required>@include('partials.ojo-contrasena', ['para' => 'repite'])</div></div>
             </div>
             <button type="submit" class="boton principal">Cambiar contraseña</button>
         </form>

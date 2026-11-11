@@ -145,5 +145,7 @@
         </main>
     </div>
 </div>
+{{-- «Ojo» de las contraseñas (js/acceso.js): mejora progresiva, sin él el contenido funciona igual. --}}
+<script src="{{ asset('js/acceso.js') }}"></script>
 </body>
 </html>

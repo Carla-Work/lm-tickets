@@ -462,3 +462,11 @@ table.fichas td.asunto-celda::before, table.fichas td[data-etiqueta="Acciones"]:
 }
 .acc .fila-form { display: flex; gap: .4rem; align-items: center; margin: 0; }
 .acc .fila-form select { padding: .3rem .5rem; font-size: .85rem; }
+
+/* «Ojo» para ver la contraseña (mismo diseño que el acceso, mockup acceso-a-entrar). El botón nace oculto: solo lo
+   muestra public/js/acceso.js. */
+.pw { display: flex; }
+.pw input { flex: 1; min-width: 0; border-radius: 8px 0 0 8px !important; }
+.pw button { border: 1px solid #b8bcc6; border-left: 0; border-radius: 0 8px 8px 0; background: #f3f3f5; padding: 0 .85rem; cursor: pointer; color: var(--texto-suave); }
+.pw button:hover, .pw button:focus-visible { color: var(--texto); background: #ebebef; }
+.pw button[hidden] { display: none; }

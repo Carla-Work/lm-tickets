@@ -109,6 +109,23 @@ class ProfileTest extends TestCase
         $this->como('cuA')->post(route('profile.password'), $mala)->assertStatus(429);
     }
 
+    #[TestDox('Cada campo de contraseña de «Mis datos» lleva su «ojo»: botón oculto de origen (sin JavaScript no aparece), ligado a su campo, y el script se carga')]
+    public function test_every_password_field_has_an_eye(): void
+    {
+        // Administrador con 2FA activado: 5 campos (regenerar, desactivar, actual, nueva y repetir); el resto, 3.
+        $this->a['admin']->forceFill(['two_factor_secret' => 'JBSWY3DPEHPK3PXP', 'two_factor_confirmed_at' => now(), 'two_factor_recovery_codes' => ['x']])->save();
+
+        foreach (['cuA' => 3, 'agSup' => 3, 'admin' => 5] as $clave => $esperados) {
+            $html = $this->como($clave)->get(route('profile.show'))->assertOk()->assertSee('js/acceso.js')->getContent();
+
+            preg_match_all('/<input type="password" id="([^"]+)"/', (string) $html, $campos);
+            preg_match_all('/<button type="button" class="ver-pw" data-para="([^"]+)" aria-label="Mostrar contraseña" hidden>/', (string) $html, $ojos);
+
+            $this->assertCount($esperados, $campos[1], "$clave: campos de contraseña");
+            $this->assertEqualsCanonicalizing($campos[1], $ojos[1], "$clave: cada campo debe tener su ojo, ligado a su id");
+        }
+    }
+
     #[TestDox('El menú de la cuenta enlaza «Mis datos» a todos los roles')]
     public function test_menu_link(): void
     {
