@@ -470,3 +470,21 @@ table.fichas td.asunto-celda::before, table.fichas td[data-etiqueta="Acciones"]:
 .pw button { border: 1px solid #b8bcc6; border-left: 0; border-radius: 0 8px 8px 0; background: #f3f3f5; padding: 0 .85rem; cursor: pointer; color: var(--texto-suave); }
 .pw button:hover, .pw button:focus-visible { color: var(--texto); background: #ebebef; }
 .pw button[hidden] { display: none; }
+
+/* Filtros avanzados (P1; mockups bandeja-b-filtros-avanzados y mis-tickets-c-filtros-avanzados). */
+.vistas { display: flex; flex-wrap: wrap; gap: .5rem; margin: 0 0 .75rem; align-items: center; }
+.vistas > span { font-size: .85rem; font-weight: 600; color: var(--texto-suave); margin-right: .25rem; }
+.vistas a { display: inline-block; padding: .35rem .8rem; border: 1px solid #b8bcc6; border-radius: 999px; background: var(--blanco); color: var(--texto); text-decoration: none; font-size: .88rem; }
+.vistas a:hover { border-color: var(--principal); }
+.vistas a[aria-current="true"] { background: var(--principal); border-color: var(--principal); color: #fff; font-weight: 600; }
+.filtros .casilla-mensajes { flex: 1 1 100%; margin-top: -.35rem; }
+.filtros .casilla-mensajes label { display: inline-flex; gap: .45rem; align-items: center; font-weight: 400; font-size: .9rem; margin: 0; }
+.filtros .casilla-mensajes input { min-width: 0; padding: 0; }
+.mas-filtros { flex: 1 1 100%; border-top: 1px solid var(--gris); padding-top: .6rem; }
+.mas-filtros > summary { cursor: pointer; font-weight: 600; font-size: .9rem; color: var(--principal); padding: .1rem 0 .6rem; }
+.mas-filtros .rejilla { display: flex; flex-wrap: wrap; gap: .75rem 1rem; align-items: end; }
+.activos { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: 0 0 1rem; font-size: .88rem; }
+.activos .etiqueta-filtro { display: inline-flex; gap: .4rem; align-items: center; background: #f6f0fd; border: 1px solid #d9c6f3; border-radius: 999px; padding: .25rem .4rem .25rem .75rem; }
+.activos .etiqueta-filtro a { text-decoration: none; color: var(--texto); font-weight: 700; padding: 0 .35rem; border-radius: 999px; }
+.activos .etiqueta-filtro a:hover { background: #e4d3f7; }
+.activos .limpiar-todo { color: var(--principal); }

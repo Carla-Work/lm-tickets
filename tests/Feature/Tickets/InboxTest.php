@@ -189,7 +189,10 @@ class InboxTest extends TestCase
     public function test_staff_menu_has_no_client_actions(): void
     {
         $this->actingAs($this->a['admin'])->get(route('inbox'))->assertOk()
-            ->assertSee('Panel interno')->assertDontSee('Nuevo ticket')->assertDontSee('Mis tickets');
+            ->assertSee('Panel interno')->assertDontSee('Nuevo ticket')
+            // «Mis tickets» ya puede aparecer como VISTA RÁPIDA de la bandeja (mockup P1 validado); lo que el equipo no
+            // debe tener es la entrada de menú del cliente, que lleva a /tickets (excepción documentada en la bitácora).
+            ->assertDontSee('href="'.route('tickets.index').'"', false);
     }
 
     #[TestDox('El detalle de un ticket de Contabilidad sigue siendo 403 para un agente de otro equipo aunque llegue desde la bandeja (R13)')]

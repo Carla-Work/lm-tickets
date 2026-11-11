@@ -26,6 +26,7 @@ use App\Models\Ticket;
 use App\Models\TicketEvent;
 use App\Models\TicketMessage;
 use App\Models\User;
+use App\Support\TicketFilters;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -40,34 +41,24 @@ class TicketController extends Controller
         $user = $request->user();
         abort_unless($user !== null, 403);
 
-        $filters = $request->validate([
-            'q' => ['nullable', 'string', 'max:100'],
-            'estado' => ['nullable', 'string', 'in:'.implode(',', array_column(TicketStatus::cases(), 'value'))],
-            'departamento' => ['nullable', 'string', 'in:'.implode(',', array_column(Department::cases(), 'value'))],
-            'producto' => ['nullable', 'integer'],
-            'usuario' => ['nullable', 'integer'],
-        ]);
+        // Reglas y consulta de filtros: UN solo sitio (TicketFilters), compartido con la bandeja. Aquí el cliente solo
+        // busca en mensajes PÚBLICOS (R2) y «abierto por» solo vale para el administrador de empresa.
+        $filters = $request->validate(TicketFilters::rules(team: false));
 
         $base = Ticket::query()->visibleTo($user);
         $counts = (clone $base)->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status');
 
-        $query = (clone $base)->with(['product', 'requester'])
-            ->when($filters['estado'] ?? null, fn ($q, $v) => $q->where('status', $v))
-            ->when($filters['departamento'] ?? null, fn ($q, $v) => $q->where('department', $v))
-            ->when($filters['producto'] ?? null, fn ($q, $v) => $q->where('product_id', $v))
-            // «Abierto por» solo tiene sentido (y solo se aplica) al administrador de empresa; para un usuario
-            // normal ya está limitado a los suyos por visibleTo.
-            ->when($filters['usuario'] ?? null, fn ($q, $v) => $q->where('requester_id', $v))
-            ->when($filters['q'] ?? null, function ($q, $v) {
-                // Busca por asunto o por número (2026-0312, con o sin «#»). `escape` evita que % y _ del usuario sean comodines.
-                $like = '%'.addcslashes(ltrim($v, '#'), '%_\\').'%';
-                $q->where(fn ($w) => $w->where('subject', 'like', $like)
-                    ->orWhereRaw("CONCAT(year, '-', LPAD(sequence, 4, '0')) like ?", [$like]));
-            })
-            ->orderByDesc('last_activity_at')->orderByDesc('id');
+        $query = TicketFilters::apply((clone $base)->with(['product', 'requester']), $filters, $user);
 
         $company = $user->company;
         $unread = $this->unreadByTicket($user);
+        $products = $company?->products()->orderBy('name')->get() ?? collect();
+        $requesters = $company !== null && $user->hasRole(UserRole::CompanyAdmin)
+            ? $company->users()->orderBy('name')->get(['id', 'name']) : collect();
+        $names = [
+            'producto' => fn (string $id) => $products->firstWhere('id', (int) $id)?->name,
+            'usuario' => fn (string $id) => $requesters->firstWhere('id', (int) $id)?->name,
+        ];
 
         return view('tickets.index', [
             'user' => $user,
@@ -81,9 +72,14 @@ class TicketController extends Controller
             ],
             'filters' => $filters,
             'unread' => $unread,
-            'products' => $company?->products()->orderBy('name')->get() ?? collect(),
-            'requesters' => $company !== null && $user->hasRole(UserRole::CompanyAdmin)
-                ? $company->users()->orderBy('name')->get(['id', 'name']) : collect(),
+            'products' => $products,
+            'requesters' => $requesters,
+            'active' => TicketFilters::active($request, 'tickets.index', $filters, $names, customer: true),
+            'quickViews' => TicketFilters::quickViews($request, 'tickets.index', [
+                ['label' => 'Todos', 'params' => []],
+                ['label' => 'Esperan tu respuesta', 'params' => ['estado' => TicketStatus::PendingCustomer->value]],
+                ['label' => 'Sin cerrar', 'params' => ['vivos' => 1]],
+            ]),
         ]);
     }
 

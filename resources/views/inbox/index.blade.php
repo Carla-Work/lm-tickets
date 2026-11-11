@@ -1,10 +1,11 @@
 {{--
-    «Bandeja de tickets» del equipo (agentes y administrador). Mockup validado: bandeja-a-lista-tabla.html.
+    «Bandeja de tickets» del equipo (agentes y administrador). Mockups validados: bandeja-a-lista-tabla.html y bandeja-b-filtros-avanzados.html (filtros: App\Support\TicketFilters).
     Cuándo tocarla: al cambiar la bandeja. La fila en negrita y «Respuesta del cliente» salen de los avisos sin leer
     de ESTA persona ($unread: ticket_id → tipos de aviso); ver un ticket los marca leídos.
     Trampa (R13): $departments, $companies y $summary ya vienen limitados por Ticket::visibleTo en el
     controlador; esta plantilla no decide qué se ve, solo cómo se pinta.
-    Variables: $tickets (paginado), $total, $summary, $filters, $unread, $departments, $companies, $staff.
+    Variables: $tickets (paginado), $total, $summary, $filters, $unread, $departments, $companies, $products, $categories, $staff,
+    $active (filtros aplicados), $quickViews.
 --}}
 @extends('layouts.panel')
 @section('titulo', 'Bandeja de tickets')
@@ -21,6 +22,8 @@
         <a href="{{ route('inbox', ['estado' => 'pending_customer']) }}"><strong>{{ $summary['pending'] }}</strong>Pendiente de cliente</a>
         <a href="{{ route('inbox', ['estado' => 'resolved']) }}"><strong>{{ $summary['finished'] }}</strong>Resueltos o cerrados</a>
     </section>
+
+    @include('partials.vistas-rapidas')
 
     <form class="filtros" action="{{ route('inbox') }}" method="get" aria-label="Filtrar tickets">
         <div class="buscar">
@@ -68,8 +71,65 @@
                 @endforeach
             </select>
         </div>
+        <div class="casilla-mensajes">
+            <label for="f-msg"><input type="checkbox" id="f-msg" name="en_mensajes" value="1" @checked(! empty($filters['en_mensajes']))> Buscar también en el texto de los mensajes y las notas internas</label>
+        </div>
+        <details class="mas-filtros" @if (collect($filters)->only(['producto', 'categoria', 'desde', 'hasta', 'quieta', 'orden'])->filter()->isNotEmpty()) open @endif>
+            <summary>Más filtros</summary>
+            <div class="rejilla">
+                <div>
+                    <label for="f-prod">Producto</label>
+                    <select id="f-prod" name="producto">
+                        <option value="">Todos</option>
+                        @foreach ($products as $product)
+                            <option value="{{ $product->id }}" @selected((string) ($filters['producto'] ?? '') === (string) $product->id)>{{ $product->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label for="f-cat">Categoría</label>
+                    <select id="f-cat" name="categoria">
+                        <option value="">Todas</option>
+                        @foreach ($categories as $department => $list)
+                            <optgroup label="{{ \App\Enums\Department::from($department)->label() }}">
+                                @foreach ($list as $category)
+                                    <option value="{{ $category->id }}" @selected((string) ($filters['categoria'] ?? '') === (string) $category->id)>{{ $category->name }}</option>
+                                @endforeach
+                            </optgroup>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label for="f-desde">Abierto desde</label>
+                    <input type="date" id="f-desde" name="desde" value="{{ $filters['desde'] ?? '' }}">
+                </div>
+                <div>
+                    <label for="f-hasta">Abierto hasta</label>
+                    <input type="date" id="f-hasta" name="hasta" value="{{ $filters['hasta'] ?? '' }}">
+                </div>
+                <div>
+                    <label for="f-quieta">Sin actividad desde hace</label>
+                    <select id="f-quieta" name="quieta">
+                        <option value="">—</option>
+                        @foreach (\App\Support\TicketFilters::QUIET_DAYS as $days)
+                            <option value="{{ $days }}" @selected((string) ($filters['quieta'] ?? '') === (string) $days)>{{ $days }} días</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label for="f-orden">Ordenar por</label>
+                    <select id="f-orden" name="orden">
+                        @foreach (\App\Support\TicketFilters::ORDERS as $value => $label)
+                            <option value="{{ $value }}" @selected(($filters['orden'] ?? \App\Support\TicketFilters::DEFAULT_ORDER) === $value)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+        </details>
         <button type="submit" class="boton secundario">Filtrar</button>
     </form>
+
+    @include('partials.filtros-aplicados', ['clearUrl' => route('inbox')])
 
     <div class="tabla-caja">
         <table>

@@ -2,7 +2,8 @@
 
 /*
  * «Bandeja de tickets» del equipo de Ling Marco (agentes y administrador).
- * Cuándo tocarlo: al cambiar la bandeja. Mockup validado: bandeja-a-lista-tabla.html.
+ * Cuándo tocarlo: al cambiar la bandeja. Mockups validados: bandeja-a-lista-tabla.html y bandeja-b-filtros-avanzados.html
+ * (filtros y búsqueda: App\Support\TicketFilters).
  *
  * Trampas:
  *  - Toda la lista parte de Ticket::visibleTo($usuario) (R1, R11, R13): un agente de otro equipo NO ve
@@ -19,9 +20,12 @@ namespace App\Http\Controllers;
 use App\Enums\Department;
 use App\Enums\TicketStatus;
 use App\Enums\UserRole;
+use App\Models\Category;
 use App\Models\Company;
+use App\Models\Product;
 use App\Models\Ticket;
 use App\Models\User;
+use App\Support\TicketFilters;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 
@@ -29,21 +33,13 @@ class InboxController extends Controller
 {
     private const PER_PAGE = 10;
 
-    /** Valor del filtro «Asignado a» para los tickets sin persona asignada. */
-    public const UNASSIGNED = 'sin';
-
     public function index(Request $request): View
     {
         $user = $request->user();
         abort_unless($user !== null && $user->isInternal() && $user->isOperational(), 403);
 
-        $filters = $request->validate([
-            'q' => ['nullable', 'string', 'max:100'],
-            'estado' => ['nullable', 'string', 'in:'.implode(',', array_column(TicketStatus::cases(), 'value'))],
-            'departamento' => ['nullable', 'string', 'in:'.implode(',', array_column(Department::cases(), 'value'))],
-            'empresa' => ['nullable', 'integer'],
-            'asignado' => ['nullable', 'string', 'regex:/^(sin|\d+)$/'],
-        ]);
+        // Reglas y consulta de filtros: UN solo sitio (TicketFilters), compartido con «Mis tickets». Ver sus trampas (R2, R13).
+        $filters = $request->validate(TicketFilters::rules(team: true));
 
         $base = Ticket::query()->visibleTo($user);
         $counts = (clone $base)->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status');
@@ -51,22 +47,23 @@ class InboxController extends Controller
         $inProgress = TicketStatus::InProgress->value;
         $pending = TicketStatus::PendingCustomer->value;
 
-        $query = (clone $base)->with(['product', 'requester.company', 'assignee'])
-            ->when($filters['estado'] ?? null, fn ($q, $v) => $q->where('status', $v))
-            ->when($filters['departamento'] ?? null, fn ($q, $v) => $q->where('department', $v))
-            ->when($filters['empresa'] ?? null, fn ($q, $v) => $q->where('company_id', $v))
-            ->when($filters['asignado'] ?? null, fn ($q, $v) => $v === self::UNASSIGNED
-                ? $q->whereNull('assigned_to')
-                : $q->where('assigned_to', (int) $v))
-            ->when($filters['q'] ?? null, function ($q, $v) {
-                // Asunto, número (2026-0312, con o sin «#»), persona o empresa. `addcslashes` evita que % y _ sean comodines.
-                $like = '%'.addcslashes(ltrim($v, '#'), '%_\\').'%';
-                $q->where(fn ($w) => $w->where('subject', 'like', $like)
-                    ->orWhereRaw("CONCAT(year, '-', LPAD(sequence, 4, '0')) like ?", [$like])
-                    ->orWhereHas('requester', fn ($r) => $r->where('name', 'like', $like))
-                    ->orWhereHas('company', fn ($c) => $c->where('name', 'like', $like)));
-            })
-            ->orderByDesc('last_activity_at')->orderByDesc('id');
+        $query = TicketFilters::apply((clone $base)->with(['product', 'requester.company', 'assignee']), $filters, $user);
+
+        // Las listas de los selectores salen del ámbito de esta persona (R13): un agente de otro equipo no ve ni
+        // los productos ni las categorías ni las empresas de lo que no puede ver.
+        $companies = Company::query()->whereIn('id', (clone $base)->select('company_id'))->orderBy('name')->get(['id', 'name']);
+        $products = Product::query()->whereIn('id', (clone $base)->select('product_id'))->orderBy('name')->get(['id', 'name']);
+        $categories = Category::query()->whereIn('department', $user->workableDepartments())->orderBy('name')->get(['id', 'name', 'department'])
+            ->groupBy(fn (Category $c) => $c->department->value);
+        $staff = User::query()->whereIn('role', [UserRole::Agent->value, UserRole::Admin->value])
+            ->whereNotNull('activated_at')->whereNull('deactivated_at')->orderBy('name')->get();
+
+        $names = [
+            'empresa' => fn (string $id) => $companies->firstWhere('id', (int) $id)?->name,
+            'asignado' => fn (string $id) => $staff->firstWhere('id', (int) $id)?->name,
+            'producto' => fn (string $id) => $products->firstWhere('id', (int) $id)?->name,
+            'categoria' => fn (string $id) => $categories->flatten()->firstWhere('id', (int) $id)?->name,
+        ];
 
         return view('inbox.index', [
             'user' => $user,
@@ -88,9 +85,17 @@ class InboxController extends Controller
             'departments' => collect(Department::cases())
                 ->filter(fn (Department $d) => $user->canWorkOn($d))
                 ->values()->all(),
-            'companies' => Company::query()->whereIn('id', (clone $base)->select('company_id'))->orderBy('name')->get(['id', 'name']),
-            'staff' => User::query()->whereIn('role', [UserRole::Agent->value, UserRole::Admin->value])
-                ->whereNotNull('activated_at')->whereNull('deactivated_at')->orderBy('name')->get(),
+            'companies' => $companies,
+            'products' => $products,
+            'categories' => $categories,
+            'staff' => $staff,
+            'active' => TicketFilters::active($request, 'inbox', $filters, $names, customer: false),
+            'quickViews' => TicketFilters::quickViews($request, 'inbox', [
+                ['label' => 'Todos', 'params' => []],
+                ['label' => 'Mis tickets', 'params' => ['asignado' => $user->id, 'vivos' => 1]],
+                ['label' => 'Sin asignar', 'params' => ['asignado' => TicketFilters::UNASSIGNED, 'vivos' => 1]],
+                ['label' => 'Sin actividad en 7 días', 'params' => ['quieta' => 7]],
+            ]),
         ]);
     }
 }
