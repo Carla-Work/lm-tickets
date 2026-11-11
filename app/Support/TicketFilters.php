@@ -25,6 +25,7 @@
 namespace App\Support;
 
 use App\Enums\Department;
+use App\Enums\Priority;
 use App\Enums\TicketStatus;
 use App\Enums\UserRole;
 use App\Models\Ticket;
@@ -49,6 +50,20 @@ class TicketFilters
         'numero' => 'Número (más alto primero)',
     ];
 
+    /** Órdenes SOLO del equipo: la prioridad es interna y el cliente no debe ni verla nombrada en un selector. */
+    public const TEAM_ORDERS = [
+        'prioridad' => 'Prioridad (urgentes primero)',
+    ];
+
+    /** Valor de «Prioridad» que junta Alta y Urgente (vista rápida «Urgentes y altas»). */
+    public const HIGH_OR_URGENT = 'high_urgent';
+
+    /** @return array<string, string> los órdenes que esta persona puede elegir */
+    public static function orders(bool $team): array
+    {
+        return $team ? self::TEAM_ORDERS + self::ORDERS : self::ORDERS;
+    }
+
     /** Plazos ofrecidos en «sin actividad desde hace». */
     public const QUIET_DAYS = [3, 7, 14, 30];
 
@@ -68,7 +83,7 @@ class TicketFilters
             'desde' => ['nullable', 'date_format:Y-m-d'],
             'hasta' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:desde'],
             'vivos' => ['nullable', 'boolean'],
-            'orden' => ['nullable', 'string', Rule::in(array_keys(self::ORDERS))],
+            'orden' => ['nullable', 'string', Rule::in(array_keys(self::orders($team)))],
         ];
 
         return $team
@@ -77,6 +92,9 @@ class TicketFilters
                 'asignado' => ['nullable', 'string', 'regex:/^('.self::UNASSIGNED.'|\d+)$/'],
                 'categoria' => ['nullable', 'integer'],
                 'quieta' => ['nullable', 'integer', Rule::in(self::QUIET_DAYS)],
+                // Prioridad y etiquetas son INTERNAS: el cliente no las tiene ni como filtro.
+                'prioridad' => ['nullable', 'string', Rule::in([...array_column(Priority::cases(), 'value'), self::HIGH_OR_URGENT])],
+                'etiqueta' => ['nullable', 'integer'],
             ]
             : $common + [
                 'usuario' => ['nullable', 'integer'],
@@ -107,6 +125,10 @@ class TicketFilters
             $query
                 ->when($f['empresa'] ?? null, fn ($q, $v) => $q->where('company_id', $v))
                 ->when($f['categoria'] ?? null, fn ($q, $v) => $q->where('category_id', $v))
+                ->when($f['prioridad'] ?? null, fn ($q, $v) => $v === self::HIGH_OR_URGENT
+                    ? $q->whereIn('priority', [Priority::High->value, Priority::Urgent->value])
+                    : $q->where('priority', $v))
+                ->when($f['etiqueta'] ?? null, fn ($q, $v) => $q->whereHas('tags', fn ($t) => $t->where('tags.id', $v)))
                 ->when($f['asignado'] ?? null, fn ($q, $v) => $v === self::UNASSIGNED
                     ? $q->whereNull('assigned_to')
                     : $q->where('assigned_to', (int) $v))
@@ -135,7 +157,14 @@ class TicketFilters
             });
         });
 
-        return match ($f['orden'] ?? self::DEFAULT_ORDER) {
+        // Un orden del equipo pedido por un cliente (no pasa la validación) cae al orden por defecto.
+        $order = $f['orden'] ?? self::DEFAULT_ORDER;
+        if (! $team && ! array_key_exists($order, self::ORDERS)) {
+            $order = self::DEFAULT_ORDER;
+        }
+
+        return match ($order) {
+            'prioridad' => $query->orderByRaw("FIELD(priority, 'urgent', 'high', 'normal', 'low')")->orderByDesc('last_activity_at')->orderByDesc('id'),
             'actividad_asc' => $query->orderBy('last_activity_at')->orderBy('id'),
             'apertura_desc' => $query->orderByDesc('created_at')->orderByDesc('id'),
             'numero' => $query->orderByDesc('year')->orderByDesc('sequence'),
@@ -156,6 +185,7 @@ class TicketFilters
             'estado' => 'Estado', 'departamento' => 'Departamento', 'empresa' => 'Empresa', 'asignado' => 'Asignado a',
             'producto' => 'Producto', 'categoria' => 'Categoría', 'usuario' => 'Abierto por', 'desde' => 'Abierto desde',
             'hasta' => 'Abierto hasta', 'quieta' => 'Sin actividad desde hace', 'orden' => 'Orden',
+            'prioridad' => 'Prioridad', 'etiqueta' => 'Etiqueta',
         ];
         $query = $request->except('page');
         $out = [];
@@ -178,7 +208,8 @@ class TicketFilters
                     'departamento' => Department::tryFrom($shown)?->label() ?? $shown,
                     'desde', 'hasta' => Carbon::parse($shown)->format('d/m/Y'),
                     'quieta' => $shown.' días',
-                    'orden' => self::ORDERS[$shown] ?? $shown,
+                    'orden' => self::orders(! $customer)[$shown] ?? $shown,
+                    'prioridad' => $shown === self::HIGH_OR_URGENT ? 'alta o urgente' : (Priority::tryFrom($shown)?->label() ?? $shown),
                     'asignado' => $shown === self::UNASSIGNED ? 'Sin asignar' : ($names['asignado'] ?? fn () => null)($shown) ?? '—',
                     default => isset($names[$key]) ? ($names[$key]($shown) ?? '—') : $shown,
                 };

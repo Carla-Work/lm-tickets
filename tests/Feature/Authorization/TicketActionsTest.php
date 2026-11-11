@@ -29,7 +29,7 @@ class TicketActionsTest extends TestCase
 
     private const ABILITIES = [
         'view', 'viewInternal', 'reply', 'addNote', 'markResolved', 'resolve',
-        'updateStatus', 'close', 'assign', 'changeDepartment', 'createRelated',
+        'updateStatus', 'close', 'assign', 'changeDepartment', 'changePriority', 'changeTags', 'createRelated',
     ];
 
     protected function setUp(): void
@@ -67,8 +67,8 @@ class TicketActionsTest extends TestCase
         $this->assertPermissions($this->ticket(Department::WebApps, TicketStatus::Open), [
             'cuA' => ['view', 'reply', 'markResolved'],
             'caA' => ['view'], // solo lee (propuesta): no responde por su compañero
-            'agSup' => ['view', 'viewInternal', 'addNote', 'assign', 'changeDepartment'],
-            'agApp' => ['view', 'viewInternal', 'addNote', 'assign', 'changeDepartment'],
+            'agSup' => ['view', 'viewInternal', 'addNote', 'assign', 'changeDepartment', 'changePriority', 'changeTags'],
+            'agApp' => ['view', 'viewInternal', 'addNote', 'assign', 'changeDepartment', 'changePriority', 'changeTags'],
             'admin' => ['view', 'viewInternal', 'assign'], // R10: solo lectura, pero puede reasignar
         ]);
     }
@@ -79,8 +79,8 @@ class TicketActionsTest extends TestCase
         $this->assertPermissions($this->ticket(Department::WebApps, TicketStatus::Open, 'agApp'), [
             'cuA' => ['view', 'reply', 'markResolved'],
             'caA' => ['view'],
-            'agApp' => ['view', 'viewInternal', 'reply', 'addNote', 'resolve', 'updateStatus', 'assign', 'changeDepartment'],
-            'agSup' => ['view', 'viewInternal', 'addNote', 'assign', 'changeDepartment'],
+            'agApp' => ['view', 'viewInternal', 'reply', 'addNote', 'resolve', 'updateStatus', 'assign', 'changeDepartment', 'changePriority', 'changeTags'],
+            'agSup' => ['view', 'viewInternal', 'addNote', 'assign', 'changeDepartment', 'changePriority', 'changeTags'],
             'admin' => ['view', 'viewInternal', 'assign'],
         ]);
     }
@@ -91,8 +91,8 @@ class TicketActionsTest extends TestCase
         $this->assertPermissions($this->ticket(Department::WebApps, TicketStatus::InProgress, 'agApp'), [
             'cuA' => ['view', 'reply', 'markResolved'],
             'caA' => ['view'],
-            'agApp' => ['view', 'viewInternal', 'reply', 'addNote', 'resolve', 'updateStatus', 'assign', 'changeDepartment'],
-            'agSup' => ['view', 'viewInternal', 'addNote', 'assign', 'changeDepartment'],
+            'agApp' => ['view', 'viewInternal', 'reply', 'addNote', 'resolve', 'updateStatus', 'assign', 'changeDepartment', 'changePriority', 'changeTags'],
+            'agSup' => ['view', 'viewInternal', 'addNote', 'assign', 'changeDepartment', 'changePriority', 'changeTags'],
             'admin' => ['view', 'viewInternal', 'assign'],
         ]);
     }
@@ -103,8 +103,8 @@ class TicketActionsTest extends TestCase
         $this->assertPermissions($this->ticket(Department::WebApps, TicketStatus::PendingCustomer, 'agApp'), [
             'cuA' => ['view', 'reply', 'markResolved'],
             'caA' => ['view'],
-            'agApp' => ['view', 'viewInternal', 'reply', 'addNote', 'resolve', 'updateStatus', 'assign', 'changeDepartment'],
-            'agSup' => ['view', 'viewInternal', 'addNote', 'assign', 'changeDepartment'],
+            'agApp' => ['view', 'viewInternal', 'reply', 'addNote', 'resolve', 'updateStatus', 'assign', 'changeDepartment', 'changePriority', 'changeTags'],
+            'agSup' => ['view', 'viewInternal', 'addNote', 'assign', 'changeDepartment', 'changePriority', 'changeTags'],
             'admin' => ['view', 'viewInternal', 'assign'],
         ]);
     }
@@ -141,8 +141,8 @@ class TicketActionsTest extends TestCase
         $this->assertPermissions($this->ticket(Department::Support, TicketStatus::Open, 'agSup'), [
             'cuA' => ['view', 'reply', 'markResolved'],
             'caA' => ['view'],
-            'agSup' => ['view', 'viewInternal', 'reply', 'addNote', 'resolve', 'updateStatus', 'assign', 'changeDepartment'],
-            'agApp' => ['view', 'viewInternal', 'addNote', 'assign', 'changeDepartment'],
+            'agSup' => ['view', 'viewInternal', 'reply', 'addNote', 'resolve', 'updateStatus', 'assign', 'changeDepartment', 'changePriority', 'changeTags'],
+            'agApp' => ['view', 'viewInternal', 'addNote', 'assign', 'changeDepartment', 'changePriority', 'changeTags'],
             'admin' => ['view', 'viewInternal', 'assign'],
         ]);
     }
@@ -169,7 +169,7 @@ class TicketActionsTest extends TestCase
         $this->assertPermissions($this->ticket(Department::Other, TicketStatus::Open), [
             'cuA' => ['view', 'reply', 'markResolved'],
             'caA' => ['view'],
-            'agCon' => ['view', 'viewInternal', 'addNote', 'assign', 'changeDepartment'],
+            'agCon' => ['view', 'viewInternal', 'addNote', 'assign', 'changeDepartment', 'changePriority', 'changeTags'],
             'admin' => ['view', 'viewInternal', 'assign'],
         ]);
     }
@@ -180,7 +180,7 @@ class TicketActionsTest extends TestCase
         $this->assertPermissions($this->ticket(Department::Other, TicketStatus::InProgress, 'agCon'), [
             'cuA' => ['view', 'reply', 'markResolved'],
             'caA' => ['view'],
-            'agCon' => ['view', 'viewInternal', 'reply', 'addNote', 'resolve', 'updateStatus', 'assign', 'changeDepartment'],
+            'agCon' => ['view', 'viewInternal', 'reply', 'addNote', 'resolve', 'updateStatus', 'assign', 'changeDepartment', 'changePriority', 'changeTags'],
             'admin' => ['view', 'viewInternal', 'assign'],
         ]);
     }
@@ -191,7 +191,7 @@ class TicketActionsTest extends TestCase
         $this->assertPermissions($this->ticket(Department::Other, TicketStatus::Open, 'agApp'), [
             'cuA' => ['view', 'reply', 'markResolved'],
             'caA' => ['view'],
-            'agCon' => ['view', 'viewInternal', 'addNote', 'assign', 'changeDepartment'],
+            'agCon' => ['view', 'viewInternal', 'addNote', 'assign', 'changeDepartment', 'changePriority', 'changeTags'],
             'admin' => ['view', 'viewInternal', 'assign'],
         ]);
     }
@@ -236,7 +236,7 @@ class TicketActionsTest extends TestCase
     #[TestDox('Ningún cliente tiene jamás una habilidad interna (notas, estado, cerrar, reasignar, departamento), en ninguna situación')]
     public function test_clients_never_have_internal_abilities(): void
     {
-        $internas = ['viewInternal', 'addNote', 'resolve', 'updateStatus', 'close', 'assign', 'changeDepartment'];
+        $internas = ['viewInternal', 'addNote', 'resolve', 'updateStatus', 'close', 'assign', 'changeDepartment', 'changePriority', 'changeTags'];
 
         foreach (Department::cases() as $departamento) {
             foreach (TicketStatus::cases() as $estado) {

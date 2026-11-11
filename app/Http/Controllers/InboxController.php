@@ -23,6 +23,7 @@ use App\Enums\UserRole;
 use App\Models\Category;
 use App\Models\Company;
 use App\Models\Product;
+use App\Models\Tag;
 use App\Models\Ticket;
 use App\Models\User;
 use App\Support\TicketFilters;
@@ -47,7 +48,7 @@ class InboxController extends Controller
         $inProgress = TicketStatus::InProgress->value;
         $pending = TicketStatus::PendingCustomer->value;
 
-        $query = TicketFilters::apply((clone $base)->with(['product', 'requester.company', 'assignee']), $filters, $user);
+        $query = TicketFilters::apply((clone $base)->with(['product', 'requester.company', 'assignee', 'tags']), $filters, $user);
 
         // Las listas de los selectores salen del ámbito de esta persona (R13): un agente de otro equipo no ve ni
         // los productos ni las categorías ni las empresas de lo que no puede ver.
@@ -58,11 +59,15 @@ class InboxController extends Controller
         $staff = User::query()->whereIn('role', [UserRole::Agent->value, UserRole::Admin->value])
             ->whereNotNull('activated_at')->whereNull('deactivated_at')->orderBy('name')->get();
 
+        // Todas las etiquetas (también las desactivadas: se puede filtrar por ellas). Son internas y el equipo las ve todas.
+        $tags = Tag::query()->orderBy('name')->get(['id', 'name', 'active']);
+
         $names = [
             'empresa' => fn (string $id) => $companies->firstWhere('id', (int) $id)?->name,
             'asignado' => fn (string $id) => $staff->firstWhere('id', (int) $id)?->name,
             'producto' => fn (string $id) => $products->firstWhere('id', (int) $id)?->name,
             'categoria' => fn (string $id) => $categories->flatten()->firstWhere('id', (int) $id)?->name,
+            'etiqueta' => fn (string $id) => $tags->firstWhere('id', (int) $id)?->name,
         ];
 
         return view('inbox.index', [
@@ -87,12 +92,14 @@ class InboxController extends Controller
                 ->values()->all(),
             'companies' => $companies,
             'products' => $products,
+            'tags' => $tags,
             'categories' => $categories,
             'staff' => $staff,
             'active' => TicketFilters::active($request, 'inbox', $filters, $names, customer: false),
             'quickViews' => TicketFilters::quickViews($request, 'inbox', [
                 ['label' => 'Todos', 'params' => []],
                 ['label' => 'Mis tickets', 'params' => ['asignado' => $user->id, 'vivos' => 1]],
+                ['label' => 'Urgentes y altas', 'params' => ['prioridad' => TicketFilters::HIGH_OR_URGENT, 'vivos' => 1]],
                 ['label' => 'Sin asignar', 'params' => ['asignado' => TicketFilters::UNASSIGNED, 'vivos' => 1]],
                 ['label' => 'Sin actividad en 7 días', 'params' => ['quieta' => 7]],
             ]),

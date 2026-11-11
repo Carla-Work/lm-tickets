@@ -22,6 +22,7 @@ use App\Enums\UserRole;
 use App\Http\Requests\StoreTicketRequest;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\Tag;
 use App\Models\Ticket;
 use App\Models\TicketEvent;
 use App\Models\TicketMessage;
@@ -144,6 +145,10 @@ class TicketController extends Controller
         $user->unreadNotifications()->where('data->ticket_id', $ticket->id)->update(['read_at' => now()]);
 
         $ticket->load(['product', 'requester.company', 'assignee', 'relatedTicket']);
+        // Las etiquetas son INTERNAS: solo se cargan para el equipo, así ni siquiera llegan a la vista del cliente.
+        if ($user->isInternal()) {
+            $ticket->load('tags');
+        }
         // El enlace al ticket relacionado solo se pinta si quien mira PUEDE verlo (p. ej. un agente no ve «Otros», R13).
         $related = $ticket->relatedTicket !== null && $user->can('view', $ticket->relatedTicket) ? $ticket->relatedTicket : null;
 
@@ -163,6 +168,8 @@ class TicketController extends Controller
                 'agents' => User::query()->where('role', UserRole::Agent->value)->whereNotNull('activated_at')->whereNull('deactivated_at')->orderBy('name')->get()
                     ->filter(fn (User $agent) => $agent->canWorkOn($ticket->department))->values(), // solo quien puede atenderlo (AssignTicket)
                 'categories' => Category::query()->where('active', true)->orderBy('name')->get()->groupBy(fn (Category $c) => $c->department->value),
+                // Etiquetas que se pueden marcar: las activas más las que el ticket ya lleva (aunque se hayan desactivado).
+                'tagChoices' => Tag::query()->where('active', true)->orWhereIn('id', $ticket->tags->pluck('id'))->orderBy('name')->get(),
             ]);
         }
 

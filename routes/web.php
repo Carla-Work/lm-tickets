@@ -11,6 +11,7 @@
 use App\Http\Controllers\Admin\CatalogController;
 use App\Http\Controllers\Admin\CompanyController;
 use App\Http\Controllers\Admin\StaffController;
+use App\Http\Controllers\Admin\TagController;
 use App\Http\Controllers\AttachmentController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
@@ -29,6 +30,7 @@ use App\Http\Controllers\TicketAssignmentController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\TicketDepartmentController;
 use App\Http\Controllers\TicketMessageController;
+use App\Http\Controllers\TicketPriorityController;
 use App\Http\Controllers\TicketStatusController;
 use App\Http\Controllers\TwoFactorSettingsController;
 use App\Http\Controllers\UserStatusController;
@@ -92,6 +94,9 @@ Route::middleware(['auth', 'operational'])->group(function () {
     Route::post('/tickets/{ticket}/estado', [TicketStatusController::class, 'update'])->name('tickets.status.update');
     Route::post('/tickets/{ticket}/asignacion', [TicketAssignmentController::class, 'update'])->name('tickets.assignment.update');
     Route::post('/tickets/{ticket}/departamento', [TicketDepartmentController::class, 'update'])->name('tickets.department.update');
+    // Prioridad y etiquetas INTERNAS (P1): solo agentes que atienden el departamento; el cliente no las ve.
+    Route::post('/tickets/{ticket}/prioridad', [TicketPriorityController::class, 'priority'])->name('tickets.priority.update');
+    Route::post('/tickets/{ticket}/etiquetas', [TicketPriorityController::class, 'tags'])->name('tickets.tags.update');
     Route::post('/tickets/{ticket}/resolver', [TicketStatusController::class, 'resolve'])->name('tickets.resolve');
     // R3: la ÚNICA vía de descarga de adjuntos; autoriza con AttachmentPolicy::download.
     Route::get('/adjuntos/{attachment}', [AttachmentController::class, 'download'])->name('attachments.download');
@@ -127,6 +132,12 @@ Route::middleware(['auth', 'operational'])->group(function () {
         Route::get('/catalogo/categorias/{category}', [CatalogController::class, 'editCategory'])->name('catalog.categories.edit');
         Route::post('/catalogo/categorias/{category}', [CatalogController::class, 'updateCategory'])->name('catalog.categories.update');
         Route::post('/catalogo/categorias/{category}/estado', [CatalogController::class, 'setCategoryStatus'])->name('catalog.categories.status');
+
+        // Etiquetas internas de los tickets (P1). Nada se borra: se desactivan.
+        Route::get('/etiquetas', [TagController::class, 'index'])->name('tags.index');
+        Route::post('/etiquetas', [TagController::class, 'store'])->name('tags.store');
+        Route::post('/etiquetas/{tag}', [TagController::class, 'update'])->name('tags.update');
+        Route::post('/etiquetas/{tag}/estado', [TagController::class, 'setStatus'])->name('tags.status');
     });
 
     // «Mis datos» (todos): datos personales y contraseña. La contraseña tiene su propio límite de intentos.

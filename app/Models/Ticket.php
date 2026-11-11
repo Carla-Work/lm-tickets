@@ -15,6 +15,7 @@
 namespace App\Models;
 
 use App\Enums\Department;
+use App\Enums\Priority;
 use App\Enums\TicketStatus;
 use App\Enums\UserRole;
 use Database\Factories\TicketFactory;
@@ -24,6 +25,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
@@ -34,6 +36,14 @@ class Ticket extends Model
 {
     /** @use HasFactory<TicketFactory> */
     use HasFactory;
+
+    /**
+     * Valores por defecto de un ticket recién creado: la base los pone (DEFAULT 'normal'), pero el modelo recién creado
+     * no los relee y `$ticket->priority` sería nulo hasta recargarlo.
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = ['priority' => 'normal'];
 
     protected static function booted(): void
     {
@@ -53,6 +63,7 @@ class Ticket extends Model
         return [
             'department' => Department::class,
             'status' => TicketStatus::class,
+            'priority' => Priority::class,
             'resolved_at' => 'datetime',
             'closed_at' => 'datetime',
             'last_activity_at' => 'datetime',
@@ -122,6 +133,12 @@ class Ticket extends Model
     public function relatedTicket(): BelongsTo
     {
         return $this->belongsTo(Ticket::class, 'related_ticket_id');
+    }
+
+    /** Etiquetas INTERNAS (solo el equipo las ve). @return BelongsToMany<Tag, $this> */
+    public function tags(): BelongsToMany
+    {
+        return $this->belongsToMany(Tag::class, 'ticket_tag')->orderBy('name');
     }
 
     /** @return HasMany<TicketMessage, $this> */

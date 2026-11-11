@@ -136,6 +136,26 @@ class TicketPolicy
     }
 
     /**
+     * Cambiar la prioridad INTERNA (P1): cualquier agente que atienda el departamento, como mover de departamento (R12).
+     * El administrador NO (R10: ve y reasigna, no gestiona) y el cliente nunca la ve ni la toca. Bloqueado en finales.
+     */
+    public function changePriority(User $user, Ticket $ticket): bool
+    {
+        return $this->canClassify($user, $ticket);
+    }
+
+    /** Poner o quitar etiquetas internas (P1): mismas reglas que la prioridad. */
+    public function changeTags(User $user, Ticket $ticket): bool
+    {
+        return $this->canClassify($user, $ticket);
+    }
+
+    private function canClassify(User $user, Ticket $ticket): bool
+    {
+        return ! $ticket->status->isFinal() && $user->hasRole(UserRole::Agent) && $this->view($user, $ticket);
+    }
+
+    /**
      * Abrir un ticket nuevo RELACIONADO con uno final (nadie reabre, R15). El usuario, con el suyo; el
      * administrador de empresa, con cualquiera de su empresa. Los empleados no: solo el cliente.
      */

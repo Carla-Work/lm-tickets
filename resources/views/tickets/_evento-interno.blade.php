@@ -42,6 +42,19 @@
             reasignó el ticket de <strong>{{ $data['from_name'] }}</strong> a <strong>{{ $data['to_name'] }}</strong>
         @endif
         @break
+    @case(\App\Enums\TicketEventType::PriorityChanged)
+        cambió la prioridad de <strong>{{ \App\Enums\Priority::tryFrom($data['from'] ?? '')?->label() }}</strong> a <strong>{{ \App\Enums\Priority::tryFrom($data['to'] ?? '')?->label() }}</strong>
+        @break
+    @case(\App\Enums\TicketEventType::TagsChanged)
+        @php
+            $added = collect($data['added'] ?? [])->pluck('name')->values();
+            $removed = collect($data['removed'] ?? [])->pluck('name')->values();
+        @endphp
+        {{-- Cada nombre se escapa por separado: son texto libre del administrador. --}}
+        @if ($added->isNotEmpty())añadió {{ $added->count() > 1 ? 'las etiquetas' : 'la etiqueta' }} @foreach ($added as $name)<strong>{{ $name }}</strong>{{ $loop->last ? '' : ($loop->remaining === 1 ? ' y ' : ', ') }}@endforeach @endif
+        @if ($added->isNotEmpty() && $removed->isNotEmpty())y @endif
+        @if ($removed->isNotEmpty())quitó {{ $removed->count() > 1 ? 'las etiquetas' : 'la etiqueta' }} @foreach ($removed as $name)<strong>{{ $name }}</strong>{{ $loop->last ? '' : ($loop->remaining === 1 ? ' y ' : ', ') }}@endforeach @endif
+        @break
     @case(\App\Enums\TicketEventType::Resolved)
         marcó el ticket como <strong>resuelto</strong>
         @if (! empty($data['resolution']))<br>Solución: <em>«{{ $data['resolution'] }}»</em>@endif

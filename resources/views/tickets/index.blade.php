@@ -87,7 +87,7 @@
                 <div>
                     <label for="f-orden">Ordenar por</label>
                     <select id="f-orden" name="orden">
-                        @foreach (\App\Support\TicketFilters::ORDERS as $value => $label)
+                        @foreach (\App\Support\TicketFilters::orders(false) as $value => $label)
                             <option value="{{ $value }}" @selected(($filters['orden'] ?? \App\Support\TicketFilters::DEFAULT_ORDER) === $value)>{{ $label }}</option>
                         @endforeach
                     </select>

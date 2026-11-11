@@ -4,7 +4,7 @@
     de ESTA persona ($unread: ticket_id → tipos de aviso); ver un ticket los marca leídos.
     Trampa (R13): $departments, $companies y $summary ya vienen limitados por Ticket::visibleTo en el
     controlador; esta plantilla no decide qué se ve, solo cómo se pinta.
-    Variables: $tickets (paginado), $total, $summary, $filters, $unread, $departments, $companies, $products, $categories, $staff,
+    Variables: $tickets (paginado), $total, $summary, $filters, $unread, $departments, $companies, $products, $tags, $categories, $staff,
     $active (filtros aplicados), $quickViews.
 --}}
 @extends('layouts.panel')
@@ -74,9 +74,28 @@
         <div class="casilla-mensajes">
             <label for="f-msg"><input type="checkbox" id="f-msg" name="en_mensajes" value="1" @checked(! empty($filters['en_mensajes']))> Buscar también en el texto de los mensajes y las notas internas</label>
         </div>
-        <details class="mas-filtros" @if (collect($filters)->only(['producto', 'categoria', 'desde', 'hasta', 'quieta', 'orden'])->filter()->isNotEmpty()) open @endif>
+        <details class="mas-filtros" @if (collect($filters)->only(['producto', 'categoria', 'prioridad', 'etiqueta', 'desde', 'hasta', 'quieta', 'orden'])->filter()->isNotEmpty()) open @endif>
             <summary>Más filtros</summary>
             <div class="rejilla">
+                <div>
+                    <label for="f-prio">Prioridad</label>
+                    <select id="f-prio" name="prioridad">
+                        <option value="">Todas</option>
+                        @foreach (\App\Enums\Priority::cases() as $priority)
+                            <option value="{{ $priority->value }}" @selected(($filters['prioridad'] ?? '') === $priority->value)>{{ $priority->label() }}</option>
+                        @endforeach
+                        <option value="{{ \App\Support\TicketFilters::HIGH_OR_URGENT }}" @selected(($filters['prioridad'] ?? '') === \App\Support\TicketFilters::HIGH_OR_URGENT)>Alta o urgente</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="f-etq">Etiqueta</label>
+                    <select id="f-etq" name="etiqueta">
+                        <option value="">Todas</option>
+                        @foreach ($tags as $tag)
+                            <option value="{{ $tag->id }}" @selected((string) ($filters['etiqueta'] ?? '') === (string) $tag->id)>{{ $tag->name }}@unless ($tag->active) (desactivada)@endunless</option>
+                        @endforeach
+                    </select>
+                </div>
                 <div>
                     <label for="f-prod">Producto</label>
                     <select id="f-prod" name="producto">
@@ -119,7 +138,7 @@
                 <div>
                     <label for="f-orden">Ordenar por</label>
                     <select id="f-orden" name="orden">
-                        @foreach (\App\Support\TicketFilters::ORDERS as $value => $label)
+                        @foreach (\App\Support\TicketFilters::orders(true) as $value => $label)
                             <option value="{{ $value }}" @selected(($filters['orden'] ?? \App\Support\TicketFilters::DEFAULT_ORDER) === $value)>{{ $label }}</option>
                         @endforeach
                     </select>
@@ -151,8 +170,10 @@
                         <td class="num" data-etiqueta="Nº">#{{ $ticket->number }}</td>
                         <td class="asunto-celda" data-etiqueta="Asunto">
                             <a class="asunto" href="{{ route('tickets.show', $ticket) }}">{{ $ticket->subject }}</a>
+                            @if ($ticket->priority !== \App\Enums\Priority::Normal)<span class="prio {{ $ticket->priority->cssClass() }}">{{ $ticket->priority->badge() }}</span>@endif
                             @if (in_array('client_replied', $unread[$ticket->id] ?? [], true))<span class="aviso-cliente">Respuesta del cliente</span>@endif
                             @if ($ticket->product)<span class="secundario">Producto: {{ $ticket->product->name }}</span>@endif
+                            @if ($ticket->tags->isNotEmpty())<span>@foreach ($ticket->tags as $tag)<span class="etq">{{ $tag->name }}</span>@endforeach</span>@endif
                         </td>
                         <td class="solicitante" data-etiqueta="Abierto por"><strong>{{ $ticket->requester->name }}</strong><small>{{ $ticket->requester->company?->name }}</small></td>
                         <td data-etiqueta="Departamento"><span class="dep {{ $ticket->department->cssClass() }}">{{ $ticket->department->label() }}</span></td>

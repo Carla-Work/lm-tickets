@@ -29,6 +29,9 @@
         <div class="chips">
             <span class="dep {{ $ticket->department->cssClass() }}">{{ $ticket->department->label() }}</span>
             <span class="estado {{ $ticket->status->cssClass() }}">{{ $ticket->status->label() }}</span>
+            {{-- Prioridad y etiquetas: INTERNAS, solo esta vista (la del cliente es tickets/show). Normal no se pinta. --}}
+            @if ($ticket->priority !== \App\Enums\Priority::Normal)<span class="prio {{ $ticket->priority->cssClass() }}" title="Prioridad (solo la ve el equipo)">{{ $ticket->priority->badge() }}</span>@endif
+            @if ($ticket->tags->isNotEmpty())<span>@foreach ($ticket->tags as $tag)<span class="etq">{{ $tag->name }}</span>@endforeach</span>@endif
         </div>
         <div class="meta">
             <span>Abierto por <strong>{{ $ticket->requester->name }}</strong> · {{ $ticket->requester->company?->name }}</span>
@@ -138,9 +141,11 @@
             @php
                 $canStatus = $user->can('updateStatus', $ticket) || $user->can('resolve', $ticket) || $user->can('close', $ticket);
                 $canDepartment = $user->can('changeDepartment', $ticket);
+                $canPriority = $user->can('changePriority', $ticket);
+                $canTags = $user->can('changeTags', $ticket);
                 $targets = $ticket->status->allowedTargets();
             @endphp
-            @if ($canStatus || $canAssign || $canDepartment)
+            @if ($canStatus || $canAssign || $canDepartment || $canPriority || $canTags)
                 <aside class="tarjeta gestion" aria-label="Gestión del ticket">
                     <h2>Gestión</h2>
                     @if ($canStatus && $targets !== [])
@@ -162,6 +167,39 @@
                         </form>
                     @elseif (! $canStatus && $ticket->status !== \App\Enums\TicketStatus::Closed)
                         <div class="grupo"><p class="nota-ayuda">Para cambiar el estado, asígnate primero el ticket.</p></div>
+                    @endif
+
+                    @if ($canPriority)
+                        <form class="grupo" action="{{ route('tickets.priority.update', $ticket) }}" method="post">
+                            @csrf
+                            <label for="g-prio">Prioridad <span style="font-weight:400">(solo la ve el equipo)</span></label>
+                            <select id="g-prio" name="prioridad">
+                                @foreach (\App\Enums\Priority::cases() as $priority)
+                                    <option value="{{ $priority->value }}" @selected($ticket->priority === $priority)>{{ $priority->label() }}</option>
+                                @endforeach
+                            </select>
+                            @error('prioridad')<p class="error-campo">{{ $message }}</p>@enderror
+                            <button type="submit" class="boton secundario">Cambiar prioridad</button>
+                        </form>
+                    @endif
+
+                    @if ($canTags)
+                        <form class="grupo" action="{{ route('tickets.tags.update', $ticket) }}" method="post">
+                            @csrf
+                            <label>Etiquetas <span style="font-weight:400">(hasta {{ \App\Models\Tag::MAX_PER_TICKET }}; solo las ve el equipo)</span></label>
+                            <div class="etqs-lista">
+                                @forelse ($tagChoices as $tag)
+                                    <label><input type="checkbox" name="etiquetas[]" value="{{ $tag->id }}" @checked($ticket->tags->contains('id', $tag->id))> {{ $tag->name }}@unless ($tag->active) <small>(desactivada)</small>@endunless</label>
+                                @empty
+                                    <p class="nota-ayuda">Todavía no hay etiquetas. Las crea el administrador.</p>
+                                @endforelse
+                            </div>
+                            @error('etiquetas')<p class="error-campo">{{ $message }}</p>@enderror
+                            @if ($tagChoices->isNotEmpty())
+                                <button type="submit" class="boton secundario">Guardar etiquetas</button>
+                                <p class="nota-ayuda">Las etiquetas las define el administrador en «Etiquetas».</p>
+                            @endif
+                        </form>
                     @endif
 
                     @if ($canAssign)

@@ -14,6 +14,8 @@ enum TicketEventType: string
     case StatusChanged = 'status_changed';
     case Assigned = 'assigned';
     case DepartmentChanged = 'department_changed';
+    case PriorityChanged = 'priority_changed';
+    case TagsChanged = 'tags_changed';
     case Resolved = 'resolved';
     case Closed = 'closed';
 }
