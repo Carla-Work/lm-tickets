@@ -28,6 +28,7 @@ class AuditLog extends Model
         'backup_requested' => 'Copia de seguridad pedida',
         'admin_recovered' => 'Acceso del administrador recuperado desde el servidor',
         'two_factor_disabled' => 'Segundo factor desactivado',
+        'retention_run' => 'Purga por plazo de conservación',
         'recovery_codes_regenerated' => 'Códigos de recuperación regenerados',
         'company_created' => 'Empresa creada',
         'company_updated' => 'Datos de empresa cambiados',
