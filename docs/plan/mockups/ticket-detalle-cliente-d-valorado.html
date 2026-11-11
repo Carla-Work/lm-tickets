@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<!--
+  MOCKUP P1 · Valoración de la atención, ya enviada (alternativa D; base: ticket-detalle-cliente-b-resuelto).
+  Propuesta pendiente de validar. Muestra lo que el cliente envió y no ofrece cambiarlo. En el hilo queda el evento
+  «Valoraste la atención» (visible para el cliente). Datos de mentira, pero realistas.
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ticket resuelto · valorado · Ling Marco Tickets</title>
+<style>
+/* ---------- Paleta (misma que el mockup de Nuevo ticket) ---------- */
+:root {
+    --texto: #040f24;
+    --titulo: #3c1d6f;
+    --principal: #742bba;
+    --principal-claro: #9e4af0;
+    --gris: #ededed;
+    --blanco: #ffffff;
+    --texto-suave: #4a5568;
+
+    /* Departamentos: "marca" para bordes/puntos, "texto" más oscuro para rótulos (contraste). */
+    --dep-apps: #7eba28;     --dep-apps-texto: #486330;   --dep-apps-fondo: #f1f8e4;
+    --dep-webs: #e6318a;     --dep-webs-texto: #a00860;   --dep-webs-fondo: #fdecf4;
+    --dep-soporte: #3c76ba;  --dep-soporte-texto: #1f4f8c; --dep-soporte-fondo: #e8f0fa;
+    --dep-otros: #ffe90b;    --dep-otros-texto: #6b5a00;  --dep-otros-fondo: #fffbd1;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--texto); background: #f7f7f8; line-height: 1.5; }
+h1, h2 { color: var(--titulo); line-height: 1.2; margin: 0; }
+a { color: var(--principal); }
+:focus-visible { outline: 3px solid var(--principal-claro); outline-offset: 2px; }
+
+/* ---------- Marco ---------- */
+.cabecera { background: var(--blanco); border-bottom: 1px solid var(--gris); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: .75rem 1.5rem; gap: .5rem 1rem; }
+.cabecera img { height: 34px; width: auto; max-width: 60vw; }
+.cabecera .usuario { display: flex; align-items: center; gap: 1rem; font-size: .9rem; }
+.campana { text-decoration: none; color: var(--texto); padding: .35rem .6rem; border: 1px solid var(--gris); border-radius: 999px; background: var(--blanco); }
+.campana b { background: var(--principal); color: #fff; border-radius: 999px; padding: 0 .45rem; font-size: .75rem; margin-left: .3rem; }
+.marco { display: grid; grid-template-columns: 220px minmax(0, 1fr); min-height: calc(100vh - 62px); }
+.menu { background: var(--blanco); border-right: 1px solid var(--gris); padding: 1.25rem 1rem; }
+.menu a { display: block; padding: .6rem .8rem; border-radius: 8px; color: var(--texto); text-decoration: none; margin-bottom: .2rem; }
+.menu a:hover { background: var(--gris); }
+.menu a[aria-current="page"] { background: var(--principal); color: #fff; font-weight: 600; }
+.menu .empresa { font-size: .8rem; color: var(--texto-suave); margin: 0 .8rem 1rem; }
+main { padding: 1.75rem; max-width: 1200px; }
+.titulo-fila { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+
+/* ---------- Botones ---------- */
+.boton { font: inherit; font-weight: 600; padding: .65rem 1.3rem; border-radius: 8px; cursor: pointer; border: 2px solid transparent; text-decoration: none; display: inline-block; }
+.boton.principal { background: linear-gradient(135deg, var(--principal), var(--principal-claro)); color: #fff; }
+.boton.secundario { background: var(--blanco); color: var(--principal); border-color: var(--principal); }
+
+/* Departamento: punto del color del logo + nombre en tono oscuro. Nunca solo color. */
+.dep { display: inline-flex; align-items: center; gap: .45rem; font-weight: 600; font-size: .9rem; white-space: nowrap; }
+.dep::before { content: ""; width: .8rem; height: .8rem; border-radius: 50%; flex: none; }
+.dep.apps { color: var(--dep-apps-texto); }     .dep.apps::before { background: var(--dep-apps); }
+.dep.webs { color: var(--dep-webs-texto); }     .dep.webs::before { background: var(--dep-webs); }
+.dep.soporte { color: var(--dep-soporte-texto); } .dep.soporte::before { background: var(--dep-soporte); }
+.dep.otros { color: var(--dep-otros-texto); }   .dep.otros::before { background: var(--dep-otros); box-shadow: inset 0 0 0 1px #c9b800; }
+
+/* Estado: forma + texto, en neutros y morados (los 4 colores de departamento están reservados). */
+.estado { display: inline-block; font-size: .8rem; font-weight: 700; padding: .15rem .65rem; border-radius: 999px; white-space: nowrap; border: 1.5px solid transparent; }
+.estado.abierto { background: #fff; color: var(--titulo); border-color: var(--titulo); }
+.estado.curso { background: #efe5fb; color: var(--titulo); }
+.estado.pendiente { background: var(--principal); color: #fff; }
+.estado.resuelto { background: var(--gris); color: var(--texto); }
+.estado.resuelto::before { content: "✓ "; }
+.estado.cerrado { background: var(--gris); color: var(--texto-suave); }
+
+
+@media (max-width: 860px) {
+    .marco { grid-template-columns: minmax(0, 1fr); }
+    .menu { border-right: 0; border-bottom: 1px solid var(--gris); display: flex; flex-wrap: wrap; align-content: flex-start; gap: .25rem; padding: .75rem 1rem; }
+    .menu .empresa { width: 100%; margin: 0 0 .25rem; }
+    main { padding: 1rem; }
+    .cabecera .usuario span { display: none; }
+}
+
+/* ---------- Propio del detalle del ticket ---------- */
+.migas { font-size: .85rem; margin-bottom: .75rem; color: var(--texto-suave); }
+.migas a { color: var(--texto-suave); }
+.cabecera-ticket { background: var(--blanco); border: 1px solid var(--gris); border-left: 8px solid var(--dep-apps); border-radius: 12px; padding: 1.1rem 1.4rem; margin-bottom: 1.25rem; }
+.cabecera-ticket .num { color: var(--texto-suave); font-variant-numeric: tabular-nums; font-size: .9rem; }
+.cabecera-ticket h1 { font-size: 1.5rem; margin: .15rem 0 .6rem; }
+.cabecera-ticket .chips { display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: center; }
+.dos { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 1.5rem; align-items: start; }
+.tarjeta { background: var(--blanco); border: 1px solid var(--gris); border-radius: 12px; padding: 1.25rem 1.4rem; }
+.tarjeta h2 { font-size: 1.05rem; margin-bottom: .75rem; }
+
+/* Hilo */
+.hilo { list-style: none; margin: 0; padding: 0; }
+.hilo > li { margin-bottom: 1rem; }
+.mensaje { border: 1px solid var(--gris); border-radius: 12px; padding: 1rem 1.2rem; background: var(--blanco); }
+.mensaje.equipo { border-left: 6px solid var(--principal); }
+.mensaje.mio { background: #f6f0fd; }
+.mensaje header { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .25rem 1rem; margin-bottom: .5rem; font-size: .9rem; }
+.mensaje header strong { color: var(--titulo); }
+.mensaje header .rol { font-size: .75rem; font-weight: 700; color: #fff; background: var(--principal); border-radius: 999px; padding: 0 .55rem; margin-left: .4rem; }
+.mensaje header time { color: var(--texto-suave); }
+.mensaje p { margin: 0 0 .6rem; }
+.mensaje p:last-of-type { margin-bottom: 0; }
+.adjuntos { list-style: none; margin: .8rem 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: .5rem; }
+.adjuntos a { display: inline-block; text-decoration: none; background: var(--gris); color: var(--texto); border-radius: 8px; padding: .3rem .7rem; font-size: .85rem; }
+.adjuntos a:hover { background: #e0d6ef; }
+.adjuntos small { color: var(--texto-suave); }
+.evento { text-align: center; font-size: .85rem; color: var(--texto-suave); display: flex; align-items: center; gap: .75rem; }
+.evento::before, .evento::after { content: ""; flex: 1; height: 1px; background: var(--gris); }
+.evento span { max-width: 80%; }
+
+/* Responder */
+.responder h2 { margin-bottom: .25rem; }
+.responder .ayuda { font-size: .9rem; color: var(--texto-suave); margin: 0 0 .75rem; }
+.responder label { display: block; font-weight: 600; margin-bottom: .3rem; }
+.responder textarea { width: 100%; min-height: 130px; padding: .65rem .8rem; font: inherit; color: var(--texto); border: 1px solid #b8bcc6; border-radius: 8px; resize: vertical; }
+.responder input[type=file] { width: 100%; padding: .7rem; border: 2px dashed #b8bcc6; border-radius: 8px; background: #fafafa; font: inherit; margin-top: .75rem; }
+.acciones { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 1rem; align-items: center; }
+.cierre { margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--gris); font-size: .9rem; color: var(--texto-suave); }
+.cierre p { margin: 0 0 .6rem; }
+
+/* Lateral */
+.detalles { margin: 0; }
+.detalles dt { font-size: .8rem; text-transform: uppercase; letter-spacing: .03em; color: var(--texto-suave); margin-top: .8rem; }
+.detalles dt:first-child { margin-top: 0; }
+.detalles dd { margin: .1rem 0 0; font-weight: 600; }
+.detalles dd small { display: block; font-weight: 400; color: var(--texto-suave); }
+.aviso { background: #f6f0fd; border-left: 4px solid var(--principal); padding: .75rem 1rem; border-radius: 6px; font-size: .9rem; margin-top: 1rem; }
+
+@media (max-width: 860px) {
+    .dos { grid-template-columns: minmax(0, 1fr); }
+    .cabecera-ticket { padding: 1rem; }
+    .cabecera-ticket h1 { font-size: 1.25rem; }
+}
+
+/* Móvil: la fila de la cuadrícula no debe estirarse hasta la altura mínima de la página (dejaba un hueco bajo el menú) */
+@media (max-width: 860px) { .marco { align-content: start; } }
+
+/* --- Valoración de la atención (mockup P1) --- */
+.estrellas { display: flex; flex-wrap: wrap; gap: .4rem; margin: .4rem 0 .8rem; border: 0; padding: 0; }
+.estrellas legend { font-weight: 600; margin-bottom: .3rem; padding: 0; }
+.estrellas label { display: inline-flex; flex-direction: column; align-items: center; gap: .1rem; border: 1px solid #b8bcc6; border-radius: 10px; padding: .45rem .7rem; min-width: 5.2rem; cursor: pointer; background: #fff; font-size: .82rem; }
+.estrellas label:hover { border-color: var(--principal); }
+.estrellas input { margin: 0; }
+.estrellas .est { font-size: 1.15rem; color: #d99a00; letter-spacing: .05em; }
+.valoracion-hecha .est { font-size: 1.5rem; color: #d99a00; letter-spacing: .08em; }
+.valoracion-hecha blockquote { margin: .6rem 0 0; padding: .6rem .9rem; background: #f6f0fd; border-left: 4px solid var(--principal); border-radius: 6px; font-size: .95rem; }
+.est-mini { color: #d99a00; font-weight: 700; white-space: nowrap; }
+.est-mini.mala { color: #a11a1a; }
+</style>
+</head>
+<body>
+
+<header class="cabecera">
+    <img src="../../marca lingmarco/logo-LM.svg" alt="Ling Marco &amp; Asociados">
+    <div class="usuario">
+        <a class="campana" href="#">Avisos <b>2</b></a>
+        <span>María Suárez · Hermanos Santana S.L.</span>
+        <a href="#">Salir</a>
+    </div>
+</header>
+
+<div class="marco">
+    <nav class="menu" aria-label="Menú del panel">
+        <p class="empresa">Hermanos Santana S.L.<br>Rol: usuario</p>
+        <a href="#" aria-current="page">Mis tickets</a>
+        <a href="#">Nuevo ticket</a>
+        <a href="#">Mi empresa</a>
+        <a href="#">Mis datos</a>
+    </nav>
+
+    <main>
+        <p class="migas"><a href="#">Mis tickets</a> › #2026-0312</p>
+
+        <section class="cabecera-ticket" aria-label="Resumen del ticket">
+            <span class="num">Ticket #2026-0312</span>
+            <h1>Error al importar el cliente desde Excel</h1>
+            <div class="chips">
+                <span class="dep apps">Aplicaciones web</span>
+                <span class="estado resuelto">Resuelto</span>
+            </div>
+        </section>
+
+        <div class="dos">
+            <div>
+                <section aria-label="Conversación" class="tarjeta" style="margin-bottom:1.25rem">
+                    <h2>Conversación</h2>
+                    <ol class="hilo">
+                        <li>
+                            <article class="mensaje mio">
+                                <header><span><strong>María Suárez</strong> (tú)</span><time datetime="2026-11-06T16:20">6 nov, 16:20</time></header>
+                                <p>Al importar el fichero de clientes en oneCOP aparece el mensaje «Formato de fila no válido» y no se carga ninguno. Lo he hecho otras veces con el mismo fichero sin problema.</p>
+                                <p>Adjunto el Excel y una captura del error.</p>
+                                <ul class="adjuntos">
+                                    <li><a href="#">📎 importar-clientes.xlsx <small>· 48 KB</small></a></li>
+                                    <li><a href="#">📎 error.png <small>· 212 KB</small></a></li>
+                                </ul>
+                            </article>
+                        </li>
+                        <li class="evento"><span>Ticket creado en el departamento <strong>Soporte</strong> · 6 nov, 16:21</span></li>
+                        <li class="evento"><span>El equipo ha cambiado el departamento de <strong>Soporte</strong> a <strong>Aplicaciones web</strong> · hoy, 08:50</span></li>
+                        <li>
+                            <article class="mensaje equipo">
+                                <header><span><strong>Daniel Ortega</strong><span class="rol">Ling Marco</span></span><time datetime="2026-11-09T09:42">Hoy, 09:42</time></header>
+                                <p>Hola María, hemos revisado el fichero. El fallo viene de la columna «NIF»: hay tres filas con el campo vacío y una con espacios al final, y la importación nueva es más estricta que la anterior.</p>
+                                <p>¿Puedes confirmarnos si esos clientes deben tener NIF? Te dejamos una plantilla con el formato correcto por si prefieres corregirlo tú.</p>
+                                <ul class="adjuntos">
+                                    <li><a href="#">📎 plantilla-clientes-oneCOP.xlsx <small>· 31 KB</small></a></li>
+                                </ul>
+                            </article>
+                        </li>
+                        <li class="evento"><span>Estado cambiado a <strong>Pendiente de tu respuesta</strong> · hoy, 09:42</span></li>
+                        <li class="evento"><span>Estado cambiado a <strong>En curso</strong> por tu respuesta · hoy, 09:58</span></li>
+                        <li>
+                            <article class="mensaje mio">
+                                <header><span><strong>María Suárez</strong> (tú)</span><time datetime="2026-11-09T09:58">Hoy, 09:58</time></header>
+                                <p>Gracias, Daniel. Esas tres filas son clientes particulares que no tienen NIF. ¿Podéis cargarlos igualmente sin él? La fila con espacios la corrijo yo.</p>
+                            </article>
+                        </li>
+                        <li>
+                            <article class="mensaje equipo">
+                                <header><span><strong>Daniel Ortega</strong><span class="rol">Ling Marco</span></span><time datetime="2026-11-09T10:20">Hoy, 10:20</time></header>
+                                <p>Hecho: hemos ajustado la importación para admitir clientes sin NIF y se han cargado los 214 clientes del fichero. Puedes comprobarlo ya en oneCOP.</p>
+                                <p>Lo dejamos como resuelto. Si el problema vuelve a aparecer, abre un ticket nuevo y lo miramos enseguida.</p>
+                            </article>
+                        </li>
+                        <li class="evento"><span>Estado cambiado a <strong>Resuelto</strong> por <strong>Daniel Ortega</strong> · hoy, 10:21<br>Solución: <em>«Validación de NIF relajada para clientes particulares; importados 214 clientes.»</em></span></li>
+                        <li>
+                            <article class="mensaje equipo">
+                                <header><span><strong>Daniel Ortega</strong><span class="rol">Ling Marco</span></span><time datetime="2026-11-09T10:40">Hoy, 10:40</time></header>
+                                <p>Una cosa más: te dejamos una guía corta con el formato que admite la importación, por si la necesitas más adelante.</p>
+                                <ul class="adjuntos">
+                                    <li><a href="#">📎 guia-importacion-clientes.pdf <small>· 120 KB</small></a></li>
+                                </ul>
+                            </article>
+                        </li>
+                        <li class="evento"><span>Valoraste la atención: <strong>4 de 5</strong> · hoy, 11:02</span></li>
+                    </ol>
+                </section>
+
+                <section class="tarjeta responder" aria-label="Ticket resuelto">
+                    <h2>Este ticket está resuelto</h2>
+                    <p class="ayuda">Resuelto por Daniel Ortega hoy a las 10:21. Ya no se pueden añadir mensajes ni reabrirlo. Si el problema vuelve, abre un ticket nuevo: lo relacionaremos con este para que el equipo tenga el contexto.</p>
+                    <div class="acciones">
+                        <a class="boton principal" href="#">Abrir un ticket nuevo</a>
+                    </div>
+                </section>
+
+                <section class="tarjeta responder valoracion-hecha" aria-label="Tu valoración">
+                    <h2>Gracias por tu valoración</h2>
+                    <p style="margin:.2rem 0"><span class="est" aria-label="4 de 5">★★★★☆</span> <strong>4 de 5 · Buena</strong></p>
+                    <blockquote>Rápidos y claros. Tardaron un poco en dar con el fallo, pero el resultado es el esperado.</blockquote>
+                    <p class="ayuda" style="margin-top:.6rem">Valorado hoy a las 11:02. No se puede cambiar.</p>
+                </section>
+            </div>
+
+            <aside class="tarjeta" aria-label="Detalles del ticket">
+                <h2>Detalles</h2>
+                <dl class="detalles">
+                    <dt>Abierto por</dt>
+                    <dd>María Suárez<small>Hermanos Santana S.L.</small></dd>
+                    <dt>Fecha de apertura</dt>
+                    <dd>6 nov 2026, 16:20</dd>
+                    <dt>Departamento</dt>
+                    <dd><span class="dep apps">Aplicaciones web</span></dd>
+                    <dt>Producto</dt>
+                    <dd>oneCOP</dd>
+                    <dt>Atendido por</dt>
+                    <dd>Daniel Ortega<small>Ling Marco</small></dd>
+                    <dt>Última actividad</dt>
+                    <dd>Hoy, 10:40</dd>
+                </dl>
+                <p class="aviso">Estás viendo este ticket porque lo abriste tú. Los administradores de tu empresa también pueden verlo.</p>
+            </aside>
+        </div>
+    </main>
+</div>
+
+</body>
+</html>

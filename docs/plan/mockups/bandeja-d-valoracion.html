@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<!--
+  MOCKUP P1 · Bandeja con VALORACIÓN del cliente (alternativa D; base: bandeja-c-prioridad-etiquetas).
+  Propuesta pendiente de validar. Qué añade: la puntuación (★ n/5) junto al estado de los tickets ya valorados; en
+  «Más filtros», «Valoración» (Mala 1-2 · Normal 3 · Buena 4-5 · Valorados · Sin valorar) y la vista rápida «Mal
+  valorados». Estado dibujado: esa vista rápida. Solo lo ve el equipo (R11, R13). Datos de mentira, pero realistas.
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bandeja con valoración · Ling Marco Tickets</title>
+<style>
+/* ---------- Paleta (misma que el mockup de Nuevo ticket) ---------- */
+:root {
+    --texto: #040f24;
+    --titulo: #3c1d6f;
+    --principal: #742bba;
+    --principal-claro: #9e4af0;
+    --gris: #ededed;
+    --blanco: #ffffff;
+    --texto-suave: #4a5568;
+
+    /* Departamentos: "marca" para bordes/puntos, "texto" más oscuro para rótulos (contraste). */
+    --dep-apps: #7eba28;     --dep-apps-texto: #486330;   --dep-apps-fondo: #f1f8e4;
+    --dep-webs: #e6318a;     --dep-webs-texto: #a00860;   --dep-webs-fondo: #fdecf4;
+    --dep-soporte: #3c76ba;  --dep-soporte-texto: #1f4f8c; --dep-soporte-fondo: #e8f0fa;
+    --dep-otros: #ffe90b;    --dep-otros-texto: #6b5a00;  --dep-otros-fondo: #fffbd1;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--texto); background: #f7f7f8; line-height: 1.5; }
+h1, h2 { color: var(--titulo); line-height: 1.2; margin: 0; }
+a { color: var(--principal); }
+:focus-visible { outline: 3px solid var(--principal-claro); outline-offset: 2px; }
+
+/* ---------- Marco ---------- */
+.cabecera { background: var(--blanco); border-bottom: 1px solid var(--gris); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: .75rem 1.5rem; gap: .5rem 1rem; }
+.cabecera img { height: 34px; width: auto; max-width: 60vw; }
+.cabecera .usuario { display: flex; align-items: center; gap: 1rem; font-size: .9rem; }
+.campana { text-decoration: none; color: var(--texto); padding: .35rem .6rem; border: 1px solid var(--gris); border-radius: 999px; background: var(--blanco); }
+.campana b { background: var(--principal); color: #fff; border-radius: 999px; padding: 0 .45rem; font-size: .75rem; margin-left: .3rem; }
+.marco { display: grid; grid-template-columns: 220px minmax(0, 1fr); min-height: calc(100vh - 62px); }
+.menu { background: var(--blanco); border-right: 1px solid var(--gris); padding: 1.25rem 1rem; }
+.menu a { display: block; padding: .6rem .8rem; border-radius: 8px; color: var(--texto); text-decoration: none; margin-bottom: .2rem; }
+.menu a:hover { background: var(--gris); }
+.menu a[aria-current="page"] { background: var(--principal); color: #fff; font-weight: 600; }
+.menu .empresa { font-size: .8rem; color: var(--texto-suave); margin: 0 .8rem 1rem; }
+main { padding: 1.75rem; max-width: 1200px; }
+.titulo-fila { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+
+/* ---------- Botones ---------- */
+.boton { font: inherit; font-weight: 600; padding: .65rem 1.3rem; border-radius: 8px; cursor: pointer; border: 2px solid transparent; text-decoration: none; display: inline-block; }
+.boton.principal { background: linear-gradient(135deg, var(--principal), var(--principal-claro)); color: #fff; }
+.boton.secundario { background: var(--blanco); color: var(--principal); border-color: var(--principal); }
+
+/* ---------- Resumen por estado ---------- */
+.resumen { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .75rem; margin-bottom: 1.25rem; }
+.resumen a { display: block; background: var(--blanco); border: 1px solid var(--gris); border-radius: 12px; padding: .8rem 1rem; text-decoration: none; color: var(--texto); }
+.resumen a:hover { border-color: var(--principal); }
+.resumen strong { display: block; font-size: 1.6rem; color: var(--titulo); line-height: 1.1; }
+.resumen .atencion { border: 2px solid var(--principal); background: #f6f0fd; }
+
+/* ---------- Filtros (formulario GET normal: funciona sin JavaScript) ---------- */
+.filtros { background: var(--blanco); border: 1px solid var(--gris); border-radius: 12px; padding: 1rem; display: flex; flex-wrap: wrap; gap: .75rem 1rem; align-items: end; margin-bottom: 1rem; }
+.filtros label { display: block; font-size: .85rem; font-weight: 600; margin-bottom: .2rem; }
+.filtros input, .filtros select { font: inherit; color: var(--texto); padding: .5rem .7rem; border: 1px solid #b8bcc6; border-radius: 8px; background: var(--blanco); min-width: 0; }
+.filtros .buscar { flex: 1 1 220px; }
+.filtros .buscar input { width: 100%; }
+
+/* ---------- Tabla ---------- */
+.tabla-caja { background: var(--blanco); border: 1px solid var(--gris); border-radius: 12px; overflow: hidden; }
+table { width: 100%; border-collapse: collapse; }
+caption { text-align: left; padding: .8rem 1rem; font-weight: 600; color: var(--titulo); border-bottom: 1px solid var(--gris); }
+th { text-align: left; font-size: .8rem; text-transform: uppercase; letter-spacing: .03em; color: var(--texto-suave); padding: .6rem 1rem; background: #fafafa; border-bottom: 1px solid var(--gris); }
+td { padding: .8rem 1rem; border-bottom: 1px solid var(--gris); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+tbody tr:hover { background: #fcfaff; }
+td.num { white-space: nowrap; color: var(--texto-suave); font-variant-numeric: tabular-nums; }
+td .asunto { font-weight: 600; color: var(--texto); text-decoration: none; }
+td .asunto:hover { color: var(--principal); text-decoration: underline; }
+.nuevo { display: inline-block; margin-left: .5rem; font-size: .75rem; font-weight: 700; color: #fff; background: var(--principal); border-radius: 999px; padding: 0 .55rem; vertical-align: middle; }
+tr.sin-leer td .asunto { font-weight: 800; }
+
+/* Departamento: punto del color del logo + nombre en tono oscuro. Nunca solo color. */
+.dep { display: inline-flex; align-items: center; gap: .45rem; font-weight: 600; font-size: .9rem; white-space: nowrap; }
+.dep::before { content: ""; width: .8rem; height: .8rem; border-radius: 50%; flex: none; }
+.dep.apps { color: var(--dep-apps-texto); }     .dep.apps::before { background: var(--dep-apps); }
+.dep.webs { color: var(--dep-webs-texto); }     .dep.webs::before { background: var(--dep-webs); }
+.dep.soporte { color: var(--dep-soporte-texto); } .dep.soporte::before { background: var(--dep-soporte); }
+.dep.otros { color: var(--dep-otros-texto); }   .dep.otros::before { background: var(--dep-otros); box-shadow: inset 0 0 0 1px #c9b800; }
+
+/* Estado: forma + texto, en neutros y morados (los 4 colores de departamento están reservados). */
+.estado { display: inline-block; font-size: .8rem; font-weight: 700; padding: .15rem .65rem; border-radius: 999px; white-space: nowrap; border: 1.5px solid transparent; }
+.estado.abierto { background: #fff; color: var(--titulo); border-color: var(--titulo); }
+.estado.curso { background: #efe5fb; color: var(--titulo); }
+.estado.pendiente { background: var(--principal); color: #fff; }
+.estado.resuelto { background: var(--gris); color: var(--texto); }
+.estado.resuelto::before { content: "✓ "; }
+.estado.cerrado { background: var(--gris); color: var(--texto-suave); }
+
+.paginacion { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .75rem; padding-top: 1rem; font-size: .9rem; color: var(--texto-suave); }
+.paginacion nav a, .paginacion nav span { display: inline-block; min-width: 2.2rem; text-align: center; padding: .35rem .6rem; border: 1px solid var(--gris); border-radius: 8px; background: var(--blanco); text-decoration: none; margin-left: .2rem; }
+.paginacion nav span[aria-current="page"] { background: var(--principal); color: #fff; border-color: var(--principal); font-weight: 700; }
+
+/* ---------- Móvil: cada fila de la tabla pasa a ser una tarjeta ---------- */
+@media (max-width: 860px) {
+    .marco { grid-template-columns: minmax(0, 1fr); }
+    .menu { border-right: 0; border-bottom: 1px solid var(--gris); display: flex; flex-wrap: wrap; align-content: flex-start; gap: .25rem; padding: .75rem 1rem; }
+    .menu .empresa { width: 100%; margin: 0 0 .25rem; }
+    main { padding: 1rem; }
+    .cabecera .usuario span { display: none; }
+    .resumen { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    table, thead, tbody, tr, td, caption { display: block; }
+    thead { position: absolute; left: -9999px; } /* cabecera oculta a la vista pero no a lectores de pantalla */
+    tr { padding: .8rem 1rem; border-bottom: 1px solid var(--gris); }
+    tr:last-child { border-bottom: 0; }
+    td { border: 0; padding: .15rem 0; }
+    td::before { content: attr(data-etiqueta) ": "; font-size: .8rem; color: var(--texto-suave); }
+    td.asunto-celda::before, td.num::before { content: ""; }
+    td.asunto-celda { order: -1; }
+}
+
+/* ---------- Propio de la bandeja interna ---------- */
+.etiqueta-panel { display: inline-block; background: var(--titulo); color: #fff; font-size: .72rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; border-radius: 6px; padding: .1rem .5rem; margin: 0 .8rem .4rem; }
+.solicitante strong { display: block; line-height: 1.25; }
+td, th { padding-left: .7rem; padding-right: .7rem; }
+main { max-width: 1500px; }
+.tabla-caja { overflow-x: auto; }
+/* Con 7 columnas, por debajo de 1180px la tabla no cabe sin partir cada celda en varias líneas:
+   se muestra como tarjetas (las mismas reglas que ya usa el móvil para la tabla). */
+@media (max-width: 1180px) {
+    table, thead, tbody, tr, td, caption { display: block; }
+    thead { position: absolute; left: -9999px; } /* oculta a la vista, no a lectores de pantalla */
+    tr { padding: .8rem 1rem; border-bottom: 1px solid var(--gris); }
+    tr:last-child { border-bottom: 0; }
+    td { border: 0; padding: .15rem 0; }
+    td::before { content: attr(data-etiqueta) ": "; font-size: .8rem; color: var(--texto-suave); }
+    td.asunto-celda::before, td.num::before { content: ""; }
+    td.solicitante::before { display: block; }
+}
+ /* red de seguridad: si algo no cabe, se desplaza en vez de cortarse */
+/* Nombre, asignado y fecha en una sola línea SOLO en pantallas anchas: con 7 columnas, partirlos
+   duplica la altura de cada fila, pero en pantallas medianas forzar una línea corta la tabla. */
+@media (min-width: 1280px) {
+    .solicitante strong, td[data-etiqueta="Asignado a"], td[data-etiqueta="Última actividad"], .sin-asignar { white-space: nowrap; }
+}
+.solicitante small, td .secundario { display: block; color: var(--texto-suave); font-size: .85rem; line-height: 1.3; }
+.sin-asignar { font-weight: 700; color: var(--titulo); border-bottom: 2px dashed var(--principal); }
+.aviso-cliente { display: inline-block; margin-left: .5rem; font-size: .75rem; font-weight: 700; color: var(--titulo); background: #efe5fb; border: 1.5px solid var(--principal); border-radius: 999px; padding: 0 .55rem; vertical-align: middle; }
+@media (max-width: 1100px) { .resumen { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 860px) { .resumen { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* Móvil: la fila de la cuadrícula no debe estirarse hasta la altura mínima de la página (dejaba un hueco bajo el menú) */
+@media (max-width: 860px) { .marco { align-content: start; } }
+
+/* --- Filtros avanzados (mockup P1) --- */
+.vistas { display: flex; flex-wrap: wrap; gap: .5rem; margin: 0 0 .75rem; align-items: center; }
+.vistas > span { font-size: .85rem; font-weight: 600; color: var(--texto-suave, #5a5f6b); margin-right: .25rem; }
+.vistas a { display: inline-block; padding: .35rem .8rem; border: 1px solid #b8bcc6; border-radius: 999px; background: var(--blanco); color: var(--texto); text-decoration: none; font-size: .88rem; }
+.vistas a:hover { border-color: var(--principal); }
+.vistas a[aria-current="true"] { background: var(--principal); border-color: var(--principal); color: #fff; font-weight: 600; }
+.filtros .casilla-mensajes { flex: 1 1 100%; margin-top: -.35rem; }
+.filtros .casilla-mensajes label { display: inline-flex; gap: .45rem; align-items: center; font-weight: 400; font-size: .9rem; margin: 0; }
+.filtros .casilla-mensajes input { min-width: 0; padding: 0; }
+.mas-filtros { flex: 1 1 100%; border-top: 1px solid var(--gris); padding-top: .6rem; }
+.mas-filtros > summary { cursor: pointer; font-weight: 600; font-size: .9rem; color: var(--principal); padding: .1rem 0 .6rem; }
+.mas-filtros .rejilla { display: flex; flex-wrap: wrap; gap: .75rem 1rem; align-items: end; }
+.activos { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: 0 0 1rem; font-size: .88rem; }
+.activos .etiqueta-filtro { display: inline-flex; gap: .4rem; align-items: center; background: #f6f0fd; border: 1px solid #d9c6f3; border-radius: 999px; padding: .25rem .4rem .25rem .75rem; }
+.activos .etiqueta-filtro a { text-decoration: none; color: var(--texto); font-weight: 700; padding: 0 .35rem; border-radius: 999px; }
+.activos .etiqueta-filtro a:hover { background: #e4d3f7; }
+.activos .limpiar-todo { color: var(--principal); }
+
+/* --- Prioridad y etiquetas (mockup P1) --- */
+.prio { display: inline-block; border-radius: 999px; padding: .1rem .65rem; font-size: .8rem; font-weight: 700; white-space: nowrap; }
+.prio.baja { background: #eef0f3; color: #4a5568; }
+.prio.alta { background: #fff1de; color: #8a4b00; border: 1px solid #f2c27c; }
+.prio.urgente { background: #fde7e7; color: #a11a1a; border: 1px solid #f0a3a3; }
+.etq { display: inline-block; background: #eef4ff; color: #1f4a8a; border: 1px solid #c4d6f5; border-radius: 6px; padding: 0 .45rem; font-size: .78rem; margin: .15rem .25rem 0 0; white-space: nowrap; }
+.etqs-lista { display: flex; flex-wrap: wrap; gap: .35rem .9rem; margin: .2rem 0 .5rem; }
+.etqs-lista label { display: inline-flex; gap: .4rem; align-items: center; font-weight: 400; font-size: .9rem; margin: 0; }
+
+/* --- Valoración de la atención (mockup P1) --- */
+.estrellas { display: flex; flex-wrap: wrap; gap: .4rem; margin: .4rem 0 .8rem; border: 0; padding: 0; }
+.estrellas legend { font-weight: 600; margin-bottom: .3rem; padding: 0; }
+.estrellas label { display: inline-flex; flex-direction: column; align-items: center; gap: .1rem; border: 1px solid #b8bcc6; border-radius: 10px; padding: .45rem .7rem; min-width: 5.2rem; cursor: pointer; background: #fff; font-size: .82rem; }
+.estrellas label:hover { border-color: var(--principal); }
+.estrellas input { margin: 0; }
+.estrellas .est { font-size: 1.15rem; color: #d99a00; letter-spacing: .05em; }
+.valoracion-hecha .est { font-size: 1.5rem; color: #d99a00; letter-spacing: .08em; }
+.valoracion-hecha blockquote { margin: .6rem 0 0; padding: .6rem .9rem; background: #f6f0fd; border-left: 4px solid var(--principal); border-radius: 6px; font-size: .95rem; }
+.est-mini { color: #d99a00; font-weight: 700; white-space: nowrap; }
+.est-mini.mala { color: #a11a1a; }
+</style>
+</head>
+<body>
+
+<header class="cabecera">
+    <img src="../../marca lingmarco/logo-LM.svg" alt="Ling Marco &amp; Asociados">
+    <div class="usuario">
+        <a class="campana" href="#">Avisos <b>5</b></a>
+        <span>Carlos Medina · Administrador</span>
+        <a href="#">Salir</a>
+    </div>
+</header>
+
+<div class="marco">
+    <nav class="menu" aria-label="Menú del panel interno">
+        <span class="etiqueta-panel">Panel interno</span>
+        <p class="empresa">Ling Marco &amp; Asociados<br>Rol: administrador</p>
+        <a href="#" aria-current="page">Bandeja</a>
+        <a href="#">Empresas</a>
+        <a href="#">Productos y categorías</a>
+        <a href="#">Usuarios</a>
+        <a href="#">Mis datos</a>
+    </nav>
+
+    <main>
+        <div class="titulo-fila">
+            <h1>Bandeja de tickets</h1>
+        </div>
+
+        <section class="resumen" aria-label="Resumen por estado">
+            <a class="atencion" href="#"><strong>2</strong>Sin asignar</a>
+            <a href="#"><strong>4</strong>Abiertos</a>
+            <a href="#"><strong>2</strong>En curso</a>
+            <a href="#"><strong>1</strong>Pendiente de cliente</a>
+            <a href="#"><strong>3</strong>Resueltos o cerrados</a>
+        </section>
+
+        <div class="vistas" aria-label="Vistas rápidas">
+            <span>Vistas rápidas:</span>
+            <a href="#">Todos</a>
+            <a href="#">Mis tickets</a>
+            <a href="#">Urgentes y altas</a>
+            <a href="#">Sin asignar</a>
+            <a href="#">Sin actividad en 7 días</a>
+            <a href="#" aria-current="true">Mal valorados</a>
+        </div>
+
+        <form class="filtros" action="#" method="get" aria-label="Filtrar tickets">
+            <div class="buscar">
+                <label for="q">Buscar</label>
+                <input type="search" id="q" name="q" value="" placeholder="Asunto, número, persona o empresa">
+            </div>
+            <div>
+                <label for="f-estado">Estado</label>
+                <select id="f-estado" name="estado"><option>Todos</option><option>Abierto</option><option>En curso</option><option>Pendiente de cliente</option><option>Resuelto</option><option>Cerrado</option></select>
+            </div>
+            <div>
+                <label for="f-dep">Departamento</label>
+                <select id="f-dep" name="departamento"><option>Todos</option><option>Soporte</option><option>Aplicaciones</option><option>Páginas web</option></select>
+            </div>
+            <div>
+                <label for="f-emp">Empresa</label>
+                <select id="f-emp" name="empresa"><option>Todas</option><option>Asesoría Quintana</option><option>Clínica Dental Atlántico</option><option>Hermanos Santana S.L.</option><option>Transportes Insulares S.L.</option></select>
+            </div>
+            <div>
+                <label for="f-asig">Asignado a</label>
+                <select id="f-asig" name="asignado"><option>Todos</option><option>Sin asignar</option><optgroup label="Soporte"><option>Andrés Vega (tú)</option><option>Laura Pérez</option></optgroup><optgroup label="Desarrollo y Diseño"><option>Daniel Ortega</option></optgroup></select>
+            </div>
+            <div class="casilla-mensajes">
+                <label for="f-msg"><input type="checkbox" id="f-msg" name="en_mensajes" value="1"> Buscar también en el texto de los mensajes y las notas internas</label>
+            </div>
+            <details class="mas-filtros" open>
+                <summary>Más filtros</summary>
+                <div class="rejilla">
+                    <div>
+                        <label for="f-prio">Prioridad</label>
+                        <select id="f-prio" name="prioridad"><option>Todas</option><option>Urgente</option><option>Alta</option><option>Normal</option><option>Baja</option><option>Alta o urgente</option></select>
+                    </div>
+                    <div>
+                        <label for="f-etq">Etiqueta</label>
+                        <select id="f-etq" name="etiqueta"><option>Todas</option><option>Cliente con contrato premium</option><option>Importación</option><option>Pendiente de proveedor</option><option>Requiere visita</option><option>Facturable</option></select>
+                    </div>
+                    <div>
+                        <label for="f-val">Valoración</label>
+                        <select id="f-val" name="valoracion"><option>Todas</option><option selected>Mala (1-2)</option><option>Normal (3)</option><option>Buena (4-5)</option><option>Valorados</option><option>Sin valorar</option></select>
+                    </div>
+                    <div>
+                        <label for="f-prod">Producto</label>
+                        <select id="f-prod" name="producto"><option>Todos</option><option>oneFact</option><option>oneCOP</option><option>Pool de mantenimiento</option></select>
+                    </div>
+                    <div>
+                        <label for="f-cat">Categoría</label>
+                        <select id="f-cat" name="categoria"><option>Todas</option><optgroup label="Soporte"><option>Correo electrónico</option><option>Equipos y sistemas</option></optgroup><optgroup label="Aplicaciones"><option>Error en la aplicación</option></optgroup></select>
+                    </div>
+                    <div>
+                        <label for="f-desde">Abierto desde</label>
+                        <input type="date" id="f-desde" name="desde">
+                    </div>
+                    <div>
+                        <label for="f-hasta">Abierto hasta</label>
+                        <input type="date" id="f-hasta" name="hasta">
+                    </div>
+                    <div>
+                        <label for="f-quieta">Sin actividad desde hace</label>
+                        <select id="f-quieta" name="quieta"><option>—</option><option>3 días</option><option>7 días</option><option>14 días</option><option>30 días</option></select>
+                    </div>
+                    <div>
+                        <label for="f-orden">Ordenar por</label>
+                        <select id="f-orden" name="orden"><option>Prioridad (urgentes primero)</option><option>Última actividad (recientes primero)</option><option>Última actividad (antiguos primero)</option><option>Fecha de apertura (recientes primero)</option><option>Número</option></select>
+                    </div>
+                </div>
+            </details>
+            <button type="submit" class="boton secundario">Filtrar</button>
+        </form>
+
+        <p class="activos" aria-label="Filtros aplicados">
+            <strong>Filtros aplicados:</strong>
+            <span class="etiqueta-filtro">Valoración: mala (1-2) <a href="#" aria-label="Quitar este filtro">×</a></span>
+            <a class="limpiar-todo" href="#">Limpiar todo</a>
+        </p>
+
+
+        <div class="tabla-caja">
+            <table>
+                <caption>3 de 3 tickets con estos filtros</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Nº</th>
+                        <th scope="col">Asunto</th>
+                        <th scope="col">Abierto por</th>
+                        <th scope="col">Departamento</th>
+                        <th scope="col">Estado</th>
+                        <th scope="col">Asignado a</th>
+                        <th scope="col">Última actividad</th>
+                    </tr>
+                </thead>
+                <tbody>
+<tr>
+                        <td class="num" data-etiqueta="Nº">#2026-0321</td>
+                        <td class="asunto-celda" data-etiqueta="Asunto"><a class="asunto" href="#">TPV no sincroniza con oneFact</a> <span class="secundario">Producto: oneFact</span></td>
+                        <td class="solicitante" data-etiqueta="Abierto por"><strong>Rubén Alonso</strong><small>Transportes Insulares S.L.</small></td>
+                        <td data-etiqueta="Departamento"><span class="dep apps">Aplicaciones</span></td>
+                        <td data-etiqueta="Estado"><span class="estado resuelto">Resuelto</span><br><span class="est-mini mala" title="Valoración del cliente">★ 1/5</span></td>
+                        <td data-etiqueta="Asignado a"><span>Andrés Vega</span><small class="secundario">Soporte</small></td>
+                        <td data-etiqueta="Última actividad">Hoy, 09:58</td>
+                    </tr>
+<tr>
+                        <td class="num" data-etiqueta="Nº">#2026-0319</td>
+                        <td class="asunto-celda" data-etiqueta="Asunto"><a class="asunto" href="#">Web caída desde esta mañana</a> <span class="secundario">Producto: Mantenimiento web</span></td>
+                        <td class="solicitante" data-etiqueta="Abierto por"><strong>Elena Marrero</strong><small>Clínica Dental Atlántico</small></td>
+                        <td data-etiqueta="Departamento"><span class="dep webs">Páginas web</span></td>
+                        <td data-etiqueta="Estado"><span class="estado cerrado">Cerrado</span><br><span class="est-mini mala" title="Valoración del cliente">★ 2/5</span></td>
+                        <td data-etiqueta="Asignado a"><span>Andrés Vega</span><small class="secundario">Soporte</small></td>
+                        <td data-etiqueta="Última actividad">Hoy, 08:41</td>
+                    </tr>
+<tr>
+                        <td class="num" data-etiqueta="Nº">#2026-0318</td>
+                        <td class="asunto-celda" data-etiqueta="Asunto"><a class="asunto" href="#">No puedo emitir la factura de octubre</a> <span class="secundario">Producto: oneFact</span></td>
+                        <td class="solicitante" data-etiqueta="Abierto por"><strong>María Suárez</strong><small>Hermanos Santana S.L.</small></td>
+                        <td data-etiqueta="Departamento"><span class="dep apps">Aplicaciones</span></td>
+                        <td data-etiqueta="Estado"><span class="estado cerrado">Cerrado</span><br><span class="est-mini mala" title="Valoración del cliente">★ 2/5</span></td>
+                        <td data-etiqueta="Asignado a"><span>Andrés Vega</span><small class="secundario">Soporte</small></td>
+                        <td data-etiqueta="Última actividad">Hoy, 08:15</td>
+                    </tr>
+</tbody>
+            </table>
+        </div>
+
+        <div class="paginacion">
+            <span>Mostrando 1–10 de 87</span>
+            <nav aria-label="Paginación">
+                <span aria-current="page">1</span><a href="#">2</a><a href="#">3</a><span>…</span><a href="#">9</a>
+            </nav>
+        </div>
+    </main>
+</div>
+
+</body>
+</html>
