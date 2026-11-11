@@ -68,6 +68,11 @@ return [
     'records' => [
         // Dónde deja scripts/db-backup.sh las copias (contienen datos de clientes: fuera de public/ y de git).
         'backups_path' => storage_path('backups'),
+        // Rotación de copias (backup:prune): se conservan todas las de los últimos DÍAS y una por mes de los últimos MESES.
+        // Una copia conserva datos que retention:run ya borró: el plazo real de un dato «borrado» es el de la copia más
+        // antigua que lo lleve. Provisional (a validar con la asesoría junto con el plazo de conservación).
+        'backups_keep_days' => (int) env('BACKUPS_KEEP_DAYS', 14),
+        'backups_keep_months' => (int) env('BACKUPS_KEEP_MONTHS', 3),
         // Filas por página en correos y auditoría.
         'per_page' => 15,
     ],
