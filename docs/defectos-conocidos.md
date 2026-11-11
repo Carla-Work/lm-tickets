@@ -32,9 +32,9 @@
 - **D-4 · Las descargas de adjuntos no dejan rastro en la auditoría** (`AttachmentController`), ni los accesos
   denegados (403) ni los bloqueos R20. **Decisión de la usuaria:** qué eventos auditar (una descarga por cada
   apertura llenaría la tabla).
-- **D-5 · Datos sin plan de conservación:** `password_reset_tokens` (filas caducadas con el correo), `notifications`
+- **D-5 · Datos sin plan de conservación:** `notifications`
   (solo se borran las de tickets anonimizados), `failed_jobs`, `sessions`. Rebajado de «crítico»: son acumulación,
-  no exposición. Arreglo en `retention:run` tras decidir plazos.
+  no exposición. Los enlaces caducados de `password_reset_tokens` YA se purgan (ver «Cerrados»). Arreglo del resto en `retention:run` tras decidir plazos: **decisión de la usuaria**.
 - **D-6 · Identidad de usuarios de baja en tickets ya anonimizados** (`requester_id`, `assigned_to` se conservan).
   Ya estaba como «sin decidir» (usuarios de baja y empresas, `conservacion-datos.md`).
 - **D-7 · `User::visibleNotices()`** filtra con `JSON_EXTRACT` sobre `notifications.data` y se ejecuta en cada
@@ -42,7 +42,6 @@
   indexada en `notifications`. Medir antes de tocar.
 
 ### Bajos
-- **D-8 · `resources/views/welcome.blade.php` sin uso** (la raíz redirige a `/panel`). Borrado pendiente de permiso.
 - **D-9 · Huecos de test menores:** comprobados uno a uno el 2026-11-11; los demás que citó el revisor (copias, reenviar invitación, rol de empresa) YA estaban cubiertos. El de mover a un agente entre equipos con tickets asignados quedó cubierto con D-12.
 - **D-10 · Menores de rendimiento:** búsqueda `LIKE '%…%'` en la bandeja (sin índice), `select *` en la lista de
   empleados, mensajes y eventos del hilo ordenados en PHP. Irrelevantes al volumen actual.
@@ -60,3 +59,5 @@
 ## Cerrados
 - **D-1 · Cabeceras de seguridad** (2026-11-11): middleware global `SecurityHeaders` (`X-Frame-Options: DENY`, `frame-ancestors 'none'`, `nosniff`, `Referrer-Policy`, HSTS solo por HTTPS) y `SecurityHeadersTest`. Sin CSP general a propósito (las vistas usan `style="…"`). Verificado con `curl -I` en la app real. Pendiente de commit.
 - **D-12 · Cambio de equipo de un agente** (2026-11-11, visto bueno de la usuaria): al cambiar de equipo se liberan, con evento interno `team_changed`, los tickets no cerrados que ya no puede atender; se conservan los que sí. `ChangeAgentTeam` + `UnassignTickets` (parámetro `$onlyDepartments`), `StaffTest::test_team_change_releases_tickets_it_can_no_longer_work_on` (3 mutaciones, todas rojas). Pendiente de commit.
+- **D-5 (parte) · Enlaces de contraseña caducados** (2026-11-11): `retention:run` borra los de `password_reset_tokens` más viejos que el plazo más largo de los dos tipos (invitación, 7 días); la simulación los cuenta sin borrar. `RetentionTest::test_expired_reset_tokens_are_purged` (3 mutaciones rojas). Siguen abiertos avisos (`notifications`), `failed_jobs` y `sessions`.
+- **D-8 · `welcome.blade.php`** (2026-11-11): borrada, no la usaba nadie (la raíz redirige a `/panel`); queda en el historial de git.
