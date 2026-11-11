@@ -35,7 +35,7 @@
 
 ### Bajos
 - **D-9 · Huecos de test menores:** comprobados uno a uno el 2026-11-11; los demás que citó el revisor (copias, reenviar invitación, rol de empresa) YA estaban cubiertos. El de mover a un agente entre equipos con tickets asignados quedó cubierto con D-12.
-- **D-10 · Menores de rendimiento:** búsqueda `LIKE '%…%'` en la bandeja (sin índice), `select *` en la lista de
+- **D-10 · Menores de rendimiento:** búsqueda `LIKE '%…%'` en la bandeja (sin índice; medida con 20 000 tickets y 100 000 mensajes: ≤170 ms, ver `p1-busqueda-y-filtros.md`), `select *` en la lista de
   empleados, mensajes y eventos del hilo ordenados en PHP. Irrelevantes al volumen actual.
 - **D-11 · Sin páginas de error propias** (403/404/419/429/500 usan las de Laravel, genéricas con `APP_DEBUG=false`).
   Es de diseño: se hará con los ajustes de diseño.

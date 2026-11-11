@@ -37,6 +37,8 @@ Pasos: 0 cierre de Fase 1 · 1 modelo de datos · 2 acceso (entrar, bloqueo, rec
 
 **P0 CERRADO (2026-11-10):** además de lo anterior, «Mis datos» con 2FA del administrador (activar, regenerar códigos, desactivar; mockups mis-datos-c a h validados), `php artisan admin:recover` (docs/plan/recuperacion-admin.md) y `php artisan retention:run` (docs/plan/conservacion-datos.md; **no programado**, plazo provisional de 2 años a validar con la asesoría; faltan usuarios de baja y empresas). Siguiente: Fase 4 (endurecimiento, un eje por pasada).
 
+**P1 en marcha (2026-11-11):** hecho «búsqueda y filtros avanzados» (`docs/plan/p1-busqueda-y-filtros.md`); quedan prioridades y etiquetas, informes, email entrante, valoración y antivirus de adjuntos (los dos últimos con dependencias/servicios a decidir).
+
 **Para producción (fuera del P0):** trabajador de colas en marcha (sin él no salen correos ni avisos), remitente real de correo (hoy `hello@example.com`, en local los correos van al log), copia de seguridad automática programada, validar el plazo de conservación y programar `retention:run`, y la Fase 4 (endurecimiento).
 
 **Pendiente de validar por la usuaria:** el selector de categoría del cambio de departamento (el mockup no lo dibuja), la correspondencia departamento–equipo de los avisos (Páginas web → Desarrollo y Diseño) y el resto de «Decisiones abiertas».
@@ -65,6 +67,7 @@ varios administradores por empresa, «Mi empresa» del usuario normal, confirmac
 - Cliente: `cliente-mi-empresa-a-administrador`, `mis-tickets-b-administrador-empresa`, `mis-datos-a-cliente`, `avisos-a-cliente`. **Validado 2026-11-09.**
 - Interno: `mis-datos-b-interno`, `avisos-b-interno`. **Validado 2026-11-09.**
 - 2FA en «Mis datos» del administrador: `mis-datos-c`, `mis-datos-d` (regenerar), `mis-datos-e` (desactivada), `mis-datos-f` (activar), `mis-datos-g` (códigos tras activar), `mis-datos-h` (activada con desactivar). **Validados 2026-11-10** e implementados.
+- P1 · filtros avanzados: `bandeja-b-filtros-avanzados`, `mis-tickets-c-filtros-avanzados`. **Validados 2026-11-11** e implementados.
 - **Ya hay mockup de todas las pantallas previstas.** Falta que la usuaria los valide; las dudas pendientes están en el encuadre, sección «Acceso, administración y panel del cliente».
 - Sin dibujar, por no haberse pedido: ticket recién creado sin respuestas, enlace caducado, estados vacíos de las listas, vista del usuario normal en «Mi empresa».
 - Decidido: el cierre lo hace un agente; nadie reabre (se clona/crea uno relacionado); el cliente marca «resuelto» directo pero explicando cómo; al responder el cliente el estado pasa solo a «En curso».
