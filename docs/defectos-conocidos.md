@@ -29,14 +29,6 @@
 - **D-3 · Valores de desarrollo en `.env.example`** que no valen en producción: `APP_DEBUG=true`, `LOG_STACK=single`
   (sin rotación), `LOG_LEVEL=debug`, `SESSION_ENCRYPT=false`, `MAIL_MAILER=log`. Arreglo: lista de «entorno de
   producción» en la documentación de despliegue (no cambiar el ejemplo, que es el de desarrollo).
-- **D-4 · Las descargas de adjuntos no dejan rastro en la auditoría** (`AttachmentController`), ni los accesos
-  denegados (403) ni los bloqueos R20. **Decisión de la usuaria:** qué eventos auditar (una descarga por cada
-  apertura llenaría la tabla).
-- **D-5 · Datos sin plan de conservación:** `notifications`
-  (solo se borran las de tickets anonimizados), `failed_jobs`, `sessions`. Rebajado de «crítico»: son acumulación,
-  no exposición. Los enlaces caducados de `password_reset_tokens` YA se purgan (ver «Cerrados»). Arreglo del resto en `retention:run` tras decidir plazos: **decisión de la usuaria**.
-- **D-6 · Identidad de usuarios de baja en tickets ya anonimizados** (`requester_id`, `assigned_to` se conservan).
-  Ya estaba como «sin decidir» (usuarios de baja y empresas, `conservacion-datos.md`).
 - **D-7 · `User::visibleNotices()`** filtra con `JSON_EXTRACT` sobre `notifications.data` y se ejecuta en cada
   carga del panel (campana). Sin medir; no urgente con el volumen previsto. Arreglo si crece: columna `ticket_id`
   indexada en `notifications`. Medir antes de tocar.
@@ -61,3 +53,6 @@
 - **D-12 · Cambio de equipo de un agente** (2026-11-11, visto bueno de la usuaria): al cambiar de equipo se liberan, con evento interno `team_changed`, los tickets no cerrados que ya no puede atender; se conservan los que sí. `ChangeAgentTeam` + `UnassignTickets` (parámetro `$onlyDepartments`), `StaffTest::test_team_change_releases_tickets_it_can_no_longer_work_on` (3 mutaciones, todas rojas). Pendiente de commit.
 - **D-5 (parte) · Enlaces de contraseña caducados** (2026-11-11): `retention:run` borra los de `password_reset_tokens` más viejos que el plazo más largo de los dos tipos (invitación, 7 días); la simulación los cuenta sin borrar. `RetentionTest::test_expired_reset_tokens_are_purged` (3 mutaciones rojas). Siguen abiertos avisos (`notifications`), `failed_jobs` y `sessions`.
 - **D-8 · `welcome.blade.php`** (2026-11-11): borrada, no la usaba nadie (la raíz redirige a `/panel`); queda en el historial de git.
+- **D-4 · Auditoría de descargas** (2026-11-11, decisión delegada): solo se audita la descarga DENEGADA (`attachment_denied`: quién y qué adjunto, sin nombre de fichero); las permitidas no, para no llenar la tabla. Los bloqueos R20 ya se auditaban (`login_locked`). `AttachmentsTest::test_denied_download_is_audited`.
+- **D-5 · Datos sin plan de conservación** (2026-11-11): avisos de la campana a 2 años, `failed_jobs` a 90 días y enlaces caducados, en `retention:run`; las sesiones las limpia Laravel. 
+- **D-6 · Usuarios de baja** (2026-11-11): anonimizados a los 2 años de la baja (columna `users.anonymized_at`; no se reactivan); las empresas quedan FUERA de la purga. Provisional hasta validar con la asesoría.
