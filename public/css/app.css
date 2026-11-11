@@ -48,7 +48,8 @@ a { color: var(--principal); }
 /* ---------- Formularios ---------- */
 .campo { margin-bottom: 1.1rem; }
 .campo > label { display: block; font-weight: 600; margin-bottom: .3rem; }
-.campo input[type=text], .campo input[type=email], .campo input[type=password] {
+/* `tel` también: sin él el teléfono (empresa, «Mis datos») salía con el estilo nativo del navegador, distinto del resto. */
+.campo input[type=text], .campo input[type=email], .campo input[type=password], .campo input[type=tel] {
     width: 100%; font: inherit; color: var(--texto); padding: .6rem .8rem;
     border: 1px solid #b8bcc6; border-radius: 8px; background: #fff;
 }
@@ -59,3 +60,11 @@ a { color: var(--principal); }
 .alerta { padding: .8rem 1rem; border-radius: 8px; border-left: 5px solid; margin-bottom: 1rem; font-size: .95rem; }
 .alerta.error { background: #fdeceb; border-color: var(--error); color: #7a1710; }
 .alerta.ok { background: #f6f0fd; border-color: var(--principal); }
+
+/* ---------- Páginas de error (resources/views/errors; defecto D-11) ---------- */
+.pagina-error { min-height: 100vh; display: grid; place-items: center; background: #f6f6f8; padding: 1.5rem; }
+.pagina-error main { background: #fff; border: 1px solid var(--gris); border-radius: 16px; padding: 2.5rem 2rem; max-width: 30rem; width: 100%; text-align: center; }
+.pagina-error .logo-error { height: 44px; margin-bottom: 1.5rem; }
+.pagina-error .codigo-error { margin: 0; color: var(--texto-suave); font-size: .9rem; letter-spacing: .06em; text-transform: uppercase; }
+.pagina-error h1 { margin: .3rem 0 .6rem; color: var(--titulo); font-size: 1.5rem; }
+.pagina-error .texto-error { margin: 0 0 1.5rem; color: var(--texto); }
