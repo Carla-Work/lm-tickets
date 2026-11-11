@@ -30,6 +30,7 @@ use App\Http\Controllers\TicketController;
 use App\Http\Controllers\TicketDepartmentController;
 use App\Http\Controllers\TicketMessageController;
 use App\Http\Controllers\TicketStatusController;
+use App\Http\Controllers\TwoFactorSettingsController;
 use App\Http\Controllers\UserStatusController;
 use Illuminate\Support\Facades\Route;
 
@@ -132,6 +133,18 @@ Route::middleware(['auth', 'operational'])->group(function () {
     Route::get('/mis-datos', [ProfileController::class, 'show'])->name('profile.show');
     Route::post('/mis-datos', [ProfileController::class, 'updateData'])->name('profile.update');
     Route::post('/mis-datos/contrasena', [ProfileController::class, 'updatePassword'])->middleware('throttle:5,1')->name('profile.password');
+
+    // Segundo factor del administrador desde «Mis datos» (R21, opcional). Las que piden código o contraseña limitan
+    // intentos: `throttle:5,1` cuenta por PERSONA, no por ruta, así que activar, regenerar, desactivar y cambiar la
+    // contraseña comparten los mismos 5 intentos por minuto (a propósito: no se multiplican probando rutas distintas).
+    Route::prefix('mis-datos/dos-pasos')->name('profile.two-factor.')->group(function () {
+        Route::get('/activar', [TwoFactorSettingsController::class, 'setup'])->name('setup');
+        Route::post('/activar', [TwoFactorSettingsController::class, 'confirm'])->middleware('throttle:5,1')->name('confirm');
+        Route::get('/codigos', [TwoFactorSettingsController::class, 'codes'])->name('codes');
+        Route::post('/codigos', [TwoFactorSettingsController::class, 'finish'])->name('finish');
+        Route::post('/codigos-nuevos', [TwoFactorSettingsController::class, 'regenerate'])->middleware('throttle:5,1')->name('regenerate');
+        Route::post('/desactivar', [TwoFactorSettingsController::class, 'disable'])->middleware('throttle:5,1')->name('disable');
+    });
 
     // «Mi empresa» (cliente): productos en solo lectura y, para su administrador, los usuarios de su empresa.
     Route::get('/mi-empresa', [CompanyAreaController::class, 'show'])->name('company.show');

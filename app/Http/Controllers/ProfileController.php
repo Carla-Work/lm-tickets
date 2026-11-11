@@ -8,9 +8,8 @@
  * Trampas:
  *  - Solo se editan nombre y teléfono (el teléfono solo lo pide el cliente en el mockup). El correo, la empresa, el
  *    rol y el equipo son de solo lectura: los cambia otra persona (R8) y NO están en #[Fillable] a propósito.
- *  - FALTA la tarjeta del 2FA del administrador (activar, desactivar, códigos nuevos): su mockup (mis-datos-c/d)
- *    está pendiente de validar y no cubre «activar» ni «desactivar». Mientras tanto no se puede activar desde la
- *    interfaz (R21 es opcional).
+ *  - La tarjeta del 2FA del administrador (activar, regenerar códigos, desactivar) vive en esta pantalla, pero su
+ *    lógica está en TwoFactorSettingsController (mockups mis-datos-c a h, validados el 2026-11-10).
  *  - La contraseña actual se comprueba SIEMPRE (quien tenga una sesión abierta ajena no puede cambiarla sin
  *    saberla) y la ruta limita los intentos. Otras sesiones abiertas de la misma cuenta NO se cierran (pendiente).
  */
@@ -30,6 +29,9 @@ class ProfileController extends Controller
 {
     public function show(Request $request): View
     {
+        // Si se abandonó la activación del 2FA a medias, la clave pendiente se descarta (no queda nada guardado).
+        $request->session()->forget('two_factor_settings.secret');
+
         return view('profile.show', ['user' => $this->me($request)]);
     }
 

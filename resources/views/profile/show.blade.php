@@ -1,7 +1,8 @@
 {{--
     «Mis datos» (todos los roles). Mockups validados: mis-datos-a-cliente, mis-datos-b-interno, mis-datos-c-administrador.
     Cuándo tocarla: al cambiar la pantalla. Variables: $user.
-    Trampas: la tarjeta del 2FA del administrador NO está (mockup pendiente de validar); el teléfono solo se pide al
+    «Verificación en dos pasos» (mockups validados mis-datos-c/d/e/f/g/h): solo el administrador (R21, opcional).
+    Trampas: el teléfono solo se pide al
     cliente; correo, empresa, equipo y rol son de solo lectura (los cambia otra persona).
 --}}
 @extends('layouts.panel')
@@ -28,6 +29,35 @@
             </div>
             <button type="submit" class="boton secundario">Guardar datos</button>
         </form>
+
+        @if ($user->role === \App\Enums\UserRole::Admin)
+            @if (! $user->hasTwoFactorEnabled())
+                <section class="tarjeta" aria-label="Verificación en dos pasos">
+                    <h2>Verificación en dos pasos</h2>
+                    <p style="margin:0 0 .8rem"><span class="estado-cuenta">○ Desactivada</span></p>
+                    <p style="margin:0 0 1rem">Añade un segundo paso al entrar: además de tu contraseña, un código de 6 dígitos de una app de autenticación en tu móvil. <strong>Es opcional, pero muy recomendable</strong> en la cuenta del administrador, que lo ve todo.</p>
+                    <a class="boton principal" href="{{ route('profile.two-factor.setup') }}">Activar la verificación en dos pasos</a>
+                </section>
+            @else
+                <form class="tarjeta" action="{{ route('profile.two-factor.regenerate') }}" method="post" aria-label="Verificación en dos pasos">
+                    @csrf
+                    <h2>Verificación en dos pasos</h2>
+                    <p style="margin:0 0 .8rem"><span class="estado-cuenta">✓ Activada</span> · App de autenticación</p>
+                    <p style="margin:0 0 1rem">Te quedan <strong>{{ $user->remainingRecoveryCodes() }}</strong> códigos de recuperación sin usar. Cada uno sirve una sola vez.</p>
+                    <div class="aviso" style="margin-bottom:1rem"><strong>Si generas códigos nuevos, los anteriores dejan de valer</strong> (los {{ $user->remainingRecoveryCodes() }} que te quedan también). Los nuevos se te mostrarán una sola vez.</div>
+                    <div class="campo" style="max-width:340px"><label for="clave-conf">Tu contraseña actual <span class="oblig" aria-hidden="true">*</span></label><input type="password" id="clave-conf" name="password" autocomplete="current-password" required><p class="ayuda">Te la pedimos para confirmar que eres tú.</p>@error('password')<p class="error-campo" role="alert">{{ $message }}</p>@enderror</div>
+                    <button type="submit" class="boton secundario">Generar códigos nuevos</button>
+                </form>
+
+                <form class="tarjeta peligro" action="{{ route('profile.two-factor.disable') }}" method="post" aria-label="Desactivar la verificación en dos pasos">
+                    @csrf
+                    <h2>Desactivar la verificación en dos pasos</h2>
+                    <p class="sub" style="color:var(--texto)">Volverás a entrar solo con tu contraseña y se borrarán la clave y los códigos de recuperación. Podrás activarla de nuevo cuando quieras.</p>
+                    <div class="campo" style="max-width:340px"><label for="clave-des">Tu contraseña actual <span class="oblig" aria-hidden="true">*</span></label><input type="password" id="clave-des" name="password" autocomplete="current-password" required><p class="ayuda">Te la pedimos para confirmar que eres tú.</p></div>
+                    <button type="submit" class="boton peligro-b">Desactivar</button>
+                </form>
+            @endif
+        @endif
 
         <form class="tarjeta" action="{{ route('profile.password') }}" method="post" aria-label="Cambiar contraseña">
             @csrf
