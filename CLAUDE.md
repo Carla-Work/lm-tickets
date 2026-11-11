@@ -84,6 +84,11 @@ php artisan admin:recover                  # imprime un enlace de un solo uso; -
 # Plan de conservación (docs/plan/conservacion-datos.md): NO está programado; plazos provisionales en config/retention.php
 php artisan retention:run --dry-run        # qué afectaría; sin --dry-run lo aplica (IRREVERSIBLE)
 
+# Producción (docs/plan/produccion.md y vuelta-atras.md)
+php artisan preflight:check                # ¿está lista para producción? Sale con código 1 si hay errores; --strict trata como error lo de producción
+php artisan backup:prune [--dry-run]       # rota las copias (14 días + 1 por mes de 3 meses); se programa solo con `schedule:run`
+bash scripts/db-backup.sh                  # copia a mano (el planificador la hace cada noche a las 03:00)
+
 # Formateo y comprobación
 composer format          # formatea con Pint
 composer format:check    # solo comprueba
@@ -165,6 +170,9 @@ El trabajo se hace en la rama del hito en curso; cada rama sale de la anterior, 
 - **Informes (`/informes`, `App\Support\TicketReport`): solo el equipo; TODA cifra parte de `Ticket::visibleTo`** (un agente de Soporte no cuenta Contabilidad, R13) y la tabla «por agente» y los nombres de las personas son SOLO del administrador. Las definiciones de cada cifra están en la cabecera de `TicketReport` y en la pantalla; si se cambia una, se cambian las dos y `ReportTest` (cifras calculadas a mano). No se exporta (a propósito).
 - **La conexión `mysql` fija `'timezone' => '+00:00'`** (`config/database.php`): sin ello, MySQL usa la hora de SU servidor (aquí Canarias, con cambio de hora) y una fecha UTC en la hora que no existe allí falla al guardar. `Schema/TimezoneTest` lo vigila: no quitarlo.
 - **Para VER las pantallas sin navegador a mano (descubierto el 2026-11-11):** Chrome está en `/Applications/Google Chrome.app` y funciona sin cabeza. Método: servidor `php -S` contra una base `lm_tickets_qa` con datos de aspecto realista (ver la regla de `artisan serve`), bajar cada página con una sesión autenticada (cookies + CSRF), sustituir `http://127.0.0.1:PUERTO/` por `file:///…/public/` y capturar con `chrome --headless=new --hide-scrollbars --window-size=1360,ALTO --screenshot=…`. **Para móvil NO usar `--window-size=420`** (Chrome no baja de ~485 px y recorta): meter la página en un `<iframe width="420">` dentro de una página de 520 y capturar esa. Así se encontraron fallos de diseño que ningún test ve.
+- **Producción: `preflight:check` antes de abrir y tras cada despliegue; una entrada de cron (`schedule:run`) y un trabajador de colas permanente.** Sin el cron no hay copias ni rotación; sin el trabajador no salen correos ni avisos. `retention:run` sigue SIN programar (irreversible, plazo por validar). **No se usa `migrate:rollback` en producción:** volver atrás = restaurar la copia previa (varios `down()` borran tablas con datos). `APP_KEY` no se cambia nunca (cifra el 2FA). Probado solo con MySQL 9.6, no con MariaDB.
+- **`TRUSTED_PROXIES` va en `config/trustedproxy.php`, NO en `bootstrap/app.php`** (comprobado con el servidor real: allí `env()` devuelve nulo en una petición web y el proxy se ignoraba sin avisar). Vacío = ningún proxy.
+- **Artisan reutiliza la MISMA instancia de un comando dentro de un proceso**: un comando con estado en propiedades (`$rows`) debe vaciarlo al empezar `handle()` (fallo real de `PreflightCheck`, destapado por un test).
 - **Páginas de error (`resources/views/errors/`): texto FIJO en español, nunca `$exception->getMessage()`, y sin sesión, usuario ni base de datos** (un 500 puede venir de ahí). El enlace de vuelta es `url('/')`, no `route('panel')`. `ErrorPagesTest` lo vigila, también con `APP_DEBUG` activo.
 - **CSS del panel: `body.panel .boton` (más específico) pisa a `.boton.pequeno`**, por eso hay `body.panel .boton.pequeno` al final de `panel.css`; y las cifras de tablas que deban conservar su rótulo en móvil usan `td.cifra`, NO `td.num` (que lo oculta, pensado para el nº de ticket). `.etq` es la chip de etiqueta interna: no reutilizar ese nombre como rótulo de formulario.
 - **`php artisan tinker fichero.php` se queda esperando entrada y no termina** (descubierto el 2026-11-11): para scripts de prueba usar `php artisan tinker --execute="$(tail -n +2 fichero.php)"`.

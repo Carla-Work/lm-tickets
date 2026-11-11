@@ -22,13 +22,9 @@
 ## Abiertos
 
 ### Altos (antes de producción)
-- **D-2 · Sin supervisión del trabajador de colas.** Si `queue:work` cae, no salen correos ni avisos y nadie se entera
-  (CLAUDE.md ya lo avisa). Falta: supervisor (o equivalente en IONOS), y vigilar `failed_jobs`. Es de despliegue (Fase 5).
+- **D-2 · Nadie avisa si la cola o la copia fallan** (2026-11-11: **detectable pero no avisado**). `php artisan preflight:check` ya detecta un trabajador de colas parado (trabajos pendientes más de 10 minutos), trabajos fallidos y copias viejas; supervisor y alternativa por cron están documentados en `docs/plan/produccion.md`. **Falta, y es decisión de la usuaria ❓:** que algo AVISE a una persona automáticamente (hoy solo lo ve quien ejecute el comando) y poner el trabajador y el cron en el servidor real.
 
 ### Medios
-- **D-3 · Valores de desarrollo en `.env.example`** que no valen en producción: `APP_DEBUG=true`, `LOG_STACK=single`
-  (sin rotación), `LOG_LEVEL=debug`, `SESSION_ENCRYPT=false`, `MAIL_MAILER=log`. Arreglo: lista de «entorno de
-  producción» en la documentación de despliegue (no cambiar el ejemplo, que es el de desarrollo).
 - **D-7 · `User::visibleNotices()`** filtra con `JSON_EXTRACT` sobre `notifications.data` y se ejecuta en cada
   carga del panel (campana). Sin medir; no urgente con el volumen previsto. Arreglo si crece: columna `ticket_id`
   indexada en `notifications`. Medir antes de tocar.
@@ -55,3 +51,4 @@
 - **D-6 · Usuarios de baja** (2026-11-11): anonimizados a los 2 años de la baja (columna `users.anonymized_at`; no se reactivan); las empresas quedan FUERA de la purga. Provisional hasta validar con la asesoría.
 - **D-13 · Zona horaria de la conexión a MySQL** (2026-11-11, hallazgo mío al cargar datos de prueba): la sesión de MySQL usaba la hora del servidor (aquí Canarias, WET con cambio de hora) mientras Laravel guarda UTC; una fecha dentro de la hora que no existe allí (último domingo de marzo, 01:00-02:00 UTC) **fallaba al guardar** (un ticket o mensaje creado a esa hora daba error 500). Arreglado: `'timezone' => '+00:00'` en la conexión `mysql` (`config/database.php`, variable `DB_TIMEZONE`). `Schema/TimezoneTest` (3; la zona de sesión y el caso de marzo estaban en rojo antes). Pendiente de comprobar en IONOS: el huso de su MySQL (con este arreglo da igual).
 - **D-11 · Páginas de error propias** (2026-11-11): `resources/views/errors/` (403, 404, 419, 429, 500, 503) en español, con el logo y el enlace de vuelta, sin sesión ni base de datos y sin el mensaje de la excepción. `ErrorPagesTest` (5; 4 mutaciones rojas). Antes salía la página en inglés de Laravel («404 Not Found»), sin nada que orientara.
+- **D-3 · Valores de desarrollo en `.env.example`** (2026-11-11): `.env.production.example` con los valores de producción y la razón de cada uno, y `php artisan preflight:check` que los comprueba (en producción falla con código 1). Guía en `docs/plan/produccion.md`.
