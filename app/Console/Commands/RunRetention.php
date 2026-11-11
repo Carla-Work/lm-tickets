@@ -61,13 +61,16 @@ class RunRetention extends Command
         $emailLogs = EmailLog::query()->where('created_at', '<', $logsCutoff);
         $auditLogs = AuditLog::query()->where('created_at', '<', $logsCutoff);
 
-        $totals = ['tickets' => 0, 'attachments' => 0, 'notices' => 0, 'email_logs' => 0, 'audit_logs' => 0];
+        $tokens = $this->expiredResetTokens();
+
+        $totals = ['tickets' => 0, 'attachments' => 0, 'notices' => 0, 'email_logs' => 0, 'audit_logs' => 0, 'reset_tokens' => 0];
 
         if ($dry) {
             $totals['tickets'] = (clone $due)->count();
             $totals['attachments'] = Attachment::query()->whereIn('ticket_id', (clone $due)->select('id'))->count();
             $totals['email_logs'] = (clone $emailLogs)->count();
             $totals['audit_logs'] = (clone $auditLogs)->count();
+            $totals['reset_tokens'] = (clone $tokens)->count();
         } else {
             (clone $due)->chunkById(100, function ($tickets) use (&$totals): void {
                 foreach ($tickets as $ticket) {
@@ -79,6 +82,7 @@ class RunRetention extends Command
             });
             $totals['email_logs'] = $emailLogs->delete();
             $totals['audit_logs'] = $auditLogs->delete();
+            $totals['reset_tokens'] = $tokens->delete();
         }
 
         $this->table(['Qué', $dry ? 'Afectaría a' : 'Afectados'], [
@@ -87,14 +91,30 @@ class RunRetention extends Command
             ['Avisos de la campana borrados', $dry ? '—' : $totals['notices']],
             ['Correos del registro borrados', $totals['email_logs']],
             ['Filas de auditoría borradas', $totals['audit_logs']],
+            ['Enlaces de contraseña caducados borrados', $totals['reset_tokens']],
         ]);
 
         if (! $dry) {
             // Después de purgar la auditoría, para que esta fila (sin datos personales) no se borre a sí misma.
-            Audit::record('retention_run', "Purga por plazo: {$totals['tickets']} tickets anonimizados, {$totals['attachments']} adjuntos, {$totals['email_logs']} correos y {$totals['audit_logs']} filas de auditoría borrados.", null, null, null, $totals);
+            Audit::record('retention_run', "Purga por plazo: {$totals['tickets']} tickets anonimizados, {$totals['attachments']} adjuntos, {$totals['email_logs']} correos y {$totals['audit_logs']} filas de auditoría y {$totals['reset_tokens']} enlaces caducados borrados.", null, null, null, $totals);
         }
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Enlaces de recuperación e invitación que ya no sirven (defecto D-5). Laravel solo borra un token al USARLO, y los
+     * que nadie abre se quedarían para siempre con el correo de la persona. Los dos tipos comparten tabla: se usa el
+     * plazo MÁS LARGO de los dos (la invitación, 7 días), así nunca se borra uno que todavía valga.
+     *
+     * @return \Illuminate\Database\Query\Builder
+     */
+    private function expiredResetTokens()
+    {
+        $table = (string) config('auth.passwords.users.table');
+        $minutes = max((int) config('auth.passwords.users.expire'), (int) config('auth.passwords.invitations.expire'));
+
+        return DB::table($table)->where('created_at', '<', now()->subMinutes($minutes));
     }
 
     /** @return Builder<Ticket> */

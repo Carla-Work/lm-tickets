@@ -26,6 +26,7 @@ mano hasta que el plazo se valide con la asesoría legal (no es asesoramiento le
 | Avisos de la campana de esos tickets | con el ticket | Borrar (llevan asunto y empresa) | **Hecho** |
 | Registro de correos (`email_logs`) | 2 años | Borrar filas antiguas | **Hecho** |
 | Auditoría (`audit_logs`) | 2 años | Borrar filas antiguas (esta purga es el ÚNICO sitio que borra auditoría); deja su propia fila con los recuentos | **Hecho** |
+| Enlaces de contraseña caducados (`password_reset_tokens`) | más viejos que el plazo del más largo (invitación, 7 días) | Borrar (llevan el correo y Laravel solo los borra al usarlos). Decisión técnica de Claude, sin dato personal de valor | **Hecho** (2026-11-11, defecto D-5) |
 | Aviso previo al cliente | — | **Ninguno** (decidido) | — |
 | Usuarios dados de baja | ❓ | Anonimizar (propuesta) | **SIN DECIDIR, no implementado** |
 | Empresa tras terminar la relación | ❓ | Depende de obligaciones contables/contractuales | **SIN DECIDIR, no implementado** |
@@ -54,6 +55,8 @@ php artisan retention:run             # lo aplica (IRREVERSIBLE salvo desde una 
 - Las copias de seguridad contienen los datos antes de la purga.
 
 ## Decisiones abiertas
+
+0. Sin plazo todavía: avisos de la campana antiguos de tickets no anonimizados (`notifications`), trabajos fallidos (`failed_jobs`) y sesiones (`sessions`; caducan solas pero no se purgan). Ver D-5 en `docs/defectos-conocidos.md`.
 
 1. Usuarios dados de baja: ¿anonimizar a los 2 años de la baja? (Propuesta: sí.)
 2. Empresa cliente: plazo y obligaciones contables/contractuales (¿asesoría?).

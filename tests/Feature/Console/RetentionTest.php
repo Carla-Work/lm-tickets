@@ -27,6 +27,7 @@ use App\Models\TicketEvent;
 use App\Models\TicketMessage;
 use App\Notifications\TicketNotice;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\TestDox;
 use Tests\Concerns\CreatesActors;
@@ -144,6 +145,23 @@ class RetentionTest extends TestCase
 
         $this->assertSame(0, EmailLog::count());
         $this->assertFalse(AuditLog::where('description', 'año y medio')->exists());
+    }
+
+    #[TestDox('Los enlaces de contraseña caducados (más viejos que el plazo MÁS LARGO, el de la invitación) se borran; uno de hace 3 días se conserva porque una invitación aún valdría (D-5)')]
+    public function test_expired_reset_tokens_are_purged(): void
+    {
+        DB::table('password_reset_tokens')->insert([
+            ['email' => 'viejo@example.com', 'token' => 'x', 'created_at' => now()->subDays(8)],
+            ['email' => 'reciente@example.com', 'token' => 'y', 'created_at' => now()->subDays(3)],
+        ]);
+
+        $this->artisan('retention:run', ['--dry-run' => true])->assertSuccessful();
+        $this->assertSame(2, DB::table('password_reset_tokens')->count(), 'la simulación no borra');
+
+        $this->ejecutar();
+
+        $this->assertSame(['reciente@example.com'], DB::table('password_reset_tokens')->pluck('email')->all());
+        $this->assertSame(1, AuditLog::where('event', 'retention_run')->firstOrFail()->properties['reset_tokens']);
     }
 
     #[TestDox('--dry-run enseña qué afectaría pero no cambia nada: ni tickets, ni adjuntos, ni ficheros, ni registros, ni auditoría')]
