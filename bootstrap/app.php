@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\EnsureAccountIsOperational;
 use App\Http\Middleware\EnsurePendingLogin;
+use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -16,6 +17,9 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // Quien ya ha iniciado sesión y abre /acceso va directo al panel.
         $middleware->redirectUsersTo(fn () => route('panel'));
+
+        // Cabeceras de seguridad en todas las respuestas web (D-1). Ver SecurityHeaders.
+        $middleware->appendToGroup('web', SecurityHeaders::class);
 
         $middleware->alias([
             'login.pending' => EnsurePendingLogin::class,   // pantallas del segundo factor
