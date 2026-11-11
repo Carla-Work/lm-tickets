@@ -45,6 +45,7 @@ class User extends Authenticatable
             'team' => Team::class,
             'activated_at' => 'datetime',
             'deactivated_at' => 'datetime',
+            'anonymized_at' => 'datetime',
             // La clave del segundo factor se guarda CIFRADA; los códigos de recuperación, con hash (ver la migración).
             'two_factor_secret' => 'encrypted',
             'two_factor_confirmed_at' => 'datetime',

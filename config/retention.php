@@ -15,4 +15,17 @@ return [
 
     // Registro de correos (`email_logs`) y auditoría (`audit_logs`): se BORRAN las filas más antiguas que esto.
     'logs_years' => (int) env('RETENTION_LOGS_YEARS', 2),
+
+    // Avisos de la campana (`notifications`) más antiguos que esto se BORRAN, aunque su ticket no se haya anonimizado
+    // todavía (defecto D-5, decidido 2026-11-11). Mismo plazo que los registros: son su reflejo.
+    // (No tiene variable propia a propósito: si el aviso vive más que el correo/auditoría que lo originó, sobra.)
+
+    // Trabajos fallidos (`failed_jobs`): llevan el aviso serializado (ticket, asunto, empresa) y una traza. Se borran
+    // pasados estos DÍAS; si algo no salió, interesa verlo pronto, no a los dos años.
+    'failed_jobs_days' => (int) env('RETENTION_FAILED_JOBS_DAYS', 90),
+
+    // Usuarios DADOS DE BAJA: pasado este plazo desde la baja se ANONIMIZAN (nombre, correo, teléfono, contraseña y
+    // segundo factor); la fila y su id se conservan porque los tickets apuntan a ella (defecto D-6, decidido
+    // 2026-11-11). Las EMPRESAS no se tocan: pueden pesar obligaciones contables y contractuales.
+    'deactivated_users_years' => (int) env('RETENTION_DEACTIVATED_USERS_YEARS', 2),
 ];

@@ -9,9 +9,11 @@
  *     internas, se sustituyen por un texto fijo), se BORRAN sus adjuntos (fichero y fila) y sus avisos de la campana.
  *     El ticket, quién lo abrió, su clasificación y su historial de estados se conservan (estadística).
  *  2. Registro de correos y auditoría: se BORRAN las filas más antiguas que el plazo.
+ *  3. (2026-11-11) Enlaces de contraseña caducados, avisos de la campana antiguos y trabajos fallidos antiguos.
+ *  4. (2026-11-11) Usuarios dados de baja hace más del plazo: se ANONIMIZAN (la fila y su id quedan).
  *
- * Qué NO hace (a propósito, pendiente de decisión): no toca usuarios dados de baja ni empresas (el historial de los
- * tickets apunta a ellos), ni las copias de seguridad (su rotación fija su plazo real).
+ * Qué NO hace (a propósito): no toca las empresas (obligaciones contables y contractuales) ni las copias de
+ * seguridad (su rotación fija su plazo real).
  *
  * Trampas:
  *  - NO está programado: la usuaria decidió dejarlo manual hasta validar el plazo con la asesoría legal. `--dry-run`
@@ -32,11 +34,14 @@ use App\Models\AuditLog;
 use App\Models\EmailLog;
 use App\Models\Ticket;
 use App\Models\TicketMessage;
+use App\Models\User;
 use App\Support\Audit;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class RunRetention extends Command
 {
@@ -44,6 +49,9 @@ class RunRetention extends Command
     public const REPLACEMENT_SUBJECT = 'Ticket anonimizado';
 
     public const REPLACEMENT_BODY = '[Contenido eliminado por el plazo de conservación]';
+
+    /** Nombre que sustituye al de un usuario anonimizado. El correo pasa a `baja-{id}@anonimo.invalid` (único). */
+    public const REPLACEMENT_USER_NAME = 'Persona dada de baja';
 
     protected $signature = 'retention:run {--dry-run : Solo muestra qué se aplicaría, sin cambiar nada}';
 
@@ -62,8 +70,11 @@ class RunRetention extends Command
         $auditLogs = AuditLog::query()->where('created_at', '<', $logsCutoff);
 
         $tokens = $this->expiredResetTokens();
+        $oldNotices = DB::table('notifications')->where('created_at', '<', $logsCutoff);
+        $oldFailedJobs = DB::table('failed_jobs')->where('failed_at', '<', now()->subDays((int) config('retention.failed_jobs_days')));
+        $usersDue = $this->dueUsers(now()->subYears((int) config('retention.deactivated_users_years')));
 
-        $totals = ['tickets' => 0, 'attachments' => 0, 'notices' => 0, 'email_logs' => 0, 'audit_logs' => 0, 'reset_tokens' => 0];
+        $totals = ['tickets' => 0, 'attachments' => 0, 'notices' => 0, 'email_logs' => 0, 'audit_logs' => 0, 'reset_tokens' => 0, 'old_notices' => 0, 'failed_jobs' => 0, 'users' => 0];
 
         if ($dry) {
             $totals['tickets'] = (clone $due)->count();
@@ -71,6 +82,9 @@ class RunRetention extends Command
             $totals['email_logs'] = (clone $emailLogs)->count();
             $totals['audit_logs'] = (clone $auditLogs)->count();
             $totals['reset_tokens'] = (clone $tokens)->count();
+            $totals['old_notices'] = (clone $oldNotices)->count();
+            $totals['failed_jobs'] = (clone $oldFailedJobs)->count();
+            $totals['users'] = (clone $usersDue)->count();
         } else {
             (clone $due)->chunkById(100, function ($tickets) use (&$totals): void {
                 foreach ($tickets as $ticket) {
@@ -83,6 +97,12 @@ class RunRetention extends Command
             $totals['email_logs'] = $emailLogs->delete();
             $totals['audit_logs'] = $auditLogs->delete();
             $totals['reset_tokens'] = $tokens->delete();
+            $totals['old_notices'] = $oldNotices->delete();
+            $totals['failed_jobs'] = $oldFailedJobs->delete();
+            (clone $usersDue)->each(function (User $user) use (&$totals): void {
+                $this->anonymizeUser($user);
+                $totals['users']++;
+            });
         }
 
         $this->table(['Qué', $dry ? 'Afectaría a' : 'Afectados'], [
@@ -92,11 +112,14 @@ class RunRetention extends Command
             ['Correos del registro borrados', $totals['email_logs']],
             ['Filas de auditoría borradas', $totals['audit_logs']],
             ['Enlaces de contraseña caducados borrados', $totals['reset_tokens']],
+            ['Avisos antiguos borrados', $totals['old_notices']],
+            ['Trabajos fallidos antiguos borrados', $totals['failed_jobs']],
+            ['Usuarios de baja anonimizados', $totals['users']],
         ]);
 
         if (! $dry) {
             // Después de purgar la auditoría, para que esta fila (sin datos personales) no se borre a sí misma.
-            Audit::record('retention_run', "Purga por plazo: {$totals['tickets']} tickets anonimizados, {$totals['attachments']} adjuntos, {$totals['email_logs']} correos y {$totals['audit_logs']} filas de auditoría y {$totals['reset_tokens']} enlaces caducados borrados.", null, null, null, $totals);
+            Audit::record('retention_run', "Purga por plazo: {$totals['tickets']} tickets anonimizados, {$totals['attachments']} adjuntos, {$totals['email_logs']} correos y {$totals['audit_logs']} filas de auditoría y {$totals['reset_tokens']} enlaces caducados, {$totals['old_notices']} avisos y {$totals['failed_jobs']} trabajos fallidos borrados; {$totals['users']} usuarios de baja anonimizados.", null, null, null, $totals);
         }
 
         return self::SUCCESS;
@@ -115,6 +138,43 @@ class RunRetention extends Command
         $minutes = max((int) config('auth.passwords.users.expire'), (int) config('auth.passwords.invitations.expire'));
 
         return DB::table($table)->where('created_at', '<', now()->subMinutes($minutes));
+    }
+
+    /** @return Builder<User> usuarios dados de baja hace más del plazo y aún sin anonimizar */
+    private function dueUsers(\DateTimeInterface $cutoff): Builder
+    {
+        return User::query()->whereNotNull('deactivated_at')->where('deactivated_at', '<=', $cutoff)->whereNull('anonymized_at');
+    }
+
+    /**
+     * Deja a la persona irreconocible conservando su fila y su id (los tickets, mensajes y eventos apuntan a ella con
+     * claves RESTRICT). La contraseña pasa a un valor aleatorio que nadie conoce y se quitan el segundo factor, las
+     * sesiones, los avisos y cualquier enlace pendiente: aunque alguien reactivara la cuenta a mano, no entra nadie.
+     */
+    private function anonymizeUser(User $user): void
+    {
+        DB::transaction(function () use ($user): void {
+            $user = User::query()->lockForUpdate()->findOrFail($user->id);
+            if ($user->anonymized_at !== null) {
+                return; // otro proceso se adelantó
+            }
+
+            $email = $user->email;
+
+            $user->forceFill([
+                'name' => self::REPLACEMENT_USER_NAME,
+                'email' => "baja-{$user->id}@anonimo.invalid",
+                'phone' => null,
+                'password' => Hash::make(Str::random(64)),
+                'remember_token' => null,
+                'anonymized_at' => now(),
+            ])->save();
+            $user->clearTwoFactor();
+
+            DB::table('notifications')->where('notifiable_type', $user->getMorphClass())->where('notifiable_id', $user->id)->delete();
+            DB::table('sessions')->where('user_id', $user->id)->delete();
+            DB::table((string) config('auth.passwords.users.table'))->where('email', $email)->delete();
+        });
     }
 
     /** @return Builder<Ticket> */

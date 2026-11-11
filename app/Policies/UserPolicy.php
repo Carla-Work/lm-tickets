@@ -67,9 +67,17 @@ class UserPolicy
         return $this->invite($user, $target->getAttribute('role'), $target->company);
     }
 
-    /** Dar de baja. R9: el administrador no puede darse de baja a sí mismo; antes traspasa el rol. */
+    /**
+     * Dar de baja (y reactivar, que usa esta misma habilidad). R9: el administrador no puede darse de baja a sí mismo;
+     * antes traspasa el rol. Una cuenta ANONIMIZADA por el plan de conservación (D-6) no se reactiva: ya no tiene
+     * correo ni clave reales y volver a abrirla dejaría una cuenta que nadie puede usar; se invita de nuevo a la persona.
+     */
     public function deactivate(User $user, User $target): bool
     {
+        if ($target->anonymized_at !== null) {
+            return false;
+        }
+
         if ($user->is($target)) {
             return false; // nadie se da de baja a sí mismo (R9 para el administrador; el resto, por prudencia)
         }

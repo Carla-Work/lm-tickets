@@ -29,6 +29,7 @@ use App\Notifications\TicketNotice;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use PHPUnit\Framework\Attributes\TestDox;
 use Tests\Concerns\CreatesActors;
 use Tests\TestCase;
@@ -162,6 +163,75 @@ class RetentionTest extends TestCase
 
         $this->assertSame(['reciente@example.com'], DB::table('password_reset_tokens')->pluck('email')->all());
         $this->assertSame(1, AuditLog::where('event', 'retention_run')->firstOrFail()->properties['reset_tokens']);
+    }
+
+    #[TestDox('Un usuario de baja hace más del plazo queda anonimizado (nombre, correo, teléfono, clave, 2FA, avisos y enlaces) pero conserva fila e id; los de baja reciente, los activos y las empresas no se tocan (D-6)')]
+    public function test_old_deactivated_users_are_anonymized(): void
+    {
+        $viejo = $this->a['cuA2'];
+        $viejo->forceFill(['deactivated_at' => now()->subYears(3), 'phone' => '600111222', 'two_factor_secret' => 'JBSWY3DPEHPK3PXP', 'two_factor_confirmed_at' => now()->subYears(3)])->save();
+        $correoViejo = $viejo->email;
+        $claveVieja = $viejo->password;
+        DB::table('password_reset_tokens')->insert(['email' => $correoViejo, 'token' => 'x', 'created_at' => now()]);
+        $viejo->notifications()->create(['id' => (string) Str::uuid(), 'type' => 'x', 'data' => ['ticket_id' => 1]]);
+
+        $reciente = $this->a['agSup'];
+        $reciente->forceFill(['deactivated_at' => now()->subYear()])->save();
+        $nombreReciente = $reciente->name;
+
+        $ticket = $this->cerrado(0.1); // un ticket suyo no depende de que el usuario exista con su nombre
+        $empresa = $this->empresaA->name;
+
+        $this->artisan('retention:run', ['--dry-run' => true])->assertSuccessful();
+        $this->assertSame($correoViejo, $viejo->fresh()->email, 'la simulación no cambia nada');
+
+        $this->ejecutar();
+
+        $viejo = $viejo->fresh();
+        $this->assertSame(RunRetention::REPLACEMENT_USER_NAME, $viejo->name);
+        $this->assertSame("baja-{$viejo->id}@anonimo.invalid", $viejo->email);
+        $this->assertNull($viejo->phone);
+        $this->assertNotNull($viejo->anonymized_at);
+        $this->assertNotSame($claveVieja, $viejo->password);
+        $this->assertFalse($viejo->hasTwoFactorEnabled());
+        $this->assertSame(0, $viejo->notifications()->count());
+        $this->assertSame(0, DB::table('password_reset_tokens')->where('email', $correoViejo)->count());
+
+        $this->assertSame($nombreReciente, $reciente->fresh()->name, 'baja reciente: intacta');
+        $this->assertNull($reciente->fresh()->anonymized_at);
+        $this->assertNull($this->a['cuA']->fresh()->anonymized_at, 'activos: intactos');
+        $this->assertSame($empresa, $this->empresaA->fresh()->name, 'las empresas no se tocan');
+        $this->assertSame($this->a['cuA']->id, $ticket->fresh()->requester_id);
+
+        // Una cuenta anonimizada no se puede reactivar (ni siquiera el administrador): ya no tiene correo ni clave reales.
+        $this->app['auth']->forgetGuards();
+        $this->actingAs($this->a['admin'])->post(route('users.reactivate', $viejo))->assertForbidden();
+        $this->assertNotNull($viejo->fresh()->deactivated_at);
+
+        // Repetir no vuelve a anonimizar (la fecha es la marca).
+        $fecha = $viejo->anonymized_at;
+        $this->ejecutar();
+        $this->assertEquals($fecha, $viejo->fresh()->anonymized_at);
+    }
+
+    #[TestDox('Los avisos de la campana más viejos que el plazo de registros y los trabajos fallidos de más de 90 días se borran; los recientes se conservan (D-5)')]
+    public function test_old_notices_and_failed_jobs_are_purged(): void
+    {
+        foreach ([['viejo', now()->subYears(3)], ['nuevo', now()->subDays(5)]] as [$marca, $fecha]) {
+            DB::table('notifications')->insert(['id' => (string) Str::uuid(), 'type' => 'x', 'notifiable_type' => 'user', 'notifiable_id' => 99, 'data' => json_encode(['m' => $marca]), 'created_at' => $fecha, 'updated_at' => $fecha]);
+        }
+        foreach ([['viejo', now()->subDays(100)], ['nuevo', now()->subDays(10)]] as [$marca, $fecha]) {
+            DB::table('failed_jobs')->insert(['uuid' => (string) Str::uuid(), 'connection' => 'database', 'queue' => $marca, 'payload' => '{}', 'exception' => 'boom', 'failed_at' => $fecha]);
+        }
+
+        $this->artisan('retention:run', ['--dry-run' => true])->assertSuccessful();
+        $this->assertSame(2, DB::table('notifications')->where('notifiable_id', 99)->count());
+        $this->assertSame(2, DB::table('failed_jobs')->count());
+
+        $this->ejecutar();
+
+        $this->assertSame(['nuevo'], DB::table('notifications')->where('notifiable_id', 99)->get()->map(fn ($f) => json_decode($f->data)->m)->all());
+        $this->assertSame(['nuevo'], DB::table('failed_jobs')->pluck('queue')->all());
     }
 
     #[TestDox('--dry-run enseña qué afectaría pero no cambia nada: ni tickets, ni adjuntos, ni ficheros, ni registros, ni auditoría')]
