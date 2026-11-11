@@ -54,6 +54,8 @@ los demás departamentos, los otros dos equipos). El **administrador no gestiona
 | **Poner o quitar etiquetas internas** (P1) | No | No | Cualquier ticket que ve, no final | No |
 | **Gestionar el catálogo de etiquetas** (P1) | No | No | No | Sí |
 | **Valorar la atención** (P1) | Solo el suyo, en ticket final, una vez | No (solo si lo abrió él) | No | No |
+| **Ver informes** (P1; solo lo que ve cada cual, R13) | No | No | Sí | Sí |
+| **Ver la tabla «por agente»** de los informes | No | No | No | Sí |
 | Abrir un ticket **relacionado** de uno final | El suyo | Cualquiera de su empresa | No | No |
 | Ver notas internas, historial interno | No | No | Sí | Sí |
 
