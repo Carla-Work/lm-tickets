@@ -58,6 +58,10 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'strict' => true,
+            // La sesión de MySQL trabaja en UTC, igual que la aplicación (`config/app.php`). Sin esto la sesión usa la hora del
+            // SERVIDOR (en esta máquina, Canarias con cambio de hora): una fecha UTC dentro de la hora que no existe allí
+            // (último domingo de marzo, 01:00-02:00) fallaba al guardar. Defecto D-13; lo vigila Schema/TimezoneTest.
+            'timezone' => env('DB_TIMEZONE', '+00:00'),
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
