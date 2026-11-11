@@ -1,5 +1,6 @@
 {{--
     Frase del historial para el cliente. Variable: $event (TicketEvent).
+    Variables: $event y, opcional, $viewerId (quien mira, para decir «Valoraste» en vez de su nombre).
     Cuándo tocarlo: al añadir un tipo de evento VISIBLE al cliente (TicketEventType). Un tipo sin frase aquí
     se muestra como «Cambio en el ticket» para no esconder ni romper nada.
     Los textos de `data` son valores de enumeraciones guardadas por el código, no texto libre del usuario.
@@ -25,6 +26,10 @@
         @break
     @case(\App\Enums\TicketEventType::Closed)
         Ticket <strong>cerrado</strong>
+        @break
+    @case(\App\Enums\TicketEventType::Rated)
+        {{-- Quien valoró lee «Valoraste…»; su administrador de empresa, el nombre de quien lo hizo (un compañero de su empresa). --}}
+        {{ ($viewerId ?? null) === $event->actor_id ? 'Valoraste' : ($event->actor?->name ?? 'Se').' valoró' }} la atención: <strong>{{ (int) ($data['score'] ?? 0) }} de 5</strong>
         @break
     @default
         Cambio en el ticket

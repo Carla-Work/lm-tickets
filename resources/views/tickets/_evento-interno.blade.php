@@ -55,6 +55,9 @@
         @if ($added->isNotEmpty() && $removed->isNotEmpty())y @endif
         @if ($removed->isNotEmpty())quitó {{ $removed->count() > 1 ? 'las etiquetas' : 'la etiqueta' }} @foreach ($removed as $name)<strong>{{ $name }}</strong>{{ $loop->last ? '' : ($loop->remaining === 1 ? ' y ' : ', ') }}@endforeach @endif
         @break
+    @case(\App\Enums\TicketEventType::Rated)
+        valoró la atención: <strong>{{ (int) ($data['score'] ?? 0) }} de 5</strong>
+        @break
     @case(\App\Enums\TicketEventType::Resolved)
         marcó el ticket como <strong>resuelto</strong>
         @if (! empty($data['resolution']))<br>Solución: <em>«{{ $data['resolution'] }}»</em>@endif

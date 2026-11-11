@@ -29,7 +29,7 @@ class TicketActionsTest extends TestCase
 
     private const ABILITIES = [
         'view', 'viewInternal', 'reply', 'addNote', 'markResolved', 'resolve',
-        'updateStatus', 'close', 'assign', 'changeDepartment', 'changePriority', 'changeTags', 'createRelated',
+        'updateStatus', 'close', 'assign', 'changeDepartment', 'changePriority', 'changeTags', 'createRelated', 'rate',
     ];
 
     protected function setUp(): void
@@ -113,7 +113,7 @@ class TicketActionsTest extends TestCase
     public function test_resolved(): void
     {
         $this->assertPermissions($this->ticket(Department::WebApps, TicketStatus::Resolved, 'agApp'), [
-            'cuA' => ['view', 'createRelated'],
+            'cuA' => ['view', 'createRelated', 'rate'],
             'caA' => ['view', 'createRelated'],
             'agApp' => ['view', 'viewInternal', 'reply', 'addNote', 'close'],
             'agSup' => ['view', 'viewInternal', 'addNote'],
@@ -125,7 +125,7 @@ class TicketActionsTest extends TestCase
     public function test_closed(): void
     {
         $this->assertPermissions($this->ticket(Department::WebApps, TicketStatus::Closed, 'agApp'), [
-            'cuA' => ['view', 'createRelated'],
+            'cuA' => ['view', 'createRelated', 'rate'],
             'caA' => ['view', 'createRelated'],
             'agApp' => ['view', 'viewInternal'],
             'agSup' => ['view', 'viewInternal'],
@@ -200,7 +200,7 @@ class TicketActionsTest extends TestCase
     public function test_accounting_resolved(): void
     {
         $this->assertPermissions($this->ticket(Department::Other, TicketStatus::Resolved, 'agCon'), [
-            'cuA' => ['view', 'createRelated'],
+            'cuA' => ['view', 'createRelated', 'rate'],
             'caA' => ['view', 'createRelated'],
             'agCon' => ['view', 'viewInternal', 'reply', 'addNote', 'close'],
             'admin' => ['view', 'viewInternal'],
@@ -211,7 +211,7 @@ class TicketActionsTest extends TestCase
     public function test_accounting_closed(): void
     {
         $this->assertPermissions($this->ticket(Department::Other, TicketStatus::Closed, 'agCon'), [
-            'cuA' => ['view', 'createRelated'],
+            'cuA' => ['view', 'createRelated', 'rate'],
             'caA' => ['view', 'createRelated'],
             'agCon' => ['view', 'viewInternal'],
             'admin' => ['view', 'viewInternal'],

@@ -31,6 +31,7 @@
             <span class="estado {{ $ticket->status->cssClass() }}">{{ $ticket->status->label() }}</span>
             {{-- Prioridad y etiquetas: INTERNAS, solo esta vista (la del cliente es tickets/show). Normal no se pinta. --}}
             @if ($ticket->priority !== \App\Enums\Priority::Normal)<span class="prio {{ $ticket->priority->cssClass() }}" title="Prioridad (solo la ve el equipo)">{{ $ticket->priority->badge() }}</span>@endif
+            @if ($ticket->rating)<span class="est-mini {{ $ticket->rating->score <= 2 ? 'mala' : '' }}" title="Valoración del cliente">{{ \App\Models\TicketRating::stars($ticket->rating->score) }} {{ $ticket->rating->score }}/5</span>@endif
             @if ($ticket->tags->isNotEmpty())<span>@foreach ($ticket->tags as $tag)<span class="etq">{{ $tag->name }}</span>@endforeach</span>@endif
         </div>
         <div class="meta">
@@ -138,6 +139,10 @@
         </div>
 
         <div class="lateral-col">
+            @if ($ticket->rating)
+                {{-- Valoración del cliente (P1, mockup interno-g): la ve todo el equipo que ve el ticket; nadie del equipo puede ponerla. --}}
+                @include('tickets._valoracion', ['rating' => $ticket->rating, 'mine' => false])
+            @endif
             @php
                 $canStatus = $user->can('updateStatus', $ticket) || $user->can('resolve', $ticket) || $user->can('close', $ticket);
                 $canDepartment = $user->can('changeDepartment', $ticket);

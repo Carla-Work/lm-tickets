@@ -55,6 +55,15 @@ class TicketFilters
         'prioridad' => 'Prioridad (urgentes primero)',
     ];
 
+    /** Valores del filtro «Valoración» (solo equipo): el cliente ve su propia valoración, no filtra por ella. */
+    public const RATINGS = [
+        'low' => 'Mala (1-2)',
+        'mid' => 'Normal (3)',
+        'good' => 'Buena (4-5)',
+        'rated' => 'Valorados',
+        'unrated' => 'Sin valorar',
+    ];
+
     /** Valor de «Prioridad» que junta Alta y Urgente (vista rápida «Urgentes y altas»). */
     public const HIGH_OR_URGENT = 'high_urgent';
 
@@ -95,6 +104,7 @@ class TicketFilters
                 // Prioridad y etiquetas son INTERNAS: el cliente no las tiene ni como filtro.
                 'prioridad' => ['nullable', 'string', Rule::in([...array_column(Priority::cases(), 'value'), self::HIGH_OR_URGENT])],
                 'etiqueta' => ['nullable', 'integer'],
+                'valoracion' => ['nullable', 'string', Rule::in(array_keys(self::RATINGS))],
             ]
             : $common + [
                 'usuario' => ['nullable', 'integer'],
@@ -128,6 +138,13 @@ class TicketFilters
                 ->when($f['prioridad'] ?? null, fn ($q, $v) => $v === self::HIGH_OR_URGENT
                     ? $q->whereIn('priority', [Priority::High->value, Priority::Urgent->value])
                     : $q->where('priority', $v))
+                ->when($f['valoracion'] ?? null, fn ($q, $v) => match ($v) {
+                    'low' => $q->whereHas('rating', fn ($r) => $r->where('score', '<=', 2)),
+                    'mid' => $q->whereHas('rating', fn ($r) => $r->where('score', 3)),
+                    'good' => $q->whereHas('rating', fn ($r) => $r->where('score', '>=', 4)),
+                    'rated' => $q->has('rating'),
+                    default => $q->doesntHave('rating'),
+                })
                 ->when($f['etiqueta'] ?? null, fn ($q, $v) => $q->whereHas('tags', fn ($t) => $t->where('tags.id', $v)))
                 ->when($f['asignado'] ?? null, fn ($q, $v) => $v === self::UNASSIGNED
                     ? $q->whereNull('assigned_to')
@@ -185,7 +202,7 @@ class TicketFilters
             'estado' => 'Estado', 'departamento' => 'Departamento', 'empresa' => 'Empresa', 'asignado' => 'Asignado a',
             'producto' => 'Producto', 'categoria' => 'Categoría', 'usuario' => 'Abierto por', 'desde' => 'Abierto desde',
             'hasta' => 'Abierto hasta', 'quieta' => 'Sin actividad desde hace', 'orden' => 'Orden',
-            'prioridad' => 'Prioridad', 'etiqueta' => 'Etiqueta',
+            'prioridad' => 'Prioridad', 'etiqueta' => 'Etiqueta', 'valoracion' => 'Valoración',
         ];
         $query = $request->except('page');
         $out = [];
@@ -209,6 +226,7 @@ class TicketFilters
                     'desde', 'hasta' => Carbon::parse($shown)->format('d/m/Y'),
                     'quieta' => $shown.' días',
                     'orden' => self::orders(! $customer)[$shown] ?? $shown,
+                    'valoracion' => isset(self::RATINGS[$shown]) ? mb_strtolower(self::RATINGS[$shown]) : $shown,
                     'prioridad' => $shown === self::HIGH_OR_URGENT ? 'alta o urgente' : (Priority::tryFrom($shown)?->label() ?? $shown),
                     'asignado' => $shown === self::UNASSIGNED ? 'Sin asignar' : ($names['asignado'] ?? fn () => null)($shown) ?? '—',
                     default => isset($names[$key]) ? ($names[$key]($shown) ?? '—') : $shown,

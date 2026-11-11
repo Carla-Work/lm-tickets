@@ -144,7 +144,7 @@ class TicketController extends Controller
         // Verlo es leerlo: los avisos de este ticket pasan a leídos para esta persona (campana y marcas de las listas).
         $user->unreadNotifications()->where('data->ticket_id', $ticket->id)->update(['read_at' => now()]);
 
-        $ticket->load(['product', 'requester.company', 'assignee', 'relatedTicket']);
+        $ticket->load(['product', 'requester.company', 'assignee', 'relatedTicket', 'rating.author']);
         // Las etiquetas son INTERNAS: solo se cargan para el equipo, así ni siquiera llegan a la vista del cliente.
         if ($user->isInternal()) {
             $ticket->load('tags');

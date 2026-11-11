@@ -74,9 +74,18 @@
         <div class="casilla-mensajes">
             <label for="f-msg"><input type="checkbox" id="f-msg" name="en_mensajes" value="1" @checked(! empty($filters['en_mensajes']))> Buscar también en el texto de los mensajes y las notas internas</label>
         </div>
-        <details class="mas-filtros" @if (collect($filters)->only(['producto', 'categoria', 'prioridad', 'etiqueta', 'desde', 'hasta', 'quieta', 'orden'])->filter()->isNotEmpty()) open @endif>
+        <details class="mas-filtros" @if (collect($filters)->only(['producto', 'categoria', 'prioridad', 'etiqueta', 'valoracion', 'desde', 'hasta', 'quieta', 'orden'])->filter()->isNotEmpty()) open @endif>
             <summary>Más filtros</summary>
             <div class="rejilla">
+                <div>
+                    <label for="f-val">Valoración</label>
+                    <select id="f-val" name="valoracion">
+                        <option value="">Todas</option>
+                        @foreach (\App\Support\TicketFilters::RATINGS as $value => $label)
+                            <option value="{{ $value }}" @selected(($filters['valoracion'] ?? '') === $value)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
                 <div>
                     <label for="f-prio">Prioridad</label>
                     <select id="f-prio" name="prioridad">
@@ -177,7 +186,7 @@
                         </td>
                         <td class="solicitante" data-etiqueta="Abierto por"><strong>{{ $ticket->requester->name }}</strong><small>{{ $ticket->requester->company?->name }}</small></td>
                         <td data-etiqueta="Departamento"><span class="dep {{ $ticket->department->cssClass() }}">{{ $ticket->department->label() }}</span></td>
-                        <td data-etiqueta="Estado"><span class="estado {{ $ticket->status->cssClass() }}">{{ $ticket->status->label() }}</span></td>
+                        <td data-etiqueta="Estado"><span class="estado {{ $ticket->status->cssClass() }}">{{ $ticket->status->label() }}</span>@if ($ticket->rating)<br><span class="est-mini {{ $ticket->rating->score <= 2 ? 'mala' : '' }}" title="Valoración del cliente">★ {{ $ticket->rating->score }}/5</span>@endif</td>
                         <td data-etiqueta="Asignado a">
                             @if ($ticket->assignee)
                                 <span>{{ $ticket->assignee->name }}</span><small class="secundario">{{ $ticket->assignee->team?->label() ?? $ticket->assignee->role->label() }}</small>

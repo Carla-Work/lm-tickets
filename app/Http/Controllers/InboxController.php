@@ -48,7 +48,7 @@ class InboxController extends Controller
         $inProgress = TicketStatus::InProgress->value;
         $pending = TicketStatus::PendingCustomer->value;
 
-        $query = TicketFilters::apply((clone $base)->with(['product', 'requester.company', 'assignee', 'tags']), $filters, $user);
+        $query = TicketFilters::apply((clone $base)->with(['product', 'requester.company', 'assignee', 'tags', 'rating']), $filters, $user);
 
         // Las listas de los selectores salen del ámbito de esta persona (R13): un agente de otro equipo no ve ni
         // los productos ni las categorías ni las empresas de lo que no puede ver.
@@ -102,6 +102,7 @@ class InboxController extends Controller
                 ['label' => 'Urgentes y altas', 'params' => ['prioridad' => TicketFilters::HIGH_OR_URGENT, 'vivos' => 1]],
                 ['label' => 'Sin asignar', 'params' => ['asignado' => TicketFilters::UNASSIGNED, 'vivos' => 1]],
                 ['label' => 'Sin actividad en 7 días', 'params' => ['quieta' => 7]],
+                ['label' => 'Mal valorados', 'params' => ['valoracion' => 'low']],
             ]),
         ]);
     }

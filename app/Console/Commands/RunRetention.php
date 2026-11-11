@@ -8,6 +8,7 @@
  *  1. Tickets CERRADOS hace más del plazo: se ANONIMIZAN (asunto, solución y TODOS los mensajes, también las notas
  *     internas, se sustituyen por un texto fijo), se BORRAN sus adjuntos (fichero y fila) y sus avisos de la campana.
  *     El ticket, quién lo abrió, su clasificación y su historial de estados se conservan (estadística).
+ *     La valoración de la atención (P1) conserva su PUNTUACIÓN y pierde el comentario (texto libre del cliente).
  *  2. Registro de correos y auditoría: se BORRAN las filas más antiguas que el plazo.
  *  3. (2026-11-11) Enlaces de contraseña caducados, avisos de la campana antiguos y trabajos fallidos antiguos.
  *  4. (2026-11-11) Usuarios dados de baja hace más del plazo: se ANONIMIZAN (la fila y su id quedan).
@@ -204,6 +205,9 @@ class RunRetention extends Command
             // Los avisos de la campana llevan el asunto y la empresa del ticket (no su texto): se borran.
             $notices = DB::table('notifications')
                 ->whereRaw("CAST(JSON_UNQUOTE(JSON_EXTRACT(`data`, '$.ticket_id')) AS UNSIGNED) = ?", [$ticket->id])->delete();
+
+            // El comentario de la valoración es texto libre del cliente: se sustituye. La puntuación se conserva (estadística).
+            DB::table('ticket_ratings')->where('ticket_id', $ticket->id)->whereNotNull('comment')->update(['comment' => self::REPLACEMENT_BODY]);
 
             $ticket->forceFill(['subject' => self::REPLACEMENT_SUBJECT, 'resolution' => null, 'anonymized_at' => now()])->save();
         });

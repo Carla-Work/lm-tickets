@@ -45,7 +45,7 @@
                             </article>
                         </li>
                     @else
-                        <li class="evento"><span>@include('tickets._evento', ['event' => $item]) · {{ $when($item->created_at) }}</span></li>
+                        <li class="evento"><span>@include('tickets._evento', ['event' => $item, 'viewerId' => $user->id]) · {{ $when($item->created_at) }}</span></li>
                     @endif
                 @endforeach
             </ol>
@@ -97,6 +97,33 @@
                     <div class="acciones"><a class="boton principal" href="{{ route('tickets.create', ['relacionado' => $ticket->id]) }}">Abrir un ticket nuevo</a></div>
                 @endcan
             </section>
+
+            {{-- Valoración de la atención (P1, mockups ticket-detalle-cliente-c/d): se ve el resultado si ya está valorado; el
+                 formulario solo lo ofrece la policy `rate` (quien abrió el ticket) y mientras no haya valoración. --}}
+            @if ($ticket->rating)
+                @include('tickets._valoracion', ['rating' => $ticket->rating, 'mine' => $ticket->rating->rated_by === $user->id])
+            @else
+                @can('rate', $ticket)
+                    <section class="tarjeta responder" aria-label="Valorar la atención">
+                        <h2>¿Cómo ha ido la atención?</h2>
+                        <p class="ayuda">Es opcional y solo se puede hacer una vez: después no se puede cambiar. Tu valoración la verá el equipo de Ling Marco y nos ayuda a mejorar.</p>
+                        <form action="{{ route('tickets.rating.store', $ticket) }}" method="post">
+                            @csrf
+                            <fieldset class="estrellas">
+                                <legend>Tu valoración <span aria-hidden="true">*</span></legend>
+                                @foreach (\App\Models\TicketRating::LABELS as $score => $label)
+                                    <label><input type="radio" name="puntuacion" value="{{ $score }}" required @checked((int) old('puntuacion') === $score)><span class="est" aria-hidden="true">{{ \App\Models\TicketRating::stars($score) }}</span>{{ $score }} · {{ $label }}</label>
+                                @endforeach
+                            </fieldset>
+                            @error('puntuacion')<p class="error-campo" role="alert">{{ $message }}</p>@enderror
+                            <label for="valoracion-comentario">Comentario <span style="font-weight:400">(opcional, hasta {{ \App\Models\TicketRating::COMMENT_MAX }} caracteres)</span></label>
+                            <textarea id="valoracion-comentario" name="comentario" maxlength="{{ \App\Models\TicketRating::COMMENT_MAX }}" style="min-height:80px" placeholder="¿Qué ha ido bien o qué podríamos mejorar?">{{ old('comentario') }}</textarea>
+                            @error('comentario')<p class="error-campo" role="alert">{{ $message }}</p>@enderror
+                            <div class="acciones"><button type="submit" class="boton secundario">Enviar valoración</button></div>
+                        </form>
+                    </section>
+                @endcan
+            @endif
         @endcan
         </div>
 

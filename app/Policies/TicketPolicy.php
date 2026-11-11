@@ -144,6 +144,18 @@ class TicketPolicy
         return $this->canClassify($user, $ticket);
     }
 
+    /**
+     * Valorar la atención (P1): SOLO quien abrió el ticket (no el administrador de su empresa, ni el compañero, ni el equipo) y
+     * con el ticket en estado final. Que no haya otra valoración ya lo comprueba RateTicket con el ticket bloqueado: aquí no,
+     * para que un segundo envío dé un error claro y no un 403.
+     */
+    public function rate(User $user, Ticket $ticket): bool
+    {
+        return $user->hasRole(UserRole::CompanyUser, UserRole::CompanyAdmin)
+            && $this->isRequester($user, $ticket)
+            && $ticket->status->isFinal();
+    }
+
     /** Poner o quitar etiquetas internas (P1): mismas reglas que la prioridad. */
     public function changeTags(User $user, Ticket $ticket): bool
     {

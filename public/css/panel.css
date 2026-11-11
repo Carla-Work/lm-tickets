@@ -497,3 +497,15 @@ table.fichas td.asunto-celda::before, table.fichas td[data-etiqueta="Acciones"]:
 .etq { display: inline-block; background: #eef4ff; color: #1f4a8a; border: 1px solid #c4d6f5; border-radius: 6px; padding: 0 .45rem; font-size: .78rem; margin: .15rem .25rem 0 0; white-space: nowrap; }
 .etqs-lista { display: flex; flex-wrap: wrap; gap: .35rem .9rem; margin: .2rem 0 .5rem; }
 .etqs-lista label { display: inline-flex; gap: .4rem; align-items: center; font-weight: 400; font-size: .9rem; margin: 0; }
+
+/* Valoración de la atención (P1; mockups ticket-detalle-cliente-c/d, interno-g y bandeja-d). */
+.estrellas { display: flex; flex-wrap: wrap; gap: .4rem; margin: .4rem 0 .8rem; border: 0; padding: 0; }
+.estrellas legend { font-weight: 600; margin-bottom: .3rem; padding: 0; }
+.estrellas label { display: inline-flex; flex-direction: column; align-items: center; gap: .1rem; border: 1px solid #b8bcc6; border-radius: 10px; padding: .45rem .7rem; min-width: 5.2rem; cursor: pointer; background: var(--blanco); font-size: .82rem; font-weight: 400; margin: 0; }
+.estrellas label:hover { border-color: var(--principal); }
+.estrellas input { margin: 0; }
+.estrellas .est { font-size: 1.15rem; color: #d99a00; letter-spacing: .05em; }
+.valoracion-hecha .est { font-size: 1.5rem; color: #d99a00; letter-spacing: .08em; }
+.valoracion-hecha blockquote { margin: .6rem 0 0; padding: .6rem .9rem; background: #f6f0fd; border-left: 4px solid var(--principal); border-radius: 6px; font-size: .95rem; }
+.est-mini { color: #b07a00; font-weight: 700; white-space: nowrap; font-size: .85rem; }
+.est-mini.mala { color: #a11a1a; }

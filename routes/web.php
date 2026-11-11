@@ -31,6 +31,7 @@ use App\Http\Controllers\TicketController;
 use App\Http\Controllers\TicketDepartmentController;
 use App\Http\Controllers\TicketMessageController;
 use App\Http\Controllers\TicketPriorityController;
+use App\Http\Controllers\TicketRatingController;
 use App\Http\Controllers\TicketStatusController;
 use App\Http\Controllers\TwoFactorSettingsController;
 use App\Http\Controllers\UserStatusController;
@@ -97,6 +98,8 @@ Route::middleware(['auth', 'operational'])->group(function () {
     // Prioridad y etiquetas INTERNAS (P1): solo agentes que atienden el departamento; el cliente no las ve.
     Route::post('/tickets/{ticket}/prioridad', [TicketPriorityController::class, 'priority'])->name('tickets.priority.update');
     Route::post('/tickets/{ticket}/etiquetas', [TicketPriorityController::class, 'tags'])->name('tickets.tags.update');
+    // Valoración de la atención (P1): solo quien abrió el ticket, con el ticket resuelto o cerrado.
+    Route::post('/tickets/{ticket}/valoracion', [TicketRatingController::class, 'store'])->name('tickets.rating.store');
     Route::post('/tickets/{ticket}/resolver', [TicketStatusController::class, 'resolve'])->name('tickets.resolve');
     // R3: la ÚNICA vía de descarga de adjuntos; autoriza con AttachmentPolicy::download.
     Route::get('/adjuntos/{attachment}', [AttachmentController::class, 'download'])->name('attachments.download');

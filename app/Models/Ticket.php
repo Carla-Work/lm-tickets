@@ -27,6 +27,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * @property-read string $number Número legible, p. ej. «2026-0312» (accesor `number()`).
@@ -133,6 +134,12 @@ class Ticket extends Model
     public function relatedTicket(): BelongsTo
     {
         return $this->belongsTo(Ticket::class, 'related_ticket_id');
+    }
+
+    /** Valoración de la atención (una como máximo). @return HasOne<TicketRating, $this> */
+    public function rating(): HasOne
+    {
+        return $this->hasOne(TicketRating::class);
     }
 
     /** Etiquetas INTERNAS (solo el equipo las ve). @return BelongsToMany<Tag, $this> */
