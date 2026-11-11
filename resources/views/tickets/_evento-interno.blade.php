@@ -30,6 +30,8 @@
             retiró la asignación de <strong>{{ $data['from_name'] ?? '' }}</strong>: el departamento nuevo lo atiende otro equipo
         @elseif (($data['reason'] ?? null) === 'user_deactivated')
             retiró la asignación de <strong>{{ $data['from_name'] ?? '' }}</strong>: su cuenta se dio de baja
+        @elseif (($data['reason'] ?? null) === 'team_changed')
+            retiró la asignación de <strong>{{ $data['from_name'] ?? '' }}</strong>: cambió de equipo y ya no atiende este departamento
         @elseif (($data['reason'] ?? null) === 'role_transfer')
             retiró la asignación de <strong>{{ $data['from_name'] ?? '' }}</strong>: pasó a ser el administrador (no lleva tickets)
         @elseif (empty($data['to_name']))

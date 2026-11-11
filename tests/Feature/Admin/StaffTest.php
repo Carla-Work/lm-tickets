@@ -122,6 +122,38 @@ class StaffTest extends TestCase
         $this->como('admin')->post(route('admin.staff.team', $this->a['admin']), ['team' => 'support'])->assertForbidden();
     }
 
+    #[TestDox('Al cambiar de equipo se liberan (con evento interno) los tickets no cerrados que el agente ya no puede atender y se conservan los que sí (D-12)')]
+    public function test_team_change_releases_tickets_it_can_no_longer_work_on(): void
+    {
+        $deSoporte = $this->ticket(Department::Support, TicketStatus::InProgress, 'agSup');
+        $cerrado = $this->ticket(Department::Support, TicketStatus::Closed, 'agSup');
+
+        // De Soporte a Contabilidad: ya no atiende «Soporte» (solo «Contabilidad»).
+        $this->como('admin')->post(route('admin.staff.team', $this->a['agSup']), ['team' => 'accounting'])->assertRedirect();
+
+        $this->assertNull($deSoporte->fresh()->assigned_to, 'el ticket de Soporte queda libre');
+        $this->assertSame($this->a['agSup']->id, $cerrado->fresh()->assigned_to, 'los cerrados conservan quién los llevó');
+        $evento = TicketEvent::where('ticket_id', $deSoporte->id)->where('type', TicketEventType::Assigned->value)->latest('id')->firstOrFail();
+        $this->assertSame('team_changed', $evento->data['reason']);
+        $this->assertFalse($evento->visible_to_customer);
+        $this->assertSame(1, AuditLog::where('event', 'team_changed')->firstOrFail()->properties['tickets_released']);
+
+        // El historial interno lo explica con palabras (si faltara el texto de la vista saldría una frase vacía).
+        $this->como('admin')->get(route('tickets.show', $deSoporte))->assertOk()->assertSee('cambió de equipo y ya no atiende este departamento');
+        $this->app['auth']->forgetGuards();
+
+        // Entre Soporte y Desarrollo y Diseño atienden lo mismo: no se libera nada.
+        $this->app['auth']->forgetGuards();
+        $otro = $this->ticket(Department::WebApps, TicketStatus::InProgress, 'agApp');
+        $this->como('admin')->post(route('admin.staff.team', $this->a['agApp']), ['team' => 'support'])->assertRedirect();
+        $this->assertSame($this->a['agApp']->id, $otro->fresh()->assigned_to);
+
+        // Y de Contabilidad a otro equipo se libera el de Contabilidad.
+        $deConta = $this->ticket(Department::Other, TicketStatus::InProgress, 'agCon');
+        $this->como('admin')->post(route('admin.staff.team', $this->a['agCon']), ['team' => 'support'])->assertRedirect();
+        $this->assertNull($deConta->fresh()->assigned_to);
+    }
+
     #[TestDox('La baja de un agente corta su acceso, libera sus tickets no cerrados (con evento) y reactivar devuelve el acceso')]
     public function test_deactivate_and_reactivate_agent(): void
     {

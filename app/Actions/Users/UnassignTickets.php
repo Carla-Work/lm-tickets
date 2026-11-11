@@ -11,6 +11,8 @@
  *  - Se llama DENTRO de la transacción del cambio de cuenta; no abre la suya.
  *  - Los «Cerrados» se dejan como están: no admiten acciones y conservan quién los llevó.
  *  - El evento es interno (no lo ve el cliente) y no avisa a nadie: es una consecuencia, no una asignación.
+ *  - `$onlyDepartments` (cambio de equipo, D-12): libera SOLO los tickets de esos departamentos, los que la persona
+ *    ya no puede atender; los demás los conserva. Sin él se liberan todos (baja, traspaso del rol).
  */
 
 namespace App\Actions\Users;
@@ -23,11 +25,16 @@ use App\Models\User;
 
 class UnassignTickets
 {
-    /** @return int cuántos tickets se han liberado */
-    public function __invoke(User $actor, User $from, string $reason): int
+    /**
+     * @param  list<string>|null  $onlyDepartments  valores de `Department`; null = todos
+     * @return int cuántos tickets se han liberado
+     */
+    public function __invoke(User $actor, User $from, string $reason, ?array $onlyDepartments = null): int
     {
         $tickets = Ticket::query()->where('assigned_to', $from->id)
-            ->where('status', '!=', TicketStatus::Closed->value)->lockForUpdate()->get();
+            ->where('status', '!=', TicketStatus::Closed->value)
+            ->when($onlyDepartments !== null, fn ($q) => $q->whereIn('department', $onlyDepartments))
+            ->lockForUpdate()->get();
 
         foreach ($tickets as $ticket) {
             $ticket->assigned_to = null;
