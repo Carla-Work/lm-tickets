@@ -50,7 +50,7 @@ los demás departamentos, los otros dos equipos). El **administrador no gestiona
 | **Cerrar** (Resuelto → Cerrado) | No | No | Si lo gestiona | No |
 | **Reasignar** (R11) | No | No | Cualquier ticket que ve, no final | Cualquiera, no final (a un agente que pueda atenderlo) |
 | **Cambiar el departamento** (R12) | No | No | Cualquier ticket que ve, no final | No |
-| **Cambiar la prioridad interna** (P1) | No | No | Cualquier ticket que ve, no final | No |
+| **Cambiar la prioridad interna** (P1) | No | No | Cualquier ticket que ve, no final | **Sí**, cualquier ticket no final (decidido 2026-11-11; es lo único que gestiona, además de reasignar) |
 | **Poner o quitar etiquetas internas** (P1) | No | No | Cualquier ticket que ve, no final | No |
 | **Gestionar el catálogo de etiquetas** (P1) | No | No | No | Sí |
 | **Valorar la atención** (P1) | Solo el suyo, en ticket final, una vez | No (solo si lo abrió él) | No | No |

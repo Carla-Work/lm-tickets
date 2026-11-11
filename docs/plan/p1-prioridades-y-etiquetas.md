@@ -9,7 +9,7 @@
 - Cuatro valores fijos: **Baja · Normal · Alta · Urgente**. Todo ticket nuevo entra como **Normal**.
 - **Interna:** el cliente NO la elige ni la ve (si la eligiera, todo sería «urgente» y dejaría de servir). No genera avisos.
 - Quién la cambia: **cualquier agente que atienda el departamento del ticket** (mismo criterio que mover de departamento, R12), en
-  tickets no resueltos ni cerrados. **El administrador no** (R10: ve y reasigna, no gestiona). Cada cambio queda en el historial
+  tickets no resueltos ni cerrados. **Revisado 2026-11-11: el administrador SÍ puede cambiar la PRIORIDAD** (petición de la usuaria; sigue sin poder tocar las etiquetas, R10: ve y reasigna, no gestiona). Cada cambio queda en el historial
   interno del ticket (R5, evento `priority_changed`, no visible para el cliente).
 - En la bandeja: etiqueta de prioridad en la fila (solo si no es Normal), filtro «Prioridad» (incluye «Alta o urgente»), orden
   «Prioridad (urgentes primero)» y vista rápida «Urgentes y altas».
@@ -18,7 +18,7 @@
 - **Catálogo cerrado** que gestiona el administrador (Administración › Etiquetas): crear, renombrar, desactivar. Una etiqueta en uso
   **no se borra**, solo se desactiva (como productos, R19): deja de ofrecerse, los tickets que ya la llevan la conservan.
 - **Internas:** el cliente nunca las ve (ni en su lista, ni en el detalle, ni en correos o avisos).
-- Un ticket lleva **hasta 5**. Las pone y quita cualquier agente que atienda el departamento (no el administrador), en tickets no
+- Un ticket lleva **hasta 5**. Las pone y quita cualquier agente que atienda el departamento (no el administrador; la prioridad sí, ver arriba), en tickets no
   finalizados; cada cambio, al historial interno (evento `tags_changed`).
 - En la bandeja: etiquetas bajo el asunto y filtro «Etiqueta».
 - Fuera: etiquetas libres escritas por los agentes (acabarían con duplicados «urgente», «Urgente!»…); etiquetas por empresa; reglas
@@ -27,7 +27,7 @@
 ## Criterio de aceptación (observable)
 - Ni la prioridad ni las etiquetas aparecen NUNCA en nada que vea el cliente (lista, detalle, correos, avisos, exportaciones): se
   prueba recorriendo todas esas salidas con un cliente (R2).
-- Solo un agente que atiende el departamento puede cambiarlas; el administrador, el cliente y los agentes de otro equipo reciben 403
+- Solo un agente que atiende el departamento puede cambiarlas; el cliente y los agentes de otro equipo reciben 403 (y el administrador, en las etiquetas)
   (matriz `TicketActionsTest`, que deniega por defecto) y la acción lo recomprueba con el ticket bloqueado (dos capas).
 - No se pueden cambiar en tickets resueltos o cerrados.
 - Cada cambio deja evento interno (quién, de qué a qué) y los eventos no los ve el cliente.
