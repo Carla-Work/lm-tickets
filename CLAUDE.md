@@ -23,7 +23,7 @@ usuarios de las empresas cliente abren y siguen incidencias y el equipo de Ling 
 | Documento | Qué resuelve |
 |---|---|
 | `docs/plan/00-encuadre.md` | Alcance, exclusiones, roles, reglas R1–R21, plan P0/P1. **Manda sobre cualquier suposición.** |
-| `docs/plan/conservacion-datos.md` | Plazos de conservación (provisional 2 años; sin cerrar). |
+| `docs/plan/conservacion-datos.md` | Plan de conservación (2 años, provisional; `retention:run` hecho pero NO programado; faltan usuarios de baja y empresas). |
 | `docs/plan/recuperacion-admin.md` | Qué hacer si el único administrador pierde el acceso (`admin:recover`). |
 | `docs/plan/bitacoras/` | Qué se hizo, decidió y qué queda; leer el último día. |
 | `ONBOARDING.md` | Estado actual y cómo verificarlo. |
@@ -80,6 +80,9 @@ bash scripts/db-restore.sh FICHERO.sql.gz BASE_DESTINO     # se niega a pisar la
 
 # Recuperar el acceso del administrador (solo en el servidor; ver docs/plan/recuperacion-admin.md)
 php artisan admin:recover                  # imprime un enlace de un solo uso; --disable-2fa, --reactivate, --email=
+
+# Plan de conservación (docs/plan/conservacion-datos.md): NO está programado; plazos provisionales en config/retention.php
+php artisan retention:run --dry-run        # qué afectaría; sin --dry-run lo aplica (IRREVERSIBLE)
 
 # Formateo y comprobación
 composer format          # formatea con Pint
@@ -154,6 +157,8 @@ El trabajo se hace en la rama del hito en curso; cada rama sale de la anterior, 
 - **Nada se borra en cascada** — las claves foráneas son RESTRICT; las bajas son `deactivated_at`/`active`.
 - **Los `FormRequest` de administración autorizan en `authorize()` con la policy, ANTES de validar:** con `authorize() { return true; }` un no autorizado recibe 302 con mensajes de validación («ya existe ese correo»), que filtran datos. Probado mandando datos inválidos a propósito.
 - **Al dar de baja a un agente o traspasar el rol se liberan sus tickets no cerrados** (`UnassignTickets`, evento interno): si no, quedan asignados a quien no puede atenderlos. El traspaso va en UNA transacción y degrada al antiguo ANTES de ascender al nuevo (índice único `admin_slot`).
+- **2FA desde «Mis datos» (`TwoFactorSettingsController`):** la clave nueva vive solo en la sesión (cifrada) hasta acertar un código; activar guarda `two_factor_last_step`; regenerar y desactivar piden la contraseña; el límite `throttle:5,1` es POR PERSONA y lo comparten activar, regenerar, desactivar y cambiar contraseña (a propósito). Solo el administrador (R21).
+- **`retention:run` anonimiza tickets CERRADOS antiguos y borra adjuntos y registros viejos; es IRREVERSIBLE y no está programado.** Marca `tickets.anonymized_at` (no el texto). No ampliarlo a usuarios o empresas sin decisión de la usuaria. La auditoría solo se añade salvo esta purga.
 - **No quitar el índice único de `users.admin_slot`** aunque nadie lo lea: es lo que impide dos administradores activos (R9).
 - **En un `CHECK` sobre columnas con NULL, escribir `IS NOT NULL` explícito** — con NULL el CHECK no falla.
 - **Los tests no usan SQLite** — MySQL en `lm_tickets_testing`, para que un test verde valga en producción. No apuntar nunca los tests a `lm_tickets`.
@@ -172,7 +177,7 @@ app/Actions/Tickets/ casos de uso del ticket (CreateTicket, ReplyToTicket, Chang
 app/Http/Requests/   validación de formularios (StoreTicketRequest: R6 en servidor)
 public/css/panel.css CSS del panel (cliente e interno, este último bajo `.interno`), sacado de los mockups validados y reestructurado el 2026-11-10 (barra lateral + cabecera, sin mockup, a petición; los mockups ya no reflejan la estructura) (.dep = etiqueta, .dep-opcion = tarjeta del formulario)
 app/Policies/        quién puede hacer qué (TicketPolicy, UserPolicy, CompanyPolicy…); la matriz está en docs/plan/autorizacion.md
-app/Console/Commands/ RecoverAdminAccess (`admin:recover`)
+app/Console/Commands/ RecoverAdminAccess (`admin:recover`), RunRetention (`retention:run`, plan de conservación)
 app/Support/         LoginThrottle (bloqueo, R20), Totp (2FA, R21), RecoveryCodes, PendingLogin (acceso a medias), Audit (único que escribe `audit_logs`), MailLogger (escribe `email_logs`), BackupStore (lista las copias)
 app/Http/Controllers/Admin/ «Administración» del administrador: CompanyController (Empresas), CatalogController (Productos y categorías), StaffController (Usuarios y traspaso del rol); vistas en resources/views/admin/; acciones en app/Actions/Companies/, Catalog/ (ManageCatalog) y Users/ (SetUserActive, ChangeAgentTeam, TransferAdmin, ChangeCompanyRole, UnassignTickets)
 app/Http/Controllers/ CompanyAreaController («Mi empresa»), ProfileController («Mis datos»), UserStatusController e InvitationController (baja/reactivar y reenviar invitación, compartidos por Administración y «Mi empresa»)

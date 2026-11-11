@@ -35,14 +35,16 @@ Pasos: 0 cierre de Fase 1 · 1 modelo de datos · 2 acceso (entrar, bloqueo, rec
 
 **Cambio de reglas 2026-11-10 (por la usuaria):** «Otros» → **Contabilidad**, con equipo propio (`comercial@lingmarco.es`, agente del equipo Contabilidad, creada en la base local con contraseña provisional `password`: cambiarla). El administrador ya no responde en ningún departamento. El rol de Ruyman Sosa se descarta. ⚠ **Tras `git pull`: `php artisan migrate`** (amplía el CHECK de equipos). Detalle: bitácora del día.
 
-**Lo que faltaba del P0 al cerrar la Fase 2 (lo ya hecho figura arriba):** pantallas del administrador (Empresas, Productos y categorías, Usuarios del equipo con el traspaso del rol); «Mi empresa» y usuarios del administrador de empresa; «Mis datos» (con activar/desactivar el 2FA y regenerar códigos); comando de recuperación del acceso del administrador, documentado y probado; plan de conservación de datos implementado. Hoy esas cuentas y empresas se crean a mano en la base de datos. Para producción: trabajador de colas, remitente real de correo y la Fase 4 (endurecimiento).
+**P0 CERRADO (2026-11-10):** además de lo anterior, «Mis datos» con 2FA del administrador (activar, regenerar códigos, desactivar; mockups mis-datos-c a h validados), `php artisan admin:recover` (docs/plan/recuperacion-admin.md) y `php artisan retention:run` (docs/plan/conservacion-datos.md; **no programado**, plazo provisional de 2 años a validar con la asesoría; faltan usuarios de baja y empresas). Siguiente: Fase 4 (endurecimiento, un eje por pasada).
+
+**Para producción (fuera del P0):** trabajador de colas en marcha (sin él no salen correos ni avisos), remitente real de correo (hoy `hello@example.com`, en local los correos van al log), copia de seguridad automática programada, validar el plazo de conservación y programar `retention:run`, y la Fase 4 (endurecimiento).
 
 **Pendiente de validar por la usuaria:** el selector de categoría del cambio de departamento (el mockup no lo dibuja), la correspondencia departamento–equipo de los avisos (Páginas web → Desarrollo y Diseño) y el resto de «Decisiones abiertas».
 
 Decidido para el acceso: 2FA solo del administrador, sin «Recordarme», bloqueo a los 5 intentos, enlace de 60 min, 12 caracteres.
 **«Registros» del administrador (2026-11-10, sin mockup a petición):** registro de correos, auditoría y copias de seguridad en `/administracion/correos`, `/auditoria` y `/copias` (solo el administrador, habilidad `view-records`). Implementado y probado con tests (`tests/Feature/Records`); **pendiente de recorrer en la aplicación real**. Sin copia automática programada ni purga por plazo; la auditoría aún no cubre altas/bajas de usuarios ni el traspaso del rol (esas pantallas no existen todavía).
 
-**2FA del administrador (OPCIONAL desde 2026-11-09):** sin activarlo entra con contraseña; hoy **no se puede activar desde la interfaz** (falta mockup y pantalla en «Mis datos»). Implementado (TOTP a mano, sin librerías, con códigos de recuperación). Pendiente: **regenerar los códigos** (mockups `mis-datos-c` y `mis-datos-d`, **pendientes de validar**; sin implementar) y el traspaso del rol, que deberá llamar a `User::clearTwoFactor()`.
+**2FA del administrador (OPCIONAL desde 2026-11-09):** sin activarlo entra con contraseña; se activa, se regeneran los códigos y se desactiva desde «Mis datos» (2026-11-10). Implementado (TOTP a mano, sin librerías, con 8 códigos de recuperación). Si lo activa, se le exige en cada acceso; el traspaso del rol llama a `User::clearTwoFactor()` al antiguo.
 
 ### Decisiones abiertas
 varios administradores por empresa, «Mi empresa» del usuario normal, confirmación al dar de baja una empresa, plazos de conservación definitivos, plan de IONOS y cómo encaja el panel en la web pública.
@@ -62,6 +64,7 @@ varios administradores por empresa, «Mi empresa» del usuario normal, confirmac
 - Administrador: `admin-empresas-a-lista`, `admin-empresa-b-detalle` (asigna productos), `admin-empresa-c-nueva`, `admin-usuarios-a-empleados` (con traspaso del rol), `admin-catalogo-a-productos-categorias`. **Validado 2026-11-09.**
 - Cliente: `cliente-mi-empresa-a-administrador`, `mis-tickets-b-administrador-empresa`, `mis-datos-a-cliente`, `avisos-a-cliente`. **Validado 2026-11-09.**
 - Interno: `mis-datos-b-interno`, `avisos-b-interno`. **Validado 2026-11-09.**
+- 2FA en «Mis datos» del administrador: `mis-datos-c`, `mis-datos-d` (regenerar), `mis-datos-e` (desactivada), `mis-datos-f` (activar), `mis-datos-g` (códigos tras activar), `mis-datos-h` (activada con desactivar). **Validados 2026-11-10** e implementados.
 - **Ya hay mockup de todas las pantallas previstas.** Falta que la usuaria los valide; las dudas pendientes están en el encuadre, sección «Acceso, administración y panel del cliente».
 - Sin dibujar, por no haberse pedido: ticket recién creado sin respuestas, enlace caducado, estados vacíos de las listas, vista del usuario normal en «Mi empresa».
 - Decidido: el cierre lo hace un agente; nadie reabre (se clona/crea uno relacionado); el cliente marca «resuelto» directo pero explicando cómo; al responder el cliente el estado pasa solo a «En curso».

@@ -309,6 +309,10 @@ no el modelo.
 8. Test de integración del flujo completo.
 9. Plan de conservación de datos definido e implementado.
 
+**Estado 2026-11-10:** los 9 puntos están implementados y probados. Quedan, para producción, decisiones fuera del código: validar el
+plazo de conservación con la asesoría y programar `retention:run`, decidir usuarios de baja y empresas (`conservacion-datos.md`), y los
+prerrequisitos de la Fase 5 (trabajador de colas, remitente de correo real, copia automática, endurecimiento).
+
 ### P1 — no se toca hasta cerrar P0
 - Prioridades y etiquetas avanzadas, búsqueda y filtros avanzados.
 - Informes y estadísticas.
