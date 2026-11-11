@@ -83,11 +83,11 @@
                 @foreach ($byDepartment as $row)
                     <tr>
                         <td data-etiqueta="Departamento"><span class="dep {{ $row['department']->cssClass() }}">{{ $row['department']->label() }}</span></td>
-                        <td class="num" data-etiqueta="Creados">{{ $row['created'] }}</td>
-                        <td class="num" data-etiqueta="Resueltos">{{ $row['resolved'] }}</td>
-                        <td class="num" data-etiqueta="Vivos ahora">{{ $row['live'] }}</td>
-                        <td class="num" data-etiqueta="Tiempo hasta resolver">{{ $humanHours($row['resolution_hours']) }}</td>
-                        <td class="num" data-etiqueta="Valoración">{{ $stars($row['rating_avg']) }}</td>
+                        <td class="cifra" data-etiqueta="Creados">{{ $row['created'] }}</td>
+                        <td class="cifra" data-etiqueta="Resueltos">{{ $row['resolved'] }}</td>
+                        <td class="cifra" data-etiqueta="Vivos ahora">{{ $row['live'] }}</td>
+                        <td class="cifra" data-etiqueta="Tiempo hasta resolver">{{ $humanHours($row['resolution_hours']) }}</td>
+                        <td class="cifra" data-etiqueta="Valoración">{{ $stars($row['rating_avg']) }}</td>
                     </tr>
                 @endforeach
             </tbody>
@@ -104,9 +104,9 @@
                 @forelse ($byCompany as $row)
                     <tr>
                         <td data-etiqueta="Empresa"><strong>{{ $row['name'] }}</strong></td>
-                        <td class="num" data-etiqueta="Creados">{{ $row['created'] }}</td>
-                        <td class="num" data-etiqueta="Resueltos">{{ $row['resolved'] }}</td>
-                        <td class="num" data-etiqueta="Valoración">{{ $stars($row['rating_avg']) }}</td>
+                        <td class="cifra" data-etiqueta="Creados">{{ $row['created'] }}</td>
+                        <td class="cifra" data-etiqueta="Resueltos">{{ $row['resolved'] }}</td>
+                        <td class="cifra" data-etiqueta="Valoración">{{ $stars($row['rating_avg']) }}</td>
                     </tr>
                 @empty
                     <tr><td colspan="4">No se ha creado ningún ticket en este periodo.</td></tr>
@@ -134,10 +134,10 @@
                         <tr>
                             <td data-etiqueta="Agente"><strong>{{ $row['name'] }}</strong></td>
                             <td data-etiqueta="Equipo">{{ $row['team'] }}</td>
-                            <td class="num" data-etiqueta="Resueltos">{{ $row['resolved'] }}</td>
-                            <td class="num" data-etiqueta="Vivos ahora">{{ $row['live'] }}</td>
-                            <td class="num" data-etiqueta="Tiempo hasta resolver">{{ $humanHours($row['resolution_hours']) }}</td>
-                            <td class="num" data-etiqueta="Valoración">{{ $stars($row['rating_avg']) }} <small class="secundario">({{ $row['rating_count'] }})</small></td>
+                            <td class="cifra" data-etiqueta="Resueltos">{{ $row['resolved'] }}</td>
+                            <td class="cifra" data-etiqueta="Vivos ahora">{{ $row['live'] }}</td>
+                            <td class="cifra" data-etiqueta="Tiempo hasta resolver">{{ $humanHours($row['resolution_hours']) }}</td>
+                            <td class="cifra" data-etiqueta="Valoración">{{ $stars($row['rating_avg']) }} <small style="color:var(--texto-suave)">({{ $row['rating_count'] }})</small></td>
                         </tr>
                     @endforeach
                 </tbody>

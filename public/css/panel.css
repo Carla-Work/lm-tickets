@@ -142,7 +142,8 @@ legend { font-weight: 600; padding: 0; margin-bottom: .5rem; }
 .aviso { background: #f6f0fd; border-left: 4px solid var(--principal); padding: .75rem 1rem; border-radius: 6px; font-size: .9rem; }
 
 /* ---------- Resumen por estado ---------- */
-.resumen { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; margin-bottom: 1.25rem; }
+/* auto-fit: con 4 o 5 tarjetas caben en una fila (con repeat(4) la quinta caía sola a una segunda fila: bandeja e informes). */
+.resumen { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: .75rem; margin-bottom: 1.25rem; }
 .resumen a { display: block; background: var(--blanco); border: 1px solid var(--gris); border-radius: 12px; padding: .8rem 1rem; text-decoration: none; color: var(--texto); }
 .resumen a:hover { border-color: var(--principal); }
 .resumen strong { display: block; font-size: 1.6rem; color: var(--titulo); line-height: 1.1; }
@@ -250,7 +251,7 @@ td .secundario { display: block; color: var(--texto-suave); font-size: .85rem; l
 @media (max-width: 860px) {
     /* Móvil: la barra deja de ser fija y pasa arriba (logo y enlaces en fila); sin JavaScript, sin cajón. */
     .app { flex-direction: column; }
-    .barra { position: static; height: auto; width: auto; border-right: 0; border-bottom: 1px solid var(--gris); }
+    .barra { position: static; height: auto; width: auto; align-self: stretch; border-right: 0; border-bottom: 1px solid var(--gris); }
     .logo { border-bottom: 0; height: 56px; }
     .menu { display: flex; flex-wrap: wrap; align-content: flex-start; gap: .25rem; padding: 0 1rem .75rem; overflow: visible; }
     .pie-barra { padding: .5rem 1rem; border-top: 0; }
@@ -514,3 +515,12 @@ table.fichas td.asunto-celda::before, table.fichas td[data-etiqueta="Acciones"]:
 .resumen .dato { display: block; background: var(--blanco); border: 1px solid var(--gris); border-radius: 12px; padding: .8rem 1rem; color: var(--texto); }
 .resumen .dato.atencion { border: 2px solid var(--principal); background: #f6f0fd; }
 body.panel .resumen .dato { padding: .65rem .875rem; }
+
+/* Ajustes de diseño tras revisar las pantallas reales (2026-11-11). */
+/* `body.panel .boton` (más específico) pisaba a `.boton.pequeno`: los botones pequeños del panel salían a tamaño normal. */
+body.panel .boton.pequeno { padding: .3rem .8rem; font-size: .85rem; white-space: nowrap; }
+/* Dos tarjetas de respuesta seguidas (p. ej. «ticket resuelto» y «valoración») no se pegan. */
+.tarjeta.responder + .tarjeta.responder { margin-top: 1.25rem; }
+/* Cifras de los informes: como `td.num` (no se parten, cifras tabulares) pero SIN ocultar su rótulo en móvil, donde cada fila pasa
+   a tarjeta y una cifra suelta («9», «20 h») no dice qué es. */
+td.cifra { white-space: nowrap; font-variant-numeric: tabular-nums; }

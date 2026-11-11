@@ -117,7 +117,7 @@
                     </select>
                     @error('team')<p class="error-campo" role="alert">{{ $message }}</p>@enderror
                 </div>
-                <div class="campo"><span class="etq">Rol</span><input type="text" value="Agente" readonly><p class="ayuda">Solo existe un administrador; se cambia con el traspaso.</p></div>
+                <div class="campo"><label for="ne-rol">Rol</label><input type="text" id="ne-rol" value="Agente" readonly><p class="ayuda">Solo existe un administrador; se cambia con el traspaso.</p></div>
                 <button type="submit" class="boton principal">Crear y enviar invitación</button>
             </form>
         </aside>

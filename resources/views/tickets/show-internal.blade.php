@@ -101,7 +101,7 @@
                             <p class="ayuda" style="margin-top:.3rem">Capturas, PDF, hojas de cálculo o ZIP. Hasta {{ config('access.attachments.max_files') }} archivos de {{ intdiv(config('access.attachments.max_kb'), 1024) }} MB cada uno.</p>
                             @error('adjuntos')<p class="error-campo" role="alert">{{ $message }}</p>@enderror
                             @foreach ($errors->get('adjuntos.*') as $messages)@foreach ($messages as $message)<p class="error-campo" role="alert">{{ $message }}</p>@endforeach @endforeach
-                            <p class="ayuda" style="margin:.3rem 0 0;font-size:.9rem;color:var(--texto-suave)">El estado no cambia solo: cámbialo en «Gestión» si hace falta (por ejemplo, a «Pendiente de cliente»). Los avisos por correo llegan en el paso 5.</p>
+                            <p class="ayuda" style="margin:.3rem 0 0;font-size:.9rem;color:var(--texto-suave)">El estado no cambia solo: cámbialo en «Gestión» si hace falta (por ejemplo, a «Pendiente de cliente»). El cliente recibirá un aviso por correo y en su panel.</p>
                             <div class="acciones"><button type="submit" class="boton principal">Enviar al cliente</button></div>
                         </form>
                     </div>
