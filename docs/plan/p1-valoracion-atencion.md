@@ -1,7 +1,7 @@
 # P1 · Valoración de la atención
 
-> Estado (2026-11-11): **plan y mockups a la espera de validación**. No hay código. Cuándo tocar este documento: al validar o
-> cambiar el alcance, y al implementar (marcar lo hecho).
+> Estado (2026-11-11): **IMPLEMENTADO** (la usuaria pidió «haz lo que recomiendes»: se tomaron las propuestas tal cual). Cuándo
+> tocar este documento: al cambiar el alcance (p. ej. avisar al agente si la nota es ≤ 2).
 
 ## Alcance propuesto (decisiones de Claude por delegación; la usuaria valida con los mockups)
 - **Quién valora:** solo la persona que **abrió** el ticket. No el administrador de su empresa ni el equipo.
@@ -43,7 +43,15 @@
 6. `RunRetention`: borrar el comentario al anonimizar (y su test); matriz de `autorizacion.md`, modelo de datos, `CLAUDE.md`.
 7. Tests por regla + mutaciones; recorrido en la aplicación real con cliente, agente y administrador.
 
-## Preguntas abiertas para la usuaria
+## Hecho y comprobado (2026-11-11)
+- Migración `2026_11_11_300000` (`ticket_ratings`, aplicada en `lm_tickets` y `lm_tickets_testing`), `TicketRating`, evento `rated`, `TicketPolicy::rate`, `RateTicket`, `TicketRatingController` y `StoreRatingRequest`, vistas (cliente: formulario y resultado; equipo: chip, tarjeta y evento; bandeja: puntuación, filtro «Valoración» y vista «Mal valorados»), retención del comentario y matriz de autorización.
+- `TicketRatingTest` (11) y `TicketActionsTest` (habilidad `rate`). 12 mutaciones: 11 en rojo y una **equivalente** (permitir el rol del equipo en `rate` no cambia nada porque la comprobación «quién abrió el ticket» ya lo impide: defensa doble, no hueco).
+- Verificado en la aplicación real (servidor y base aparte): formulario solo en resuelto/cerrado y solo al solicitante, valoración con comentario escapado, evento «Valoraste…», una sola vez, el administrador de empresa la ve sin formulario, el equipo ve chip/tarjeta/evento, filtro y vista rápida, 403 para agente, administrador y administrador de empresa, y 0 correos.
+
+## Decisiones tomadas (por «haz lo que recomiendes»)
+- Valora solo quien abrió el ticket (no el administrador de su empresa); una sola vez y sin cambiarla; sin avisos al agente por ahora.
+
+## Preguntas (ya contestadas arriba)
 - ¿Solo quien abrió el ticket, o también el administrador de su empresa?
 - ¿Basta con una sola vez y sin poder cambiarla, o prefieres poder corregirla durante unos días?
 - ¿Quieres aviso al agente cuando le pongan 1-2? (Propuesta: no por ahora.)

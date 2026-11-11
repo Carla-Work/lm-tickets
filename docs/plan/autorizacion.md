@@ -53,6 +53,7 @@ los demás departamentos, los otros dos equipos). El **administrador no gestiona
 | **Cambiar la prioridad interna** (P1) | No | No | Cualquier ticket que ve, no final | No |
 | **Poner o quitar etiquetas internas** (P1) | No | No | Cualquier ticket que ve, no final | No |
 | **Gestionar el catálogo de etiquetas** (P1) | No | No | No | Sí |
+| **Valorar la atención** (P1) | Solo el suyo, en ticket final, una vez | No (solo si lo abrió él) | No | No |
 | Abrir un ticket **relacionado** de uno final | El suyo | Cualquiera de su empresa | No | No |
 | Ver notas internas, historial interno | No | No | Sí | Sí |
 

@@ -30,6 +30,7 @@ Si cambias el esquema, actualiza esto.
 | `ticket_tag` | Etiquetas de cada ticket | Clave primaria compuesta (ticket, etiqueta); `RESTRICT` en ambos lados. |
 | `ticket_sequences` | Contador del número de ticket por año | Ver «Número de ticket». |
 | `ticket_messages` | Hilo: mensajes públicos y notas internas | Ver «Notas internas (R2)». |
+| `ticket_ratings` | Valoración de la atención (1-5 y comentario opcional) | Una por ticket (`ticket_id` único), CHECK 1-5, `RESTRICT`. El comentario es dato personal: la purga lo sustituye. Ver «Valoración de la atención». |
 | `ticket_events` | Historial de cambios (R5) | Solo se añade: no tiene `updated_at`. |
 | `attachments` | Adjuntos de un mensaje | Solo guarda la ruta en almacenamiento **privado** (R3). |
 | `notifications` | Avisos en el panel | Tabla estándar de Laravel. |
@@ -89,6 +90,12 @@ hilo se ordena por fecha mezclando ambos y partir en dos tablas obligaría a uni
 notas: una vista olvidada que las pinte. Por eso solo se cargan para el equipo (`TicketController::show`), los cambios
 generan eventos con `visible_to_customer = false`, no tocan `last_activity_at` (que ordena la lista del cliente), y
 `PriorityAndTagsTest` recorre lista, detalle y avisos del cliente buscando cualquier rastro.
+
+### Valoración de la atención (P1)
+
+`ticket_ratings` guarda una valoración por ticket (clave única en `ticket_id`, sin `updated_at`: solo se añade). La puntuación es
+estadística y se conserva; el **comentario** es texto libre del cliente y `retention:run` lo sustituye al anonimizar el ticket.
+Se pinta siempre escapado. Valorar no es un mensaje: no mueve `last_activity_at` ni avisa a nadie.
 
 ## Cómo se comprueba
 
