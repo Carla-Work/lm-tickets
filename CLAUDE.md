@@ -156,9 +156,10 @@ El trabajo se hace en la rama del hito en curso; cada rama sale de la anterior, 
 - **El historial de tickets solo se añade** (`ticket_events`, sin `updated_at`): no hay UPDATE ni DELETE de eventos (R5).
 - **Nada se borra en cascada** — las claves foráneas son RESTRICT; las bajas son `deactivated_at`/`active`.
 - **Los `FormRequest` de administración autorizan en `authorize()` con la policy, ANTES de validar:** con `authorize() { return true; }` un no autorizado recibe 302 con mensajes de validación («ya existe ese correo»), que filtran datos. Probado mandando datos inválidos a propósito.
-- **Al dar de baja a un agente o traspasar el rol se liberan sus tickets no cerrados** (`UnassignTickets`, evento interno): si no, quedan asignados a quien no puede atenderlos. El traspaso va en UNA transacción y degrada al antiguo ANTES de ascender al nuevo (índice único `admin_slot`).
+- **Al dar de baja a un agente o traspasar el rol se liberan sus tickets no cerrados; al cambiarlo de equipo, los que ya no puede atender** (`UnassignTickets`, evento interno; el cambio de equipo pasa `$onlyDepartments`): si no, quedan asignados a quien no puede atenderlos. El traspaso va en UNA transacción y degrada al antiguo ANTES de ascender al nuevo (índice único `admin_slot`).
 - **2FA desde «Mis datos» (`TwoFactorSettingsController`):** la clave nueva vive solo en la sesión (cifrada) hasta acertar un código; activar guarda `two_factor_last_step`; regenerar y desactivar piden la contraseña; el límite `throttle:5,1` es POR PERSONA y lo comparten activar, regenerar, desactivar y cambiar contraseña (a propósito). Solo el administrador (R21).
 - **`retention:run` anonimiza tickets CERRADOS antiguos y borra adjuntos y registros viejos; es IRREVERSIBLE y no está programado.** Marca `tickets.anonymized_at` (no el texto). No ampliarlo a usuarios o empresas sin decisión de la usuaria. La auditoría solo se añade salvo esta purga.
+- **Cabeceras de seguridad: middleware `SecurityHeaders` en el grupo `web`** (no iframes ajenos, `nosniff`, HSTS solo por HTTPS). Sin CSP general porque las vistas usan `style="…"`; el iframe del registro de correos se aísla con su `sandbox` y su CSP, no con esto. Defectos conocidos de la auditoría: `docs/defectos-conocidos.md`.
 - **No quitar el índice único de `users.admin_slot`** aunque nadie lo lea: es lo que impide dos administradores activos (R9).
 - **En un `CHECK` sobre columnas con NULL, escribir `IS NOT NULL` explícito** — con NULL el CHECK no falla.
 - **Los tests no usan SQLite** — MySQL en `lm_tickets_testing`, para que un test verde valga en producción. No apuntar nunca los tests a `lm_tickets`.
@@ -213,4 +214,4 @@ phpstan.neon         configuración de Larastan
 
 - Estado y pendientes: `ONBOARDING.md`
 - Plan priorizado: `docs/plan/00-encuadre.md` (sección «Plan priorizado»)
-- Defectos conocidos: aún no existe `docs/defectos-conocidos.md`
+- Defectos conocidos: `docs/defectos-conocidos.md` (auditoría de la Fase 4, 2026-11-11)

@@ -12,6 +12,7 @@ use App\Models\EmailLog;
 use App\Models\User;
 use App\Notifications\InvitationNotification;
 use App\Notifications\RecoveryCodeUsedNotification;
+use App\Notifications\ResetPasswordNotification;
 use App\Notifications\TicketNotice;
 use Exception;
 use Illuminate\Contracts\Queue\Job;
@@ -53,6 +54,19 @@ class MailLogTest extends TestCase
         $this->assertSame(EmailLog::SENT, $log->status);
         $this->assertNull($log->body);
         $this->assertStringNotContainsString('TOKEN-SECRETO-123', json_encode($log->getAttributes()));
+    }
+
+    #[TestDox('La recuperación de contraseña se anota pero NO guarda su cuerpo: lleva un enlace de un solo uso')]
+    public function test_password_reset_body_is_not_stored(): void
+    {
+        $user = User::factory()->create(['email' => 'olvido@example.com']);
+
+        $user->notify(new ResetPasswordNotification('TOKEN-RECUPERACION-456'));
+
+        $log = EmailLog::query()->firstOrFail();
+        $this->assertSame(EmailLog::SENT, $log->status);
+        $this->assertNull($log->body);
+        $this->assertStringNotContainsString('TOKEN-RECUPERACION-456', json_encode($log->getAttributes()));
     }
 
     #[TestDox('Un correo que abre el envío y la cola falla queda «failed» con el motivo; si nadie lo confirma, «pending»')]
