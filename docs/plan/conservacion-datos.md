@@ -34,6 +34,7 @@ mano hasta que el plazo se valide con la asesoría legal (no es asesoramiento le
 | Sesiones (`sessions`) | 120 min | Las limpia Laravel solas (probabilidad por petición); no se toca | — |
 | Usuarios dados de baja | 2 años **desde la baja** | **Anonimizar**: nombre → «Persona dada de baja», correo → `baja-{id}@anonimo.invalid`, teléfono vacío, clave aleatoria, 2FA, sesiones, avisos y enlaces borrados. La fila y el id se conservan (los tickets apuntan a ella). Una cuenta anonimizada NO se reactiva | **Hecho** (2026-11-11, D-6; decisión de Claude por delegación de la usuaria, provisional como el resto) |
 | Empresa tras terminar la relación | — | **No se toca**: pueden pesar obligaciones contables y contractuales (a validar con la asesoría) | **Decidido: fuera de la purga** |
+| Correo entrante (`inbound_emails` y los adjuntos de la cuarentena) | **spam 30 días, el resto 90**, desde que llegó (decidido 2026-11-12) | **Borrar** fila y ficheros; los ya convertidos en ticket o respuesta solo guardan datos mínimos del remitente | **Hecho** (2026-11-12; `retention:run`, sigue SIN programar) |
 | Copia EXTERNA de la base y copia de los adjuntos | ❓ | Decidir dónde, cuánto tiempo y cifrado: fijan el plazo real de los datos «borrados» | **SIN DECIDIR** |
 
 ## Cómo se usa

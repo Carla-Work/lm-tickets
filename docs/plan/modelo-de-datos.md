@@ -91,6 +91,29 @@ notas: una vista olvidada que las pinte. Por eso solo se cargan para el equipo (
 generan eventos con `visible_to_customer = false`, no tocan `last_activity_at` (que ordena la lista del cliente), y
 `PriorityAndTagsTest` recorre lista, detalle y avisos del cliente buscando cualquier rastro.
 
+### Quién creó el ticket y por qué canal (P1, 2026-11-12)
+
+`tickets.created_by_id` (NOT NULL, clave foránea RESTRICT a `users`) y `tickets.channel` (`web`/`email`/`phone`/`in_person`/`other`,
+NOT NULL DEFAULT `web`, con su CHECK; valores en `App\Enums\TicketChannel`). Los dos son **internos**: el cliente no los ve en
+ninguna pantalla, correo o aviso. En un ticket que abre el cliente, `created_by_id = requester_id` y `channel = web`; solo difieren
+cuando una persona del equipo lo crea a nombre de un cliente (`CreateTicket` con `StaffCreation`). En ese caso el primer mensaje y el
+evento visible `created` van a nombre del CLIENTE (así ve el ticket como suyo) y el historial interno lleva un evento
+`created_by_staff` (`visible_to_customer = false`) con el canal y la persona asignada. `StaffCreatesTicketTest` busca cualquier rastro
+en las pantallas del cliente. La migración rellenó `created_by_id` de los tickets existentes con `requester_id`.
+
+### Correo entrante (P1, 2026-11-12)
+
+Plan: `docs/plan/p1-email-entrante.md`. Tablas nuevas (migración `2026_11_12_200000`):
+- `company_domains` (dominio único: de UNA empresa), `product_keywords` (palabra normalizada única: de UN producto) e `incident_words` (normalizada, única).
+  Quitar una palabra o un dominio los **borra** (no son datos de clientes). Los dominios gratuitos (gmail…) no se pueden registrar. Solo son PISTAS.
+- `inbound_emails`: una fila por correo procesado (`message_id` único: no se procesa dos veces sin tocar el buzón). Estados (CHECK): `pending` (90 días) ·
+  `spam` (30) · `ticket` · `reply` · `ignored` · `rejected`. El **cuerpo** solo se guarda en cuarentena (pending/spam); al convertirse en ticket o mensaje se vacía.
+- `inbound_email_attachments`: adjuntos de un correo EN CUARENTENA en el disco privado (R3); al crear el ticket se copian al ticket y se borran de aquí.
+- `ticket_messages.email_message_id` (único), `via_email` y `emailed_at`: el Message-ID del correo enviado o recibido para ese mensaje, si el del cliente entró
+  por correo y si la respuesta del equipo salió por correo. Con el Message-ID una respuesta del cliente entra en SU hilo (cabecera `In-Reply-To`).
+- `categories.is_default`: «Sin clasificar» en cada departamento (la categoría de los tickets que llegan por correo). No se ofrece en ningún formulario.
+Retención: spam 30 días, el resto 90 (`retention:run`, `docs/plan/conservacion-datos.md`).
+
 ### Valoración de la atención (P1)
 
 `ticket_ratings` guarda una valoración por ticket (clave única en `ticket_id`, sin `updated_at`: solo se añade). La puntuación es

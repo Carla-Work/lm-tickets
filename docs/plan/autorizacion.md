@@ -38,24 +38,28 @@ adjunto. Se garantiza con los ámbitos `visibleTo` de `TicketMessage`, `TicketEv
 ## Acciones sobre un ticket
 
 «Gestiona» = el que lo atiende: SOLO el **agente asignado**, y solo si puede atender ese departamento (Contabilidad, su equipo;
-los demás departamentos, los otros dos equipos). El **administrador no gestiona nunca** (R10, revisada 2026-11-10). «Final» = Resuelto o Cerrado.
+los demás departamentos, los otros dos equipos). El **administrador no gestiona** (no responde ni cambia estado; R10, revisada 2026-11-10), salvo **mover de departamento, fijar la prioridad** (2026-11-11) **y crear tickets a nombre de un cliente asignándolos a un agente** (2026-11-12), además de reasignar. «Final» = Resuelto o Cerrado.
 
 | Acción | Usuario de empresa | Admin. de empresa | Agente | Administrador |
 |---|---|---|---|---|
 | Abrir un ticket (R6 lo valida el paso 4) | Sí | Sí | No | No |
+| **Crear un ticket a nombre de un cliente** (P1, decidido 2026-11-12; `createForCustomer`) | No | No | **Sí**, solo en los departamentos que atiende (R11/R13) y asignándolo a un agente que también los atienda (puede ser él) | **Sí**, en cualquier departamento, pero **debe asignarlo a un agente** (no atiende, R10) |
 | **Responder al cliente** (mensaje público) | Solo el suyo, **no final** (R4) | Solo el suyo, no final **(propuesta)** | Si **lo gestiona** y no está Cerrado | No |
 | **Nota interna** | No | No | **Cualquier ticket que ve**, no Cerrado (decidido) | No |
 | Marcar como **resuelto** (explicando cómo, R16) | Solo el suyo, no final | Solo el suyo, no final | Si lo gestiona y no es final | No |
 | Cambiar el **estado** (abierto, en curso, pendiente) | No | No | Si lo gestiona y no es final | No |
 | **Cerrar** (Resuelto → Cerrado) | No | No | Si lo gestiona | No |
 | **Reasignar** (R11) | No | No | Cualquier ticket que ve, no final | Cualquiera, no final (a un agente que pueda atenderlo) |
-| **Cambiar el departamento** (R12) | No | No | Cualquier ticket que ve, no final | No |
+| **Cambiar el departamento** (R12) | No | No | Cualquier ticket que ve, no final | **Sí**, cualquier ticket no final (decidido 2026-11-11) |
 | **Cambiar la prioridad interna** (P1) | No | No | Cualquier ticket que ve, no final | **Sí**, cualquier ticket no final (decidido 2026-11-11; es lo único que gestiona, además de reasignar) |
 | **Poner o quitar etiquetas internas** (P1) | No | No | Cualquier ticket que ve, no final | No |
 | **Gestionar el catálogo de etiquetas** (P1) | No | No | No | Sí |
 | **Valorar la atención** (P1) | Solo el suyo, en ticket final, una vez | No (solo si lo abrió él) | No | No |
 | **Ver informes** (P1; solo lo que ve cada cual, R13) | No | No | Sí | Sí |
 | **Ver la tabla «por agente»** de los informes | No | No | No | Sí |
+| **Enviar la respuesta por correo** al cliente (casilla «Enviar por correo» de «Responder», P1 2026-11-12) | No | No | Quien puede responder (el que lo gestiona); solo mensajes PÚBLICOS: una nota interna **nunca** sale por correo (R2) | No (no responde, R10) |
+| **Ver y decidir sobre el correo entrante en cuarentena** (P1; `InboundEmailPolicy`: spam, invitar al remitente, crear el ticket) | No | No | **No** (ni el de Contabilidad: la cuarentena tiene datos de desconocidos y de los tres buzones) | **Sí** (decide; no responde al remitente, R10) |
+| **Palabras clave, palabras de incidencia y dominios de empresa** (P1) | No | No | No | Sí |
 | Abrir un ticket **relacionado** de uno final | El suyo | Cualquiera de su empresa | No | No |
 | Ver notas internas, historial interno | No | No | Sí | Sí |
 

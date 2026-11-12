@@ -68,7 +68,7 @@ las atiende.
 | Tema | Decisión | Fecha |
 |---|---|---|
 | Stack | PHP + Laravel, aplicación única (web + panel de usuarios + tickets) | 2026-11-09 |
-| WordPress | Descartado | 2026-11-09 |
+| WordPress | Descartado **como base de la aplicación** (2026-11-09). **Revisado 2026-11-11:** la web pública de Ling Marco irá en WordPress y la aplicación de tickets sigue siendo Laravel, en un subdominio aparte, sin iframe ni plugin; detalle en `docs/plan/produccion.md` § 2b | 2026-11-09 / 2026-11-11 |
 | Panel de agentes | A mano, **sin Filament** ni otro paquete de administración | 2026-11-09 |
 | Cuentas | La empresa es la cuenta; una empresa tiene varios usuarios | 2026-11-09 |
 | Notificaciones | Email y dentro del panel | 2026-11-09 |
@@ -99,7 +99,7 @@ El subtipo de aplicación (oneCOP, oneFact…) ya no va en la descripción: es e
 - Facturación o imputación de tiempo.
 - App móvil.
 - Base de conocimiento o chatbot.
-- Creación de tickets por email entrante (candidato a P1).
+- ~~Creación de tickets por email entrante (candidato a P1).~~ **Hecho en el P1 el 2026-11-12** (`docs/plan/p1-email-entrante.md`).
 - Escaneo antivirus de adjuntos (riesgo aceptado en MVP, confirmado).
 - Informes y estadísticas (candidato a P1).
 
@@ -263,7 +263,7 @@ Matriz completa en `docs/plan/autorizacion.md`. Lo implementado como **lo más r
 | R7 | Solo el administrador asigna productos a empresas | Política de autorización + test |
 | R8 | Solo el administrador de la aplicación crea, desactiva o cambia el rol de empleados internos; nadie puede darse a sí mismo un rol superior | Política de autorización + test |
 | R9 | Siempre existe exactamente un administrador activo: no puede eliminarse, desactivarse ni degradarse sin traspasar antes el rol a otro empleado interno | Validación en servidor + test (incluido el intento de saltarlo) |
-| R10 | El administrador ve todos los tickets y puede reasignarlos (R11), pero **no responde ni cambia estados en ningún departamento** (revisada 2026-11-10: sin la excepción de «Otros») | Política de autorización + test de que todas las acciones de escritura devuelven denegado |
+| R10 | El administrador ve todos los tickets y puede reasignarlos (R11), pero **no responde ni cambia estados en ningún departamento** (revisada 2026-11-10: sin la excepción de «Otros»; el 2026-11-12 se le añadió **crear tickets a nombre de un cliente asignándolos a un agente**, como gerente que recibe llamadas) | Política de autorización + test de que todas las acciones de escritura devuelven denegado |
 | R11 | Los agentes de Soporte y Desarrollo y Diseño ven todos los tickets salvo Contabilidad; el agente de Contabilidad ve solo Contabilidad. Un agente o el administrador asigna a cualquier agente que pueda atender el departamento; cada reasignación queda registrada con quién, cuándo y de quién a quién, y avisa a la persona que lo recibe (revisada 2026-11-10) | Test + historial (R5) |
 | R12 | Cualquier agente puede corregir el departamento de un ticket; queda registrado (quién, cuándo, de cuál a cuál) y se avisa al cliente por email y en el panel | Test + historial (R5) + test del aviso |
 | R13 | Los tickets de **Contabilidad** (antes «Otros»; valor guardado `other`) los ven y gestionan el equipo de Contabilidad y el cliente que los abrió; el administrador los ve y reasigna; los demás agentes no los ven (ni en listas, ni en búsquedas, ni en contadores, ni por URL directa). Si un agente corrige un ticket a Contabilidad, deja de verlo (revisada 2026-11-10) | Política de autorización + test de cada vía de acceso |
@@ -324,6 +324,6 @@ prerrequisitos de la Fase 5 (trabajador de colas, remitente de correo real, copi
 
 - Aprobado el encuadre (2026-11-09). Categorías, servicios de soporte del catálogo y roles, validados con los mockups.
 - **Mockups validados el 2026-11-09:** los 25 de `docs/plan/mockups/`.
-- ❓ Cómo encaja el panel en el diseño de la web pública (que se diseñará aparte, también en Laravel).
+- Cómo encaja el panel en la web pública: **decidido 2026-11-11**: la web pública es WordPress (ya no «aparte, en Laravel») y el panel vive en un subdominio propio enlazado desde ella (`docs/plan/produccion.md` § 2b). Subdominio **`tickets.lingmarco.es`**, mismo hosting de IONOS que el WordPress, DNS gestionado por IONOS (2026-11-11). ❓ Falta verificar qué permite el plan de IONOS (carpeta raíz por subdominio, PHP/MySQL, SSH/Composer, cola solo por cron, SMTP).
 - ❓ Las decisiones de la lista «Sin decidir» de la sección «Acceso, administración y panel del cliente».
 - ❓ Plan de conservación de datos (provisional 2 años) y de IONOS: antes de producción.
