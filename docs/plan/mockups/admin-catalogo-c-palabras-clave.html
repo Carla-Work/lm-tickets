@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<!--
+  MOCKUP — Productos y categorías · palabras clave
+
+  Qué es: referencia visual con datos de mentira realistas. NO es código de producción y no se borra al implementar.
+  Cómo verlo: doble clic. Un solo archivo, CSS dentro, sin servidor ni conexión, sin JavaScript.
+  Única dependencia externa: el logo, por ruta relativa (../../marca lingmarco/logo-LM.svg); si falta se ve el texto alternativo.
+  Plan: docs/plan/p1-email-entrante.md (aprobado el 2026-11-12). Estado: PENDIENTE de validar por la usuaria.
+
+  SUPUESTOS que esta pantalla da por buenos (hay que confirmarlos al validar):
+
+   1. Las palabras clave van en «Productos y categorías», debajo de cada producto: al añadir un producto nuevo se añade su palabra.
+   2. Se busca en asunto y cuerpo, sin distinguir mayúsculas ni tildes («Fichaje» = «fichaje»). Cada palabra es de UN producto.
+   3. Solo cuenta si la empresa del cliente tiene ese producto (R6/R7); con varias coincidencias o ninguna, el ticket nace sin producto.
+   4. Las «palabras de incidencia» (error, no funciona…) sirven para decidir si un correo es una incidencia; son generales, no de un producto.
+   5. Las categorías por departamento siguen debajo, como en el mockup admin-catalogo-a (no se repiten aquí).
+   6. Quitar una palabra la borra de verdad (no es un dato de clientes). El producto, en cambio, sigue sin borrarse (R19).
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Productos y categorías · palabras clave · Ling Marco Tickets</title>
+<style>
+:root{--texto:#040f24;--titulo:#3c1d6f;--principal:#742bba;--principal-claro:#9e4af0;--gris:#ededed;--blanco:#fff;
+--dep-apps:#7eba28;--dep-apps-fondo:#f1f8e4;--dep-webs:#e6318a;--dep-webs-texto:#a00860;--dep-webs-fondo:#fdecf4;
+--dep-soporte:#3c76ba;--dep-soporte-fondo:#e8f0fa;--dep-comercial:#ffe90b;--dep-comercial-fondo:#fffbd1}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--texto);background:#f7f7f8;line-height:1.5}
+h1,h2,h3{color:var(--titulo);line-height:1.2;margin:0}
+a{color:var(--principal)}
+:focus-visible{outline:3px solid var(--principal-claro);outline-offset:2px}
+.cabecera{background:var(--blanco);border-bottom:1px solid var(--gris);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:.75rem 1.5rem;gap:.5rem 1rem}
+.cabecera img{height:34px;width:auto;max-width:60vw}
+.cabecera .usuario{display:flex;align-items:center;gap:1rem;font-size:.9rem}
+.campana{text-decoration:none;color:var(--texto);padding:.35rem .6rem;border:1px solid var(--gris);border-radius:999px;background:var(--blanco)}
+.campana b{background:var(--principal);color:#fff;border-radius:999px;padding:0 .45rem;font-size:.75rem;margin-left:.3rem}
+.marco{display:grid;grid-template-columns:220px minmax(0,1fr);min-height:calc(100vh - 62px)}
+.menu{background:var(--blanco);border-right:1px solid var(--gris);padding:1.25rem 1rem}
+.menu a{display:block;padding:.6rem .8rem;border-radius:8px;color:var(--texto);text-decoration:none;margin-bottom:.2rem}
+.menu a:hover{background:var(--gris)}
+.menu a[aria-current="page"]{background:var(--principal);color:#fff;font-weight:600}
+.menu .empresa{font-size:.8rem;color:#4a5568;margin:0 .8rem 1rem}
+.etiqueta-panel{display:inline-block;background:var(--titulo);color:#fff;font-size:.72rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border-radius:6px;padding:.1rem .5rem;margin:0 .8rem .4rem}
+main{padding:1.75rem;max-width:1100px}
+.migas{font-size:.85rem;margin-bottom:.75rem;color:#4a5568}.migas a{color:#4a5568}
+.dos-columnas{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:1.5rem;align-items:start;margin-top:1.25rem}
+.tarjeta{background:var(--blanco);border:1px solid var(--gris);border-radius:12px;padding:1.5rem}
+.campo{margin-bottom:1.25rem}
+label,.etiqueta{display:block;font-weight:600;margin-bottom:.35rem}
+.ayuda{font-size:.85rem;color:#4a5568;margin:.25rem 0 0}
+.obligatorio{color:var(--dep-webs-texto)}
+input[type=text],select,textarea{width:100%;padding:.65rem .8rem;font:inherit;color:var(--texto);border:1px solid #b8bcc6;border-radius:8px;background:var(--blanco)}
+textarea{min-height:130px;resize:vertical}
+input[type=file]{width:100%;padding:.8rem;border:2px dashed #b8bcc6;border-radius:8px;background:#fafafa;font:inherit}
+fieldset{border:0;padding:0;margin:0 0 1.25rem}
+legend{font-weight:600;padding:0;margin-bottom:.5rem}
+.departamentos{display:grid;grid-template-columns:repeat(2,1fr);gap:.75rem}
+.dep{position:relative}.dep input{position:absolute;opacity:0;inset:0;cursor:pointer}
+.dep .caja{display:block;height:100%;padding:.8rem 1rem .8rem 1.2rem;border:2px solid var(--gris);border-left-width:8px;border-radius:10px;background:var(--blanco)}
+.dep strong{display:block;color:var(--titulo)}.dep small{color:#4a5568}
+.dep input:focus-visible+.caja{outline:3px solid var(--principal-claro);outline-offset:2px}
+.dep.apps .caja{border-left-color:var(--dep-apps)}.dep.webs .caja{border-left-color:var(--dep-webs)}
+.dep.soporte .caja{border-left-color:var(--dep-soporte)}.dep.otros .caja{border-left-color:var(--dep-comercial)}
+.dep.apps input:checked+.caja{border-color:var(--dep-apps);background:var(--dep-apps-fondo)}
+.dep.webs input:checked+.caja{border-color:var(--dep-webs);background:var(--dep-webs-fondo)}
+.dep.soporte input:checked+.caja{border-color:var(--dep-soporte);background:var(--dep-soporte-fondo)}
+.dep.otros input:checked+.caja{border-color:var(--dep-comercial);background:var(--dep-comercial-fondo)}
+.dep input:checked+.caja strong::after{content:" ✓"}
+.canales{display:flex;flex-wrap:wrap;gap:.5rem}
+.canal{position:relative}.canal input{position:absolute;opacity:0;inset:0;cursor:pointer}
+.canal span{display:block;padding:.5rem 1rem;border:2px solid var(--gris);border-radius:999px;background:var(--blanco)}
+.canal input:checked+span{border-color:var(--principal);background:#f6f0fd;font-weight:600}
+.canal input:checked+span::before{content:"✓ "}
+.canal input:focus-visible+span{outline:3px solid var(--principal-claro);outline-offset:2px}
+.acciones{display:flex;gap:.75rem;flex-wrap:wrap;margin-top:1.5rem}
+.boton{font:inherit;font-weight:600;padding:.7rem 1.4rem;border-radius:8px;cursor:pointer;border:2px solid transparent;text-decoration:none;display:inline-block}
+.boton.principal{background:linear-gradient(135deg,var(--principal),var(--principal-claro));color:#fff}
+.boton.secundario{background:var(--blanco);color:var(--principal);border-color:var(--principal)}
+.lateral h2{font-size:1.05rem;margin-bottom:.75rem}.lateral ol,.lateral ul{margin:0 0 1rem;padding-left:1.2rem}.lateral li{margin-bottom:.5rem}
+.aviso{background:#f6f0fd;border-left:4px solid var(--principal);padding:.75rem 1rem;border-radius:6px;font-size:.9rem;margin:0 0 1rem}
+.interna{background:#fff8e6;border-left:4px solid #b7791f}
+.para{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem 1rem;background:#f6f0fd;border:1px solid #e0cff5;border-radius:10px;padding:.75rem 1rem;margin:1rem 0 0}
+.para strong{color:var(--titulo)}
+.chip{display:inline-block;background:var(--gris);border-radius:999px;padding:.15rem .7rem;margin:0 .3rem .3rem 0;font-size:.85rem}
+.marca-interna{display:inline-block;background:#fff8e6;color:#7b4a05;border:1px solid #e8c77a;border-radius:6px;font-size:.72rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;padding:0 .4rem;margin-left:.4rem;vertical-align:middle}
+.casilla{display:flex;gap:.6rem;align-items:flex-start;padding:.85rem 1rem;border:1px solid #b8bcc6;border-radius:8px;background:#fafafa}
+.casilla input{margin-top:.3rem;width:1.1rem;height:1.1rem}.casilla label{margin:0;font-weight:600}
+@media(max-width:860px){.marco{grid-template-columns:minmax(0,1fr);align-content:start}
+.menu{border-right:0;border-bottom:1px solid var(--gris);display:flex;flex-wrap:wrap;align-content:flex-start;gap:.25rem;padding:.75rem 1rem}
+.menu .empresa{width:100%;margin:0 0 .25rem}.dos-columnas{grid-template-columns:minmax(0,1fr)}
+.departamentos{grid-template-columns:minmax(0,1fr)}main{padding:1rem}.cabecera .usuario span{display:none}}
+
+.titulo-fila{display:flex;justify-content:space-between;align-items:flex-end;gap:1rem;flex-wrap:wrap;margin-bottom:1rem}
+.sub{color:#4a5568;margin:.2rem 0 0}
+.tabla-caja{overflow-x:auto;background:var(--blanco);border:1px solid var(--gris);border-radius:12px}
+table{width:100%;border-collapse:collapse;font-size:.92rem}
+caption{text-align:left;padding:.9rem 1rem;font-weight:700;color:var(--titulo)}
+th{text-align:left;font-size:.78rem;text-transform:uppercase;letter-spacing:.04em;color:#4a5568;padding:.6rem .8rem;border-bottom:1px solid var(--gris);background:#fafafa}
+td{padding:.75rem .8rem;border-bottom:1px solid var(--gris);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td small,.secundario{display:block;color:#4a5568;font-size:.82rem}
+.pista{display:inline-block;border-radius:999px;padding:.1rem .65rem;font-size:.8rem;margin:0 .25rem .25rem 0;background:#f6f0fd;border:1px solid #e0cff5;color:var(--titulo)}
+.pista.alerta{background:#fdecec;border-color:#f0b4b4;color:#8a1c1c}
+.pista.ok{background:#f1f8e4;border-color:#c9e19a;color:#33521a}
+.pista.gris{background:var(--gris);border-color:#d5d5d5;color:#2d3748}
+.boton.pequeno{padding:.35rem .8rem;font-size:.85rem}
+.acc{display:flex;gap:.4rem;flex-wrap:wrap}
+.resumen{display:flex;gap:.75rem;flex-wrap:wrap;margin:0 0 1.25rem}
+.resumen a{background:var(--blanco);border:1px solid var(--gris);border-radius:10px;padding:.6rem 1rem;text-decoration:none;color:var(--texto)}
+.resumen strong{display:block;font-size:1.4rem;color:var(--titulo)}
+.resumen a.atencion{border-color:var(--principal)}
+details.plegable{margin-top:1.5rem}
+details.plegable>summary{cursor:pointer;font-weight:700;color:var(--titulo);padding:.5rem 0}
+.rotulo{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;border-radius:6px;padding:0 .4rem;background:var(--gris);color:#2d3748;margin-left:.4rem;vertical-align:middle}
+.dl{display:grid;grid-template-columns:150px 1fr;gap:.35rem 1rem;margin:0}
+.dl dt{color:#4a5568}.dl dd{margin:0;min-width:0;overflow-wrap:anywhere}.dl dd small{display:block;color:#4a5568;font-size:.82rem}
+.cuerpo{background:#fafafa;border:1px solid var(--gris);border-radius:8px;padding:1rem;white-space:pre-wrap;font-family:ui-monospace,Menlo,monospace;font-size:.88rem;line-height:1.5}
+.grupo{border-top:1px solid var(--gris);padding-top:1rem;margin-top:1rem}
+.grupo h3{font-size:1rem;margin-bottom:.5rem}
+.palabras{display:flex;flex-wrap:wrap;gap:.35rem;margin:.4rem 0 .6rem}
+.palabra{display:inline-flex;align-items:center;gap:.35rem;background:#f6f0fd;border:1px solid #e0cff5;border-radius:999px;padding:.1rem .3rem .1rem .7rem;font-size:.88rem}
+.palabra button{border:0;background:transparent;cursor:pointer;color:#6b2e9e;font-size:1rem;line-height:1;padding:.1rem .35rem}
+.fila-add{display:flex;gap:.5rem}.fila-add input{flex:1}
+.hilo .msg{border:1px solid var(--gris);border-radius:10px;padding:.8rem 1rem;margin-bottom:.8rem;background:var(--blanco)}
+.hilo .msg header{display:flex;justify-content:space-between;gap:.5rem;font-size:.88rem;margin-bottom:.4rem}
+.hilo .msg.equipo{border-left:6px solid var(--principal)}
+.hilo .msg.nota{background:#f4f4f6;border-style:dashed;border-color:#8a8f9c}
+.hilo .msg.sistema{background:#f6f0fd;border-color:#e0cff5;font-size:.88rem}
+.medidor{height:8px;border-radius:999px;background:var(--gris);overflow:hidden;margin:.4rem 0}
+.medidor i{display:block;height:100%;background:linear-gradient(135deg,var(--principal),var(--principal-claro))}
+.correo{max-width:640px;margin:0 auto 2rem;background:#fff;border:1px solid #d5d5d5;border-radius:10px;overflow:hidden}
+.correo .cab{background:#f3f3f5;border-bottom:1px solid #d5d5d5;padding:.8rem 1rem;font-size:.88rem;line-height:1.6}
+.correo .cab b{display:inline-block;min-width:64px;color:#4a5568;font-weight:600}
+.correo .cuerpo-correo{padding:1.25rem 1.5rem;font-size:.95rem}
+.correo .cuerpo-correo p{margin:.6rem 0}
+.correo .cita{border-left:4px solid #d5d5d5;margin:.8rem 0;padding:.2rem .9rem;color:#4a5568}
+.correo .pie{border-top:1px solid #ececec;padding:.8rem 1.5rem;font-size:.8rem;color:#4a5568}
+.adjunto-ico{display:inline-block;border:1px solid #d5d5d5;border-radius:6px;padding:.2rem .6rem;margin:.2rem .3rem 0 0;font-size:.85rem;background:#fafafa}
+</style>
+</head>
+<body>
+<header class="cabecera">
+    <img src="../../marca lingmarco/logo-LM.svg" alt="Ling Marco &amp; Asociados">
+    <div class="usuario"><a class="campana" href="#">Avisos <b>3</b></a><span>Carlos Medina · Administrador</span><a href="#">Salir</a></div>
+</header>
+<div class="marco">
+    <nav class="menu" aria-label="Menú del panel interno">
+        <span class="etiqueta-panel">Panel interno</span>
+        <p class="empresa">Ling Marco &amp; Asociados<br>Rol: administrador</p>
+        <a href="#">Bandeja</a>
+        <a href="#">Nuevo ticket</a>
+        <a href="#">Informes</a>
+        <a href="#">Empresas</a>
+        <a href="#" aria-current="page">Productos y categorías</a>
+        <a href="#">Usuarios</a>
+        <a href="#">Correo entrante <b class="rotulo" style="background:var(--principal);color:#fff">3</b></a>
+        <a href="#">Mis datos</a>
+    </nav>
+    <main>
+
+        <div class="titulo-fila"><div><h1>Productos y categorías</h1><p class="sub">Lo que el cliente elige al abrir un ticket. Las palabras clave deciden el producto de los tickets que llegan por correo.</p></div></div>
+        <div class="dos-columnas">
+            <section aria-label="Palabras clave por producto">
+                <div class="tarjeta" style="margin-bottom:1rem">
+                    <h2 style="margin-bottom:.2rem">oneCOP</h2><p class="sub" style="margin:0 0 .6rem">Gestión de comunidades</p>
+                    <div class="palabras"><span class="palabra">fichaje<button type="button" aria-label="Quitar fichaje">×</button></span><span class="palabra">fichar<button type="button" aria-label="Quitar fichar">×</button></span><span class="palabra">control horario<button type="button" aria-label="Quitar control horario">×</button></span><span class="palabra">oneCOP<button type="button" aria-label="Quitar oneCOP">×</button></span></div>
+                    <form class="fila-add" action="#" method="post"><label class="sr" for="k1" style="position:absolute;left:-9999px">Nueva palabra para oneCOP</label><input type="text" id="k1" placeholder="Añadir palabra o frase"><button class="boton secundario pequeno" type="submit">Añadir</button></form>
+                </div>
+                <div class="tarjeta" style="margin-bottom:1rem">
+                    <h2 style="margin-bottom:.2rem">oneFact</h2><p class="sub" style="margin:0 0 .6rem">Facturación</p>
+                    <div class="palabras"><span class="palabra">factura<button type="button" aria-label="Quitar factura">×</button></span><span class="palabra">facturación<button type="button" aria-label="Quitar facturación">×</button></span><span class="palabra">emitir factura<button type="button" aria-label="Quitar emitir factura">×</button></span><span class="palabra">oneFact<button type="button" aria-label="Quitar oneFact">×</button></span></div>
+                    <form class="fila-add" action="#" method="post"><label class="sr" for="k2" style="position:absolute;left:-9999px">Nueva palabra para oneFact</label><input type="text" id="k2" placeholder="Añadir palabra o frase"><button class="boton secundario pequeno" type="submit">Añadir</button></form>
+                </div>
+                <div class="tarjeta" style="margin-bottom:1rem">
+                    <h2 style="margin-bottom:.2rem">oneCAR</h2><p class="sub" style="margin:0 0 .6rem">Gestión de flota</p>
+                    <div class="palabras"><span class="palabra">flota<button type="button" aria-label="Quitar flota">×</button></span><span class="palabra">vehículo<button type="button" aria-label="Quitar vehículo">×</button></span><span class="palabra">oneCAR<button type="button" aria-label="Quitar oneCAR">×</button></span></div>
+                    <form class="fila-add" action="#" method="post"><label class="sr" for="k3" style="position:absolute;left:-9999px">Nueva palabra para oneCAR</label><input type="text" id="k3" placeholder="Añadir palabra o frase"><button class="boton secundario pequeno" type="submit">Añadir</button></form>
+                </div>
+                <div class="tarjeta" style="margin-bottom:1rem">
+                    <h2 style="margin-bottom:.2rem">Pool de mantenimiento</h2><p class="sub" style="margin:0 0 .6rem">Bolsa de horas de soporte</p>
+                    <div class="palabras"><span class="secundario">Sin palabras: este producto nunca se asigna solo.</span></div>
+                    <form class="fila-add" action="#" method="post"><label class="sr" for="k4" style="position:absolute;left:-9999px">Nueva palabra para Pool de mantenimiento</label><input type="text" id="k4" placeholder="Añadir palabra o frase"><button class="boton secundario pequeno" type="submit">Añadir</button></form>
+                </div>
+            </section>
+            <aside>
+                <section class="tarjeta lateral" aria-label="Palabras de incidencia">
+                    <h2>Palabras de incidencia</h2>
+                    <p class="sub">Un correo de un cliente que no responde a un ticket solo crea ticket si parece una incidencia: si contiene alguna de estas palabras o una del producto.</p>
+                    <div class="palabras"><span class="palabra">error<button type="button" aria-label="Quitar error">×</button></span><span class="palabra">no funciona<button type="button" aria-label="Quitar no funciona">×</button></span><span class="palabra">fallo<button type="button" aria-label="Quitar fallo">×</button></span><span class="palabra">no puedo<button type="button" aria-label="Quitar no puedo">×</button></span><span class="palabra">urgente<button type="button" aria-label="Quitar urgente">×</button></span><span class="palabra">se ha caído<button type="button" aria-label="Quitar se ha caído">×</button></span><span class="palabra">no carga<button type="button" aria-label="Quitar no carga">×</button></span><span class="palabra">bloqueado<button type="button" aria-label="Quitar bloqueado">×</button></span></div>
+                    <form class="fila-add" action="#" method="post"><label for="gi" style="position:absolute;left:-9999px">Nueva palabra de incidencia</label><input type="text" id="gi" placeholder="Añadir palabra"><button class="boton secundario pequeno" type="submit">Añadir</button></form>
+                    <p class="aviso" style="margin-top:1rem">Si un correo de un cliente no encaja, no se pierde: va a «Correo entrante › Pendientes» para que lo revises.</p>
+                </section>
+            </aside>
+        </div>
+    </main>
+</div>
+</body>
+</html>

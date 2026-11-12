@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<!--
+  MOCKUP — Nuevo ticket para un cliente · paso 2: agente
+
+  Qué es: referencia visual con datos de mentira realistas. NO es código de producción y no se borra al implementar.
+  Cómo verlo: doble clic. Un solo archivo, CSS dentro, sin servidor ni conexión, sin JavaScript.
+  Única dependencia externa: el logo, por ruta relativa (../../marca lingmarco/logo-LM.svg); si falta se ve el texto alternativo.
+
+  Estado: PENDIENTE de validar por la usuaria (2026-11-12).
+  Plan: docs/plan/p1-ticket-creado-por-agente.md (aprobado el 2026-11-12).
+
+  SUPUESTOS que esta pantalla da por buenos (hay que confirmarlos al validar):
+   1. Entrada por un enlace «Nuevo ticket» en el menú del panel interno (no un botón en la bandeja).
+   2. Dos pasos: primero «¿Para quién?» y luego el formulario. Sin JavaScript, el producto (que depende de la empresa) no se puede
+      filtrar en una sola pantalla; en dos pasos, el formulario ya conoce a la empresa y solo enseña sus productos.
+   3. El cliente NO ve el canal ni quién creó el ticket (interno). Ve el ticket como suyo.
+   4. El aviso por correo al cliente es una casilla SIN marcar por defecto.
+   5. Nace «Abierto» y asignado. Qué personas se pueden elegir lo valida el servidor (puede atender ese departamento).
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nuevo ticket para un cliente · paso 2: agente · Ling Marco Tickets</title>
+<style>
+:root{--texto:#040f24;--titulo:#3c1d6f;--principal:#742bba;--principal-claro:#9e4af0;--gris:#ededed;--blanco:#fff;
+--dep-apps:#7eba28;--dep-apps-fondo:#f1f8e4;--dep-webs:#e6318a;--dep-webs-texto:#a00860;--dep-webs-fondo:#fdecf4;
+--dep-soporte:#3c76ba;--dep-soporte-fondo:#e8f0fa;--dep-comercial:#ffe90b;--dep-comercial-fondo:#fffbd1}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--texto);background:#f7f7f8;line-height:1.5}
+h1,h2,h3{color:var(--titulo);line-height:1.2;margin:0}
+a{color:var(--principal)}
+:focus-visible{outline:3px solid var(--principal-claro);outline-offset:2px}
+.cabecera{background:var(--blanco);border-bottom:1px solid var(--gris);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:.75rem 1.5rem;gap:.5rem 1rem}
+.cabecera img{height:34px;width:auto;max-width:60vw}
+.cabecera .usuario{display:flex;align-items:center;gap:1rem;font-size:.9rem}
+.campana{text-decoration:none;color:var(--texto);padding:.35rem .6rem;border:1px solid var(--gris);border-radius:999px;background:var(--blanco)}
+.campana b{background:var(--principal);color:#fff;border-radius:999px;padding:0 .45rem;font-size:.75rem;margin-left:.3rem}
+.marco{display:grid;grid-template-columns:220px minmax(0,1fr);min-height:calc(100vh - 62px)}
+.menu{background:var(--blanco);border-right:1px solid var(--gris);padding:1.25rem 1rem}
+.menu a{display:block;padding:.6rem .8rem;border-radius:8px;color:var(--texto);text-decoration:none;margin-bottom:.2rem}
+.menu a:hover{background:var(--gris)}
+.menu a[aria-current="page"]{background:var(--principal);color:#fff;font-weight:600}
+.menu .empresa{font-size:.8rem;color:#4a5568;margin:0 .8rem 1rem}
+.etiqueta-panel{display:inline-block;background:var(--titulo);color:#fff;font-size:.72rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border-radius:6px;padding:.1rem .5rem;margin:0 .8rem .4rem}
+main{padding:1.75rem;max-width:1100px}
+.migas{font-size:.85rem;margin-bottom:.75rem;color:#4a5568}.migas a{color:#4a5568}
+.dos-columnas{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:1.5rem;align-items:start;margin-top:1.25rem}
+.tarjeta{background:var(--blanco);border:1px solid var(--gris);border-radius:12px;padding:1.5rem}
+.campo{margin-bottom:1.25rem}
+label,.etiqueta{display:block;font-weight:600;margin-bottom:.35rem}
+.ayuda{font-size:.85rem;color:#4a5568;margin:.25rem 0 0}
+.obligatorio{color:var(--dep-webs-texto)}
+input[type=text],select,textarea{width:100%;padding:.65rem .8rem;font:inherit;color:var(--texto);border:1px solid #b8bcc6;border-radius:8px;background:var(--blanco)}
+textarea{min-height:130px;resize:vertical}
+input[type=file]{width:100%;padding:.8rem;border:2px dashed #b8bcc6;border-radius:8px;background:#fafafa;font:inherit}
+fieldset{border:0;padding:0;margin:0 0 1.25rem}
+legend{font-weight:600;padding:0;margin-bottom:.5rem}
+.departamentos{display:grid;grid-template-columns:repeat(2,1fr);gap:.75rem}
+.dep{position:relative}.dep input{position:absolute;opacity:0;inset:0;cursor:pointer}
+.dep .caja{display:block;height:100%;padding:.8rem 1rem .8rem 1.2rem;border:2px solid var(--gris);border-left-width:8px;border-radius:10px;background:var(--blanco)}
+.dep strong{display:block;color:var(--titulo)}.dep small{color:#4a5568}
+.dep input:focus-visible+.caja{outline:3px solid var(--principal-claro);outline-offset:2px}
+.dep.apps .caja{border-left-color:var(--dep-apps)}.dep.webs .caja{border-left-color:var(--dep-webs)}
+.dep.soporte .caja{border-left-color:var(--dep-soporte)}.dep.otros .caja{border-left-color:var(--dep-comercial)}
+.dep.apps input:checked+.caja{border-color:var(--dep-apps);background:var(--dep-apps-fondo)}
+.dep.webs input:checked+.caja{border-color:var(--dep-webs);background:var(--dep-webs-fondo)}
+.dep.soporte input:checked+.caja{border-color:var(--dep-soporte);background:var(--dep-soporte-fondo)}
+.dep.otros input:checked+.caja{border-color:var(--dep-comercial);background:var(--dep-comercial-fondo)}
+.dep input:checked+.caja strong::after{content:" ✓"}
+.canales{display:flex;flex-wrap:wrap;gap:.5rem}
+.canal{position:relative}.canal input{position:absolute;opacity:0;inset:0;cursor:pointer}
+.canal span{display:block;padding:.5rem 1rem;border:2px solid var(--gris);border-radius:999px;background:var(--blanco)}
+.canal input:checked+span{border-color:var(--principal);background:#f6f0fd;font-weight:600}
+.canal input:checked+span::before{content:"✓ "}
+.canal input:focus-visible+span{outline:3px solid var(--principal-claro);outline-offset:2px}
+.acciones{display:flex;gap:.75rem;flex-wrap:wrap;margin-top:1.5rem}
+.boton{font:inherit;font-weight:600;padding:.7rem 1.4rem;border-radius:8px;cursor:pointer;border:2px solid transparent;text-decoration:none;display:inline-block}
+.boton.principal{background:linear-gradient(135deg,var(--principal),var(--principal-claro));color:#fff}
+.boton.secundario{background:var(--blanco);color:var(--principal);border-color:var(--principal)}
+.lateral h2{font-size:1.05rem;margin-bottom:.75rem}.lateral ol,.lateral ul{margin:0 0 1rem;padding-left:1.2rem}.lateral li{margin-bottom:.5rem}
+.aviso{background:#f6f0fd;border-left:4px solid var(--principal);padding:.75rem 1rem;border-radius:6px;font-size:.9rem;margin:0 0 1rem}
+.interna{background:#fff8e6;border-left:4px solid #b7791f}
+.para{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem 1rem;background:#f6f0fd;border:1px solid #e0cff5;border-radius:10px;padding:.75rem 1rem;margin:1rem 0 0}
+.para strong{color:var(--titulo)}
+.chip{display:inline-block;background:var(--gris);border-radius:999px;padding:.15rem .7rem;margin:0 .3rem .3rem 0;font-size:.85rem}
+.marca-interna{display:inline-block;background:#fff8e6;color:#7b4a05;border:1px solid #e8c77a;border-radius:6px;font-size:.72rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;padding:0 .4rem;margin-left:.4rem;vertical-align:middle}
+.casilla{display:flex;gap:.6rem;align-items:flex-start;padding:.85rem 1rem;border:1px solid #b8bcc6;border-radius:8px;background:#fafafa}
+.casilla input{margin-top:.3rem;width:1.1rem;height:1.1rem}.casilla label{margin:0;font-weight:600}
+@media(max-width:860px){.marco{grid-template-columns:minmax(0,1fr);align-content:start}
+.menu{border-right:0;border-bottom:1px solid var(--gris);display:flex;flex-wrap:wrap;align-content:flex-start;gap:.25rem;padding:.75rem 1rem}
+.menu .empresa{width:100%;margin:0 0 .25rem}.dos-columnas{grid-template-columns:minmax(0,1fr)}
+.departamentos{grid-template-columns:minmax(0,1fr)}main{padding:1rem}.cabecera .usuario span{display:none}}
+</style>
+</head>
+<body>
+<header class="cabecera">
+    <img src="../../marca lingmarco/logo-LM.svg" alt="Ling Marco &amp; Asociados">
+    <div class="usuario"><a class="campana" href="#">Avisos <b>3</b></a><span>Francisco Morales · Agente de Aplicaciones</span><a href="#">Salir</a></div>
+</header>
+<div class="marco">
+    <nav class="menu" aria-label="Menú del panel interno">
+        <span class="etiqueta-panel">Panel interno</span>
+        <p class="empresa">Ling Marco &amp; Asociados<br>Rol: agente</p>
+        <a href="#">Bandeja</a>
+        <a href="#" aria-current="page">Nuevo ticket</a>
+
+        <a href="#">Informes</a>
+        <a href="#">Mis datos</a>
+    </nav>
+    <main>
+
+        <p class="migas"><a href="#">Bandeja</a> › <a href="#">Nuevo ticket</a> › Datos</p>
+        <h1>Nuevo ticket para un cliente</h1>
+        <p class="ayuda" style="font-size:1rem">Paso 2 de 2. Rellena la ficha; tú decides si el cliente recibe un aviso.</p>
+        <div class="para"><span>Ticket a nombre de <strong>María Suárez</strong> · Hermanos Santana S.L.</span><a href="#">Cambiar</a></div>
+        <form class="dos-columnas" action="#">
+            <div class="tarjeta">
+                <fieldset>
+                    <legend>Canal por el que ha llegado <span class="obligatorio" aria-hidden="true">*</span><span class="marca-interna">interno</span></legend>
+                    <div class="canales">
+                        <label class="canal"><input type="radio" name="canal" value="phone" checked><span>Teléfono</span></label>
+                        <label class="canal"><input type="radio" name="canal" value="in_person"><span>En persona</span></label>
+                        <label class="canal"><input type="radio" name="canal" value="email"><span>Correo</span></label>
+                        <label class="canal"><input type="radio" name="canal" value="other"><span>Otro</span></label>
+                    </div>
+                    <p class="ayuda">Solo lo ve el equipo. Sirve para los informes.</p>
+                </fieldset>
+                <fieldset>
+                    <legend>Departamento <span class="obligatorio" aria-hidden="true">*</span></legend>
+                    <div class="departamentos">
+                        <label class="dep soporte"><input type="radio" name="departamento" value="soporte"><span class="caja"><strong>Soporte</strong><small>Equipos, correo, copias y seguridad</small></span></label>
+                        <label class="dep apps"><input type="radio" name="departamento" value="apps" checked><span class="caja"><strong>Aplicaciones</strong><small>Programas de gestión y desarrollos a medida</small></span></label>
+                        <label class="dep webs"><input type="radio" name="departamento" value="webs"><span class="caja"><strong>Páginas web</strong><small>Web, dominio y hosting</small></span></label>
+                    </div>
+                </fieldset>
+                <div class="campo">
+                    <label for="categoria">Tipo de incidencia <span class="obligatorio" aria-hidden="true">*</span></label>
+                    <select id="categoria" name="categoria" required>
+                        <optgroup label="Aplicaciones"><option selected>Error en la aplicación</option><option>Consulta de uso</option><option>Mejora o cambio solicitado</option><option>Acceso y usuarios</option></optgroup>
+                        <optgroup label="Páginas web"><option>Cambio de contenido</option><option>Web caída o con errores</option><option>Dominio y hosting</option></optgroup>
+                        <optgroup label="Soporte"><option>Equipos y sistemas</option><option>Correo electrónico</option><option>Copias de seguridad</option><option>Seguridad</option><option>Red e impresoras</option></optgroup>
+                    </select>
+                    <p class="ayuda">El departamento sale del tipo que elijas; si no coinciden, se rechaza al enviar.</p>
+                </div>
+                <div class="campo">
+                    <label for="producto">Producto o servicio afectado <span class="obligatorio" aria-hidden="true">*</span></label>
+                    <select id="producto" name="producto" required>
+                        <option selected>oneFact</option><option>oneCOP</option><option>Pool de mantenimiento</option>
+                    </select>
+                    <p class="ayuda">Solo los productos contratados por Hermanos Santana S.L.</p>
+                </div>
+                <div class="campo">
+                    <label for="asunto">Asunto <span class="obligatorio" aria-hidden="true">*</span></label>
+                    <input type="text" id="asunto" name="asunto" required value="No puede emitir la factura de octubre">
+                </div>
+                <div class="campo">
+                    <label for="descripcion">Descripción <span class="obligatorio" aria-hidden="true">*</span></label>
+                    <textarea id="descripcion" name="descripcion" required>María llama porque al pulsar «Emitir» en la factura FA-2026-0142 sale un error y la factura se queda en borrador. Le pasa desde esta mañana con todos los clientes. No ha cambiado ningún dato.</textarea>
+                    <p class="ayuda">Escríbelo como si fuera el ticket del cliente: él lo verá con este texto.</p>
+                </div>
+                <div class="campo">
+                    <label for="adjuntos">Adjuntos (opcional)</label>
+                    <input type="file" id="adjuntos" name="adjuntos[]" multiple>
+                    <p class="ayuda">Capturas, imágenes o PDF. Máximo 10 MB por archivo y 5 archivos.</p>
+                </div>
+                <div class="campo">
+                    <label for="asignado">Asignar a <span class="obligatorio" aria-hidden="true">*</span></label>
+                    <select id="asignado" name="asignado" required>
+                        <option selected>Yo (Francisco Morales)</option>
+                        <optgroup label="Aplicaciones y Páginas web"><option>Ana Cabrera</option></optgroup>
+                        <optgroup label="Soporte"><option>Jonatan Santana</option><option>Raquel Quintana</option></optgroup>
+                    </select>
+                    <p class="ayuda">Por defecto, tú. Debe poder atender el departamento elegido, o se rechaza al enviar. A quien se asigne se le avisa.</p>
+                </div>
+                <div class="campo">
+                    <div class="casilla">
+                        <input type="checkbox" id="avisar" name="avisar">
+                        <div><label for="avisar">Enviar aviso por correo a María Suárez</label>
+                        <p class="ayuda" style="margin:0">Le llega «Se ha abierto un ticket a tu nombre» con el asunto y la descripción. Sin marcar, no se le envía nada.</p></div>
+                    </div>
+                </div>
+                <div class="acciones">
+                    <button type="submit" class="boton principal">Crear ticket</button>
+                    <a class="boton secundario" href="#">Cancelar</a>
+                </div>
+            </div>
+            <aside class="tarjeta lateral" aria-label="Información">
+                <h2>¿Qué pasa después?</h2>
+                <ol>
+                    <li>Nace <strong>Abierto</strong> y asignado a la persona que elijas.</li>
+                    <li>Queda registrado en el historial que lo creaste tú (solo lo ve el equipo).</li>
+                    <li>El cliente lo ve en su panel como un ticket suyo. Si marcas la casilla, también le llega un correo.</li>
+                </ol>
+                <h2>Contratado por la empresa</h2>
+                <p><span class="chip">oneFact</span><span class="chip">oneCOP</span><span class="chip">Pool de mantenimiento</span></p>
+                <p class="aviso interna">No ves Contabilidad: ese departamento solo lo gestiona su equipo.</p>
+                <p class="aviso">Solo el cliente, la gente de su empresa con permiso y el equipo que atiende ese departamento ven el ticket.</p>
+            </aside>
+        </form>
+    </main>
+</div>
+</body>
+</html>
