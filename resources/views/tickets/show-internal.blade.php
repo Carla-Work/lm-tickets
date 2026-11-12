@@ -245,7 +245,11 @@
                             <button type="submit" class="boton secundario">Mover ticket</button>
                             <p class="nota-ayuda fuerte">Se avisará al cliente por correo y en su panel.</p>
                             <p class="nota-ayuda">Elige el tipo de incidencia: el departamento es el del grupo donde está. No aparece el departamento actual.</p>
-                            <p class="nota-ayuda">Si el departamento nuevo lo atiende otro equipo, dejarás de ver el ticket; y si lo llevaba alguien que no puede atenderlo, quedará sin asignar.</p>
+                            @if ($user->hasRole(\App\Enums\UserRole::Admin))
+                                <p class="nota-ayuda">Si lo llevaba alguien que no puede atender el departamento nuevo, quedará sin asignar.</p>
+                            @else
+                                <p class="nota-ayuda">Si el departamento nuevo lo atiende otro equipo, dejarás de ver el ticket; y si lo llevaba alguien que no puede atenderlo, quedará sin asignar.</p>
+                            @endif
                         </form>
                     @endif
                 </aside>

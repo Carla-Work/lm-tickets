@@ -326,21 +326,42 @@ class StaffActionsTest extends TestCase
         $this->as('admin')->get(route('tickets.show', $ticket))->assertOk();
     }
 
-    #[TestDox('Sacar un ticket de Contabilidad lo deja sin asignar si lo llevaba su agente, que ya no lo ve y va a la bandeja; el administrador no reclasifica nunca (R10, R12)')]
-    public function test_moving_out_of_accounting_and_admin_cannot_reclassify(): void
+    #[TestDox('Sacar un ticket de Contabilidad lo deja sin asignar si lo llevaba su agente, que ya no lo ve y va a la bandeja (R12, R13)')]
+    public function test_moving_out_of_accounting_clears_assignment(): void
     {
         $conta = $this->ticket(Department::Other, TicketStatus::Open, 'agCon');
-        $normal = $this->ticket(Department::Support, TicketStatus::Open);
         $categoria = $this->categoria(Department::WebApps);
-
-        $this->as('admin')->post(route('tickets.department.update', $normal), ['categoria' => $categoria->id])->assertForbidden();
-        $this->as('admin')->post(route('tickets.department.update', $conta), ['categoria' => $categoria->id])->assertForbidden();
-        $this->assertSame(Department::Other, $conta->fresh()->department);
 
         $this->as('agCon')->post(route('tickets.department.update', $conta), ['categoria' => $categoria->id])->assertRedirect(route('inbox'));
         $this->assertSame(Department::WebApps, $conta->fresh()->department);
         $this->assertNull($conta->fresh()->assigned_to, 'el agente de Contabilidad no puede atender Aplicaciones');
         $this->as('agCon')->get(route('tickets.show', $conta))->assertForbidden();
+    }
+
+    #[TestDox('El administrador reclasifica cualquier ticket no final (también de y a Contabilidad): se queda en el ticket, queda su evento visible al cliente y, si el asignado no puede atenderlo, se vacía la asignación; en un ticket final, no (R12, decidido 2026-11-11)')]
+    public function test_admin_reclassifies(): void
+    {
+        $normal = $this->ticket(Department::Support, TicketStatus::Open, 'agSup');
+        $conta = $this->ticket(Department::Other, TicketStatus::Open, 'agCon');
+        $final = $this->ticket(Department::Support, TicketStatus::Closed);
+        $deWebs = $this->categoria(Department::WebApps);
+        $deSoporte = $this->categoria(Department::Support);
+
+        // Soporte → Aplicaciones: el asignado (Soporte) sí atiende Aplicaciones (cualquier agente de los dos equipos), se conserva.
+        $this->as('admin')->post(route('tickets.department.update', $normal), ['categoria' => $deWebs->id])->assertRedirect(route('tickets.show', $normal));
+        $this->assertSame(Department::WebApps, $normal->fresh()->department);
+        $evento = TicketEvent::query()->where('ticket_id', $normal->id)->where('type', TicketEventType::DepartmentChanged->value)->firstOrFail();
+        $this->assertSame($this->a['admin']->id, $evento->actor_id);
+        $this->assertTrue($evento->visible_to_customer);
+
+        // Contabilidad → Soporte: el agente de Contabilidad no puede atenderlo, se vacía; el administrador SIGUE viéndolo (no va a la bandeja).
+        $this->as('admin')->post(route('tickets.department.update', $conta), ['categoria' => $deSoporte->id])->assertRedirect(route('tickets.show', $conta));
+        $this->assertSame(Department::Support, $conta->fresh()->department);
+        $this->assertNull($conta->fresh()->assigned_to);
+
+        // Estado final: nadie reclasifica, tampoco él.
+        $this->as('admin')->post(route('tickets.department.update', $final), ['categoria' => $deWebs->id])->assertForbidden();
+        $this->assertSame(Department::Support, $final->fresh()->department);
     }
 
     #[TestDox('Los clientes no cambian el departamento (403) y en un ticket final nadie lo cambia')]
@@ -356,7 +377,7 @@ class StaffActionsTest extends TestCase
 
     // ---------- lo que se ve ----------
 
-    #[TestDox('El detalle del equipo ofrece solo los controles que la policy permite: el agente ajeno ve «Asignármelo» y no «Enviar al cliente»')]
+    #[TestDox('El detalle del equipo ofrece solo los controles que la policy permite: el agente ajeno ve «Asignármelo» y no «Enviar al cliente»; el administrador, solo reasignar, mover de departamento y prioridad')]
     public function test_detail_offers_controls_by_policy(): void
     {
         $ticket = $this->ticket(Department::Support, TicketStatus::InProgress, 'agSup');
@@ -366,6 +387,6 @@ class StaffActionsTest extends TestCase
         $this->as('agApp')->get(route('tickets.show', $ticket))->assertOk()
             ->assertSee('Asignármelo')->assertSee('Guardar nota')->assertDontSee('Enviar al cliente')->assertDontSee('Cambiar estado');
         $this->as('admin')->get(route('tickets.show', $ticket))->assertOk()
-            ->assertSee('Reasignar')->assertDontSee('Enviar al cliente')->assertDontSee('Guardar nota')->assertDontSee('Mover ticket');
+            ->assertSee('Reasignar')->assertSee('Mover ticket')->assertSee('Cambiar prioridad')->assertDontSee('Enviar al cliente')->assertDontSee('Guardar nota')->assertDontSee('Cambiar estado');
     }
 }

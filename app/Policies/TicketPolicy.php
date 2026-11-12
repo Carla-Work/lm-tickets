@@ -120,8 +120,9 @@ class TicketPolicy
     }
 
     /**
-     * Cambiar el departamento (R12): cualquier agente en lo que ve. El administrador NO (desde 2026-11-10 ve y
-     * reasigna, como en todos los departamentos). Bloqueado en estados finales.
+     * Cambiar el departamento (R12): cualquier agente en lo que ve, Y el administrador en cualquier ticket (decidido por la
+     * usuaria 2026-11-11, junto a reasignar y fijar la prioridad; antes, desde 2026-11-10, solo ve y reasigna). Sigue sin
+     * responder ni cambiar estado (R10). Bloqueado en estados finales.
      */
     public function changeDepartment(User $user, Ticket $ticket): bool
     {
@@ -130,7 +131,7 @@ class TicketPolicy
         }
 
         return match ($user->getAttribute('role')) {
-            UserRole::Agent => $this->view($user, $ticket),
+            UserRole::Agent, UserRole::Admin => $this->view($user, $ticket),
             default => false,
         };
     }

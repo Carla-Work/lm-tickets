@@ -69,7 +69,7 @@ class TicketActionsTest extends TestCase
             'caA' => ['view'], // solo lee (propuesta): no responde por su compañero
             'agSup' => ['view', 'viewInternal', 'addNote', 'assign', 'changeDepartment', 'changePriority', 'changeTags'],
             'agApp' => ['view', 'viewInternal', 'addNote', 'assign', 'changeDepartment', 'changePriority', 'changeTags'],
-            'admin' => ['view', 'viewInternal', 'assign', 'changePriority'], // R10: solo lectura, pero puede reasignar y fijar la prioridad (decidido 2026-11-11)
+            'admin' => ['view', 'viewInternal', 'assign', 'changeDepartment', 'changePriority'], // R10: solo lectura, pero puede reasignar y fijar la prioridad y mover de departamento (decidido 2026-11-11)
         ]);
     }
 
@@ -81,7 +81,7 @@ class TicketActionsTest extends TestCase
             'caA' => ['view'],
             'agApp' => ['view', 'viewInternal', 'reply', 'addNote', 'resolve', 'updateStatus', 'assign', 'changeDepartment', 'changePriority', 'changeTags'],
             'agSup' => ['view', 'viewInternal', 'addNote', 'assign', 'changeDepartment', 'changePriority', 'changeTags'],
-            'admin' => ['view', 'viewInternal', 'assign', 'changePriority'],
+            'admin' => ['view', 'viewInternal', 'assign', 'changeDepartment', 'changePriority'],
         ]);
     }
 
@@ -93,7 +93,7 @@ class TicketActionsTest extends TestCase
             'caA' => ['view'],
             'agApp' => ['view', 'viewInternal', 'reply', 'addNote', 'resolve', 'updateStatus', 'assign', 'changeDepartment', 'changePriority', 'changeTags'],
             'agSup' => ['view', 'viewInternal', 'addNote', 'assign', 'changeDepartment', 'changePriority', 'changeTags'],
-            'admin' => ['view', 'viewInternal', 'assign', 'changePriority'],
+            'admin' => ['view', 'viewInternal', 'assign', 'changeDepartment', 'changePriority'],
         ]);
     }
 
@@ -105,7 +105,7 @@ class TicketActionsTest extends TestCase
             'caA' => ['view'],
             'agApp' => ['view', 'viewInternal', 'reply', 'addNote', 'resolve', 'updateStatus', 'assign', 'changeDepartment', 'changePriority', 'changeTags'],
             'agSup' => ['view', 'viewInternal', 'addNote', 'assign', 'changeDepartment', 'changePriority', 'changeTags'],
-            'admin' => ['view', 'viewInternal', 'assign', 'changePriority'],
+            'admin' => ['view', 'viewInternal', 'assign', 'changeDepartment', 'changePriority'],
         ]);
     }
 
@@ -143,7 +143,7 @@ class TicketActionsTest extends TestCase
             'caA' => ['view'],
             'agSup' => ['view', 'viewInternal', 'reply', 'addNote', 'resolve', 'updateStatus', 'assign', 'changeDepartment', 'changePriority', 'changeTags'],
             'agApp' => ['view', 'viewInternal', 'addNote', 'assign', 'changeDepartment', 'changePriority', 'changeTags'],
-            'admin' => ['view', 'viewInternal', 'assign', 'changePriority'],
+            'admin' => ['view', 'viewInternal', 'assign', 'changeDepartment', 'changePriority'],
         ]);
     }
 
@@ -170,7 +170,7 @@ class TicketActionsTest extends TestCase
             'cuA' => ['view', 'reply', 'markResolved'],
             'caA' => ['view'],
             'agCon' => ['view', 'viewInternal', 'addNote', 'assign', 'changeDepartment', 'changePriority', 'changeTags'],
-            'admin' => ['view', 'viewInternal', 'assign', 'changePriority'],
+            'admin' => ['view', 'viewInternal', 'assign', 'changeDepartment', 'changePriority'],
         ]);
     }
 
@@ -181,7 +181,7 @@ class TicketActionsTest extends TestCase
             'cuA' => ['view', 'reply', 'markResolved'],
             'caA' => ['view'],
             'agCon' => ['view', 'viewInternal', 'reply', 'addNote', 'resolve', 'updateStatus', 'assign', 'changeDepartment', 'changePriority', 'changeTags'],
-            'admin' => ['view', 'viewInternal', 'assign', 'changePriority'],
+            'admin' => ['view', 'viewInternal', 'assign', 'changeDepartment', 'changePriority'],
         ]);
     }
 
@@ -192,7 +192,7 @@ class TicketActionsTest extends TestCase
             'cuA' => ['view', 'reply', 'markResolved'],
             'caA' => ['view'],
             'agCon' => ['view', 'viewInternal', 'addNote', 'assign', 'changeDepartment', 'changePriority', 'changeTags'],
-            'admin' => ['view', 'viewInternal', 'assign', 'changePriority'],
+            'admin' => ['view', 'viewInternal', 'assign', 'changeDepartment', 'changePriority'],
         ]);
     }
 
