@@ -1,25 +1,15 @@
+# Ling Marco Tickets: .htaccess ADAPTADO A IONOS (hosting compartido). NO es el de Laravel por defecto.
+# Con el original (Options -MultiViews -Indexes, reglas de Authorization/X-XSRF-Token y redirección de barra final) la web daba
+# 500 de Apache a TODA petición; con este, copia de la forma de WordPress que ya funciona en ese servidor (RewriteBase /), abre
+# (comprobado el 2026-11-11 en tickets.lingmarco.es). No se sabe cuál de las líneas quitadas era la culpable: no volver a
+# ponerlas sin probar en el servidor. Se pierden: listado de carpetas desactivado (public/ solo tiene recursos e index.php),
+# cabecera Authorization (la app no usa API ni tokens) y la redirección de barra final. Si algún día se despliega en otro
+# servidor, vale el .htaccess estándar de Laravel.
 <IfModule mod_rewrite.c>
-    <IfModule mod_negotiation.c>
-        Options -MultiViews -Indexes
-    </IfModule>
-
-    RewriteEngine On
-
-    # Handle Authorization Header
-    RewriteCond %{HTTP:Authorization} .
-    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
-
-    # Handle X-XSRF-Token Header
-    RewriteCond %{HTTP:x-xsrf-token} .
-    RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
-
-    # Redirect Trailing Slashes If Not A Folder...
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_URI} (.+)/$
-    RewriteRule ^ %1 [L,R=301]
-
-    # Send Requests To Front Controller...
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteRule ^ index.php [L]
+RewriteEngine On
+RewriteBase /
+RewriteRule ^index\.php$ - [L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.php [L]
 </IfModule>
