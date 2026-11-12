@@ -17,6 +17,9 @@
     @case(\App\Enums\TicketEventType::Created)
         creó el ticket en <strong>{{ $dep($data['department'] ?? null) }}</strong>
         @break
+    @case(\App\Enums\TicketEventType::CreatedByStaff)
+        creó el ticket a nombre de <strong>{{ $data['requester_name'] ?? '' }}</strong> ({{ \App\Enums\TicketChannel::tryFrom($data['channel'] ?? '')?->label() ?? 'otro canal' }}) y lo asignó a <strong>{{ $data['to_name'] ?? '' }}</strong>
+        @break
     @case(\App\Enums\TicketEventType::DepartmentChanged)
         cambió el departamento de <strong>{{ $dep($data['from'] ?? null) }}</strong> a <strong>{{ $dep($data['to'] ?? null) }}</strong> (aviso al cliente)
         @break

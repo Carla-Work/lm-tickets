@@ -98,7 +98,7 @@ class TicketController extends Controller
             abort_unless($related !== null && $user->can('createRelated', $related), 403);
         }
         $products = $user->company?->products()->where('active', true)->orderBy('name')->get() ?? collect();
-        $categories = Category::query()->where('active', true)->orderBy('name')->get()->groupBy(fn (Category $c) => $c->department->value);
+        $categories = Category::query()->offered()->orderBy('name')->get()->groupBy(fn (Category $c) => $c->department->value);
 
         return view('tickets.create', [
             'user' => $user,
@@ -167,7 +167,7 @@ class TicketController extends Controller
                 // y categorías activas agrupadas por departamento (el cambio de departamento exige una del nuevo, R6).
                 'agents' => User::query()->where('role', UserRole::Agent->value)->whereNotNull('activated_at')->whereNull('deactivated_at')->orderBy('name')->get()
                     ->filter(fn (User $agent) => $agent->canWorkOn($ticket->department))->values(), // solo quien puede atenderlo (AssignTicket)
-                'categories' => Category::query()->where('active', true)->orderBy('name')->get()->groupBy(fn (Category $c) => $c->department->value),
+                'categories' => Category::query()->offered()->orderBy('name')->get()->groupBy(fn (Category $c) => $c->department->value),
                 // Etiquetas que se pueden marcar: las activas más las que el ticket ya lleva (aunque se hayan desactivado).
                 'tagChoices' => Tag::query()->where('active', true)->orWhereIn('id', $ticket->tags->pluck('id'))->orderBy('name')->get(),
             ]);

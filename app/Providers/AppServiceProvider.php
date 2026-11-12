@@ -9,6 +9,8 @@ namespace App\Providers;
 
 use App\Enums\UserRole;
 use App\Models\User;
+use App\Support\Inbound\ImapMailboxClient;
+use App\Support\Inbound\MailboxClient;
 use App\Support\MailLogger;
 use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Mail\Events\MessageSent;
@@ -27,6 +29,9 @@ class AppServiceProvider extends ServiceProvider
     {
         // Un único MailLogger por proceso: recuerda qué correos ha abierto para marcarlos fallidos si la cola falla.
         $this->app->singleton(MailLogger::class);
+
+        // Cómo se leen los buzones del correo entrante (P1). Los tests lo sustituyen por uno falso: ninguno habla con un servidor IMAP.
+        $this->app->bind(MailboxClient::class, ImapMailboxClient::class);
     }
 
     /**

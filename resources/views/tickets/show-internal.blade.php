@@ -61,12 +61,14 @@
                                         @elseif ($isStaff)<span class="rol">Ling Marco</span>
                                         @else · cliente @endif
                                     </span>
-                                    <time datetime="{{ $item->created_at?->toIso8601String() }}">{{ $when($item->created_at) }}</time>
+                                    <time datetime="{{ $item->created_at?->toIso8601String() }}">{{ $when($item->created_at) }}@if ($item->via_email) · por correo @endif</time>
                                 </header>
                                 @if ($isNote)<span class="solo-equipo">🔒 Solo equipo de Ling Marco</span>@endif
                                 {{-- nl2br(e()): conserva los saltos de línea y escapa el HTML (el texto del usuario nunca se pinta crudo). --}}
                                 <p>{!! nl2br(e($item->body)) !!}</p>
                                 @include('tickets._adjuntos', ['attachments' => $item->attachments])
+                                {{-- INTERNO (mockup ticket-detalle-interno-h): se ve que la respuesta salió por correo. El cliente no ve estas marcas. --}}
+                                @if ($item->emailed_at)<p class="ayuda" style="margin:.4rem 0 0">✉ Enviado también por correo a {{ $ticket->requester->email }}</p>@endif
                             </article>
                         </li>
                     @else
@@ -101,7 +103,16 @@
                             <p class="ayuda" style="margin-top:.3rem">Capturas, PDF, hojas de cálculo o ZIP. Hasta {{ config('access.attachments.max_files') }} archivos de {{ intdiv(config('access.attachments.max_kb'), 1024) }} MB cada uno.</p>
                             @error('adjuntos')<p class="error-campo" id="err-adjuntos" role="alert">{{ $message }}</p>@enderror
                             @foreach ($errors->get('adjuntos.*') as $messages)@foreach ($messages as $message)<p class="error-campo" role="alert">{{ $message }}</p>@endforeach @endforeach
-                            <p class="ayuda" style="margin:.3rem 0 0;font-size:.9rem;color:var(--texto-suave)">El estado no cambia solo: cámbialo en «Gestión» si hace falta (por ejemplo, a «Pendiente de cliente»). El cliente recibirá un aviso por correo y en su panel.</p>
+                            {{-- Mockup ticket-detalle-interno-h: viene MARCADA (el cliente no entra al panel). Sin marcar, el cliente solo lo ve en su panel y no recibe correo. --}}
+                            <div class="casilla-aviso" style="margin-top:.8rem">
+                                <input type="checkbox" id="enviar_correo" name="enviar_correo" value="1" @checked(! session()->hasOldInput() || old('enviar_correo'))>
+                                <div>
+                                    <label for="enviar_correo">Enviar esta respuesta por correo a {{ $ticket->requester->name }}</label>
+                                    <p class="ayuda" style="margin:0">El texto y los adjuntos salen por correo a {{ $ticket->requester->email }} (hasta {{ config('inbound.max_outgoing_mb') }} MB de adjuntos). Si lo desmarcas, se guarda en el ticket y el cliente solo lo ve en su panel.</p>
+                                </div>
+                            </div>
+                            @error('enviar_correo')<p class="error-campo" role="alert">{{ $message }}</p>@enderror
+                            <p class="ayuda" style="margin:.5rem 0 0;font-size:.9rem;color:var(--texto-suave)">El estado no cambia solo: cámbialo en «Gestión» si hace falta (por ejemplo, a «Pendiente de cliente»).</p>
                             <div class="acciones"><button type="submit" class="boton principal">Enviar al cliente</button></div>
                         </form>
                     </div>
@@ -268,6 +279,9 @@
                 @endif
                 <dt>Fecha de apertura</dt>
                 <dd>{{ $ticket->created_at?->timezone($tz)->translatedFormat('j M Y, H:i') }}</dd>
+                {{-- INTERNO: el cliente no ve el canal ni quién lo creó (esta vista es solo del equipo). --}}
+                <dt>Canal</dt>
+                <dd>{{ $ticket->channel->label() }}@if ($ticket->created_by_id !== $ticket->requester_id)<small>Creado por {{ $ticket->createdBy?->name }}</small>@endif</dd>
                 <dt>Última actividad</dt>
                 <dd>{{ $when($ticket->last_activity_at) }}</dd>
             </dl>

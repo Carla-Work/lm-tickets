@@ -41,7 +41,7 @@ class StoreTicketRequest extends FormRequest
         return [
             'department' => ['required', Rule::enum(Department::class)],
             'category_id' => ['required', 'integer', Rule::exists(Category::class, 'id')->where(
-                fn ($query) => $query->where('active', true)->where('department', $department->value ?? '')
+                fn ($query) => $query->where('active', true)->where('is_default', false)->where('department', $department->value ?? '')
             )],
             'product_id' => $companyProducts === []
                 ? ['prohibited']

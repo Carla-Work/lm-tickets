@@ -10,6 +10,8 @@
 
 use App\Http\Controllers\Admin\CatalogController;
 use App\Http\Controllers\Admin\CompanyController;
+use App\Http\Controllers\Admin\InboundEmailController;
+use App\Http\Controllers\Admin\InboundSettingsController;
 use App\Http\Controllers\Admin\StaffController;
 use App\Http\Controllers\Admin\TagController;
 use App\Http\Controllers\AttachmentController;
@@ -27,6 +29,7 @@ use App\Http\Controllers\Records\AuditLogController;
 use App\Http\Controllers\Records\BackupController;
 use App\Http\Controllers\Records\MailLogController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\StaffTicketController;
 use App\Http\Controllers\TicketAssignmentController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\TicketDepartmentController;
@@ -91,6 +94,9 @@ Route::middleware(['auth', 'operational'])->group(function () {
     Route::get('/tickets', [TicketController::class, 'index'])->name('tickets.index');
     Route::get('/tickets/nuevo', [TicketController::class, 'create'])->name('tickets.create');
     Route::post('/tickets', [TicketController::class, 'store'])->name('tickets.store');
+    // Ticket creado POR EL EQUIPO a nombre de un cliente (P1): agentes y administrador; el cliente recibe 403. Antes de {ticket}.
+    Route::get('/tickets/nuevo-para-cliente', [StaffTicketController::class, 'create'])->name('tickets.staff.create');
+    Route::post('/tickets/para-cliente', [StaffTicketController::class, 'store'])->name('tickets.staff.store');
     Route::get('/tickets/{ticket}', [TicketController::class, 'show'])->name('tickets.show');
     Route::post('/tickets/{ticket}/mensajes', [TicketMessageController::class, 'store'])->name('tickets.messages.store');
     Route::post('/tickets/{ticket}/notas', [TicketMessageController::class, 'storeNote'])->name('tickets.notes.store');
@@ -137,6 +143,21 @@ Route::middleware(['auth', 'operational'])->group(function () {
         Route::get('/catalogo/categorias/{category}', [CatalogController::class, 'editCategory'])->name('catalog.categories.edit');
         Route::post('/catalogo/categorias/{category}', [CatalogController::class, 'updateCategory'])->name('catalog.categories.update');
         Route::post('/catalogo/categorias/{category}/estado', [CatalogController::class, 'setCategoryStatus'])->name('catalog.categories.status');
+
+        // Correo entrante (P1): cuarentena y ajustes (palabras clave, dominios). Solo el administrador; cada acción vuelve a autorizarse con su policy.
+        Route::get('/correo-entrante', [InboundEmailController::class, 'index'])->name('inbound.index');
+        Route::get('/correo-entrante/{inboundEmail}', [InboundEmailController::class, 'show'])->name('inbound.show');
+        Route::post('/correo-entrante/{inboundEmail}/spam', [InboundEmailController::class, 'spam'])->name('inbound.spam');
+        Route::post('/correo-entrante/{inboundEmail}/no-spam', [InboundEmailController::class, 'notSpam'])->name('inbound.not-spam');
+        Route::post('/correo-entrante/{inboundEmail}/invitar', [InboundEmailController::class, 'invite'])->name('inbound.invite');
+        Route::post('/correo-entrante/{inboundEmail}/ticket', [InboundEmailController::class, 'createTicket'])->name('inbound.ticket');
+        // Palabras clave y dominios: quitar BORRA de verdad (no son datos de clientes), por eso POST «borrar» y no DELETE.
+        Route::post('/catalogo/productos/{product}/palabras', [InboundSettingsController::class, 'storeKeyword'])->name('inbound.keywords.store');
+        Route::post('/catalogo/palabras/{keyword}/borrar', [InboundSettingsController::class, 'destroyKeyword'])->name('inbound.keywords.destroy');
+        Route::post('/catalogo/incidencia', [InboundSettingsController::class, 'storeIncidentWord'])->name('inbound.words.store');
+        Route::post('/catalogo/incidencia/{word}/borrar', [InboundSettingsController::class, 'destroyIncidentWord'])->name('inbound.words.destroy');
+        Route::post('/empresas/{company}/dominios', [InboundSettingsController::class, 'storeDomain'])->name('inbound.domains.store');
+        Route::post('/empresas/{company}/dominios/{domain}/borrar', [InboundSettingsController::class, 'destroyDomain'])->name('inbound.domains.destroy');
 
         // Etiquetas internas de los tickets (P1). Nada se borra: se desactivan.
         Route::get('/etiquetas', [TagController::class, 'index'])->name('tags.index');

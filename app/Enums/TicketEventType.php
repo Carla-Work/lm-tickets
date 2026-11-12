@@ -11,6 +11,7 @@ namespace App\Enums;
 enum TicketEventType: string
 {
     case Created = 'created';
+    case CreatedByStaff = 'created_by_staff'; // INTERNO: quién lo creó a nombre del cliente, canal y a quién se asignó
     case StatusChanged = 'status_changed';
     case Assigned = 'assigned';
     case DepartmentChanged = 'department_changed';

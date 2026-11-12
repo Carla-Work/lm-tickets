@@ -35,6 +35,12 @@ class Company extends Model
         return $this->hasMany(User::class);
     }
 
+    /** Dominios de correo de la empresa (pista para el correo entrante; ver CompanyDomain). @return HasMany<CompanyDomain, $this> */
+    public function domains(): HasMany
+    {
+        return $this->hasMany(CompanyDomain::class);
+    }
+
     /** Productos contratados. Solo los asigna el administrador (R7). @return BelongsToMany<Product, $this> */
     public function products(): BelongsToMany
     {

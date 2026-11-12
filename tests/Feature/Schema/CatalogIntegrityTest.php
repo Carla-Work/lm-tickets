@@ -106,12 +106,14 @@ class CatalogIntegrityTest extends TestCase
     {
         $this->seed(CatalogSeeder::class);
 
+        // Las 16 acordadas + la categoría «por defecto» del correo entrante (una por departamento: 4), que no se ofrece en los formularios.
         $this->assertSame(10, Product::count());
-        $this->assertSame(16, Category::count());
-        $this->assertSame(5, Category::where('department', 'support')->count());
-        $this->assertSame(4, Category::where('department', 'web_apps')->count());
-        $this->assertSame(3, Category::where('department', 'websites')->count());
-        $this->assertSame(4, Category::where('department', 'other')->count());
+        $this->assertSame(16, Category::where('is_default', false)->count());
+        $this->assertSame(4, Category::where('is_default', true)->count());
+        $this->assertSame(5, Category::where('department', 'support')->where('is_default', false)->count());
+        $this->assertSame(4, Category::where('department', 'web_apps')->where('is_default', false)->count());
+        $this->assertSame(3, Category::where('department', 'websites')->where('is_default', false)->count());
+        $this->assertSame(4, Category::where('department', 'other')->where('is_default', false)->count());
     }
 
     #[TestDox('El catálogo inicial es idempotente: ejecutarlo dos veces no duplica nada')]
@@ -121,6 +123,6 @@ class CatalogIntegrityTest extends TestCase
         $this->seed(CatalogSeeder::class);
 
         $this->assertSame(10, Product::count());
-        $this->assertSame(16, Category::count());
+        $this->assertSame(20, Category::count(), '16 acordadas + 4 «por defecto»');
     }
 }

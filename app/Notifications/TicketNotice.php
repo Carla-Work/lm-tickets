@@ -32,6 +32,7 @@ class TicketNotice extends Notification implements ShouldQueue
         public readonly int $ticketId,
         public readonly string $title,
         public readonly string $detail,
+        public readonly bool $mail = true, // false: solo la campana (la respuesta del equipo va por su propio correo, o el agente decidió no enviarla)
     ) {
         $this->afterCommit(); // ver «Trampas»: nada sale si la transacción se deshace
     }
@@ -39,7 +40,7 @@ class TicketNotice extends Notification implements ShouldQueue
     /** @return list<string> */
     public function via(object $notifiable): array
     {
-        return ['database', 'mail'];
+        return $this->mail ? ['database', 'mail'] : ['database'];
     }
 
     public function toMail(object $notifiable): MailMessage

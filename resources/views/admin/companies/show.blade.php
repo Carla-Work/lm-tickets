@@ -46,6 +46,26 @@
                 <button type="submit" class="boton principal">Guardar productos</button>
             </form>
 
+            {{-- Dominios de correo (P1, correo entrante): solo una PISTA para reconocer a la empresa; no crea cuentas ni tickets. Sin mockup propio: estilo ya validado (decisión anotada en la bitácora). --}}
+            <section class="tarjeta" aria-label="Dominios de correo">
+                <h2>Dominios de correo</h2>
+                <p class="sub">Si llega un correo de una persona sin cuenta con uno de estos dominios, va a «Correo entrante» con esta empresa sugerida. No crea cuentas ni tickets por sí solo.</p>
+                @error('dominio')<div class="alerta error" role="alert">{{ $message }}</div>@enderror
+                <div class="palabras">
+                    @forelse ($company->domains()->orderBy('domain')->get() as $domain)
+                        <span class="palabra">{{ $domain->domain }}<form action="{{ route('admin.inbound.domains.destroy', [$company, $domain]) }}" method="post">@csrf<button type="submit" aria-label="Quitar el dominio {{ $domain->domain }}">×</button></form></span>
+                    @empty
+                        <span class="secundario">Ninguno todavía.</span>
+                    @endforelse
+                </div>
+                <form class="fila-add" action="{{ route('admin.inbound.domains.store', $company) }}" method="post">@csrf
+                    <label for="dominio" class="sr-only">Nuevo dominio</label>
+                    <input type="text" id="dominio" name="dominio" placeholder="hermanossantana.es" maxlength="190" required>
+                    <button class="boton secundario pequeno" type="submit">Añadir</button>
+                </form>
+                <p class="ayuda">No valen los dominios de correo gratuito (gmail, hotmail…).</p>
+            </section>
+
             <section class="tarjeta" aria-label="Usuarios de la empresa">
                 <h2>Usuarios de la empresa</h2>
                 <p class="sub">Los usuarios de esta empresa los gestiona su administrador de empresa. Tú puedes reenviar invitaciones.</p>

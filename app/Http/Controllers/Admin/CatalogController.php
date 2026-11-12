@@ -20,6 +20,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\CategoryRequest;
 use App\Http\Requests\Admin\ProductRequest;
 use App\Models\Category;
+use App\Models\IncidentWord;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
@@ -36,7 +37,8 @@ class CatalogController extends Controller
 
         return view('admin.catalog.index', [
             'user' => $request->user(),
-            'products' => Product::query()->withCount('companies')->orderByDesc('active')->orderBy('name')->get(),
+            'products' => Product::query()->withCount('companies')->with('keywords')->orderByDesc('active')->orderBy('name')->get(),
+            'incidentWords' => IncidentWord::query()->orderBy('word')->get(),
             'categories' => Category::query()->orderByDesc('active')->orderBy('name')->get()->groupBy(fn (Category $c) => $c->department->value),
         ]);
     }

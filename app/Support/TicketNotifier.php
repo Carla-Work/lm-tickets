@@ -43,12 +43,49 @@ class TicketNotifier
         $this->unassignedToTeam($ticket, $requester);
     }
 
+    /**
+     * Ticket nacido de un CORREO RECIBIDO (P1). Al cliente: «Hemos recibido tu ticket» (así sabe que su correo no se perdió). Si el correo iba
+     * dirigido a un compañero que lo atiende, el ticket nace asignado y se le avisa a él; si no, se avisa al equipo de que hay uno sin asignar.
+     */
+    public function createdFromEmail(Ticket $ticket): void
+    {
+        $requester = $ticket->requester;
+        $this->send([$requester], null, TicketNoticeKind::Received, $ticket, "Hemos recibido tu ticket #{$ticket->number}", $ticket->subject);
+
+        if ($ticket->assignee !== null) {
+            $this->send([$ticket->assignee], null, TicketNoticeKind::Assigned, $ticket,
+                "Te ha llegado el #{$ticket->number} por correo", "{$ticket->subject} · {$requester->company?->name}");
+
+            return;
+        }
+
+        $this->unassignedToTeam($ticket, $requester);
+    }
+
+    /**
+     * Ticket creado por una persona del EQUIPO a nombre de un cliente (P1 2026-11-12). Nace asignado, así que NO se avisa al equipo
+     * de «sin asignar». A quien se lo asignan se le avisa (salvo que se lo asigne él mismo). Al cliente SOLO si quien lo creó marcó
+     * el aviso: lo decide la persona, no el sistema. El aviso lleva número y asunto, como el resto (el cuerpo por correo es otro
+     * P1, «correo entrante»). Nunca dice quién lo creó (dato interno).
+     */
+    public function createdByStaff(Ticket $ticket, User $actor, bool $notifyCustomer): void
+    {
+        if ($notifyCustomer) {
+            $this->send([$ticket->requester], $actor, TicketNoticeKind::OpenedByStaff, $ticket,
+                "Se ha abierto el ticket #{$ticket->number} a tu nombre", $ticket->subject);
+        }
+
+        $this->assigned($ticket, $actor, $ticket->assignee);
+    }
+
     /** Mensaje PÚBLICO nuevo: del equipo → al solicitante; del cliente → a quien lo lleva (o al equipo). */
     public function replied(Ticket $ticket, User $author): void
     {
         if ($author->isInternal()) {
+            // Solo la CAMPANA (sin correo): si el agente marcó «Enviar por correo», el cliente ya recibe la respuesta con su texto (TicketMailer); si no la
+            // marcó, decidió que no se le envíe nada por correo (decidido por la usuaria, 2026-11-12).
             $this->send([$ticket->requester], $author, TicketNoticeKind::Replied, $ticket,
-                "{$author->name} ha respondido en #{$ticket->number}", $ticket->subject);
+                "{$author->name} ha respondido en #{$ticket->number}", $ticket->subject, mail: false);
 
             return;
         }
@@ -136,9 +173,9 @@ class TicketNotifier
     /**
      * @param  iterable<User>  $recipients
      */
-    private function send(iterable $recipients, ?User $actor, TicketNoticeKind $kind, Ticket $ticket, string $title, string $detail): void
+    private function send(iterable $recipients, ?User $actor, TicketNoticeKind $kind, Ticket $ticket, string $title, string $detail, bool $mail = true): void
     {
-        $notice = new TicketNotice($kind, $ticket->id, $title, $detail);
+        $notice = new TicketNotice($kind, $ticket->id, $title, $detail, $mail);
         $seen = [];
 
         foreach ($recipients as $recipient) {

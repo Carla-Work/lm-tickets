@@ -28,6 +28,8 @@ class TicketFactory extends Factory
         return [
             'company_id' => Company::factory(),
             'requester_id' => fn (array $atributos) => User::factory()->forCompany(Company::findOrFail($atributos['company_id']))->create()->id,
+            // Por defecto lo abrió el propio solicitante (created_by_id es NOT NULL).
+            'created_by_id' => fn (array $atributos) => $atributos['requester_id'],
             'department' => Department::Support->value,
             'category_id' => fn (array $atributos) => Category::factory()->forDepartment(Department::from($atributos['department']))->create()->id,
             'subject' => fake()->sentence(5),

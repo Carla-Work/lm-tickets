@@ -50,7 +50,8 @@ class CatalogTest extends TestCase
             }
         }
         $this->assertSame(1, Product::count());
-        $this->assertSame(1, Category::count());
+        // Las categorías «por defecto» del correo entrante (una por departamento, creadas por la migración) no cuentan: solo la que creó este test.
+        $this->assertSame(1, Category::where('is_default', false)->count());
 
         foreach ($pantallas as [$metodo, $url]) {
             $this->app['auth']->forgetGuards();

@@ -25,7 +25,8 @@ class TicketMessageController extends Controller
         $user = $request->user();
         abort_unless($user !== null, 403);
 
-        $reply($user, $ticket, trim($request->string('mensaje')->toString()), MessageKind::Public, $request->file('adjuntos', []));
+        // «Enviar por correo» solo vale para el equipo; un cliente no lo activa aunque mande el campo.
+        $reply($user, $ticket, trim($request->string('mensaje')->toString()), MessageKind::Public, $request->file('adjuntos', []), $user->isInternal() && $request->boolean('enviar_correo'));
 
         return redirect()->route('tickets.show', $ticket)->with('status', $user->isInternal()
             ? 'Respuesta enviada al cliente.'

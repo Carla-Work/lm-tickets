@@ -22,6 +22,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('titulo') · {{ config('app.name') }}</title>
+    <link rel="icon" type="image/svg+xml" href="{{ asset('img/favicon.svg') }}">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
     <link rel="stylesheet" href="{{ asset('css/panel.css') }}">
 </head>
@@ -44,6 +45,9 @@
         <nav class="menu" aria-label="Menú del panel">
             @if ($internal)
                 <a href="{{ route('inbox') }}" @if (request()->routeIs('inbox', 'tickets.show')) aria-current="page" @endif>Bandeja</a>
+                @can('createForCustomer', \App\Models\Ticket::class)
+                    <a href="{{ route('tickets.staff.create') }}" @if (request()->routeIs('tickets.staff.*')) aria-current="page" @endif>Nuevo ticket</a>
+                @endcan
                 <a href="{{ route('reports.index') }}" @if (request()->routeIs('reports.*')) aria-current="page" @endif>Informes</a>
 
                 {{-- «Administración»: solo el administrador (policies). Cada entrada sale cuando existe su pantalla. --}}
@@ -54,6 +58,9 @@
                             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V5l8-2v18"/><path d="M12 9h8v12"/><path d="M8 8v.01M8 12v.01M8 16v.01M16 13v.01M16 17v.01"/></svg>Empresas</a>
                         <a href="{{ route('admin.catalog.index') }}" @if (request()->routeIs('admin.catalog.*')) aria-current="page" @endif>
                             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 8 12 3 3 8l9 5 9-5Z"/><path d="m3 8 0 8 9 5 9-5V8"/><path d="M12 13v8"/></svg>Productos y categorías</a>
+                        @php $pendingInbound = \App\Models\InboundEmail::query()->where('status', \App\Models\InboundEmail::PENDING)->count(); @endphp
+                        <a href="{{ route('admin.inbound.index') }}" @if (request()->routeIs('admin.inbound.*')) aria-current="page" @endif>
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>Correo entrante @if ($pendingInbound > 0)<span class="rotulo" style="background:var(--principal);color:#fff">{{ $pendingInbound }}</span>@endif</a>
                         <a href="{{ route('admin.tags.index') }}" @if (request()->routeIs('admin.tags.*')) aria-current="page" @endif>
                             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8Z"/><path d="M7.5 7.5v.01"/></svg>Etiquetas</a>
                         <a href="{{ route('admin.staff.index') }}" @if (request()->routeIs('admin.staff.*')) aria-current="page" @endif>

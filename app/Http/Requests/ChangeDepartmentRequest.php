@@ -23,7 +23,7 @@ class ChangeDepartmentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'categoria' => ['required', 'integer', Rule::exists(Category::class, 'id')],
+            'categoria' => ['required', 'integer', Rule::exists(Category::class, 'id')->where('is_default', false)],
         ];
     }
 }

@@ -28,4 +28,7 @@ return [
     // segundo factor); la fila y su id se conservan porque los tickets apuntan a ella (defecto D-6, decidido
     // 2026-11-11). Las EMPRESAS no se tocan: pueden pesar obligaciones contables y contractuales.
     'deactivated_users_years' => (int) env('RETENTION_DEACTIVATED_USERS_YEARS', 2),
+
+    // Correo entrante (inbound_emails): los plazos de la cuarentena salen de config/inbound.php (spam 30 días, pendientes 90). Los correos ya
+    // procesados (ticket, respuesta, ignorado, rechazado) solo guardan datos mínimos del remitente y se borran con el plazo de los pendientes.
 ];

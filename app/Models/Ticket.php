@@ -16,6 +16,7 @@ namespace App\Models;
 
 use App\Enums\Department;
 use App\Enums\Priority;
+use App\Enums\TicketChannel;
 use App\Enums\TicketStatus;
 use App\Enums\UserRole;
 use Database\Factories\TicketFactory;
@@ -44,7 +45,7 @@ class Ticket extends Model
      *
      * @var array<string, mixed>
      */
-    protected $attributes = ['priority' => 'normal'];
+    protected $attributes = ['priority' => 'normal', 'channel' => 'web'];
 
     protected static function booted(): void
     {
@@ -65,6 +66,7 @@ class Ticket extends Model
             'department' => Department::class,
             'status' => TicketStatus::class,
             'priority' => Priority::class,
+            'channel' => TicketChannel::class,
             'resolved_at' => 'datetime',
             'closed_at' => 'datetime',
             'last_activity_at' => 'datetime',
@@ -110,6 +112,17 @@ class Ticket extends Model
     public function requester(): BelongsTo
     {
         return $this->belongsTo(User::class, 'requester_id');
+    }
+
+    /**
+     * Quién lo creó: el solicitante si lo abrió él mismo, o la persona del equipo que lo creó a nombre del cliente. INTERNO: el
+     * cliente no lo ve en ninguna pantalla ni correo.
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by_id');
     }
 
     /** @return BelongsTo<User, $this> */

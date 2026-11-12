@@ -66,6 +66,7 @@ class PreflightCheck extends Command
         $this->queue();
         $this->backups();
         $this->accounts();
+        $this->inbound();
 
         $this->table(['', 'Comprobación', 'Detalle'], array_map(fn (array $r) => [match ($r[0]) {
             'ok' => 'OK', 'aviso' => 'AVISO', default => 'ERROR'
@@ -153,6 +154,29 @@ class PreflightCheck extends Command
         $this->prod(! in_array($mailer, ['log', 'array'], true), 'Correo real', "mailer «{$mailer}»", "MAIL_MAILER={$mailer}: los correos se escribirían en el registro y nadie los recibiría");
         $from = (string) config('mail.from.address');
         $this->prod($from !== '' && ! str_contains($from, 'example.'), 'Remitente del correo', $from, "MAIL_FROM_ADDRESS «{$from}» es un ejemplo: pon el buzón real de Ling Marco");
+    }
+
+    /** Correo entrante (P1): si está activado, buzones configurados, extensiones y comprobación SPF/DKIM exigida en producción. */
+    private function inbound(): void
+    {
+        if (! config('inbound.enabled')) {
+            $this->ok('Correo entrante', 'desactivado (INBOUND_ENABLED=false): no se leen los buzones');
+
+            return;
+        }
+
+        $missing = [];
+        foreach ((array) config('inbound.mailboxes') as $mailbox) {
+            if (empty($mailbox['host']) || empty($mailbox['username']) || empty($mailbox['password'])) {
+                $missing[] = (string) $mailbox['key'];
+            }
+        }
+        $this->must($missing === [], 'Correo entrante: buzones', 'host, usuario y contraseña de los tres buzones', 'faltan datos de: '.implode(', ', $missing).' (INBOUND_*_HOST/USERNAME/PASSWORD)');
+
+        $extensions = array_filter(['zip', 'iconv', 'mbstring', 'fileinfo', 'openssl'], fn (string $e) => ! extension_loaded($e));
+        $this->must($extensions === [], 'Correo entrante: extensiones de PHP', 'zip, iconv, mbstring, fileinfo y openssl', 'faltan: '.implode(', ', $extensions));
+
+        $this->prod((bool) config('inbound.require_auth'), 'Correo entrante: SPF/DKIM', 'se exige (el «De» se falsifica)', 'INBOUND_REQUIRE_AUTH=false: cualquiera podría abrir tickets haciéndose pasar por un cliente');
     }
 
     private function queue(): void

@@ -11,6 +11,7 @@ enum TicketNoticeKind: string
 {
     // --- para el CLIENTE ---
     case Received = 'received';                 // «Hemos recibido tu ticket»
+    case OpenedByStaff = 'opened_by_staff';     // «Se ha abierto un ticket a tu nombre» (solo si la persona del equipo marca el aviso)
     case Replied = 'replied';                   // el equipo ha respondido
     case StatusChanged = 'status_changed';      // en curso / pendiente de ti / resuelto / cerrado
     case DepartmentChanged = 'department_changed'; // R12

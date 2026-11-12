@@ -54,6 +54,48 @@
         </aside>
     </div>
 
+    {{-- Palabras clave del correo entrante (mockup admin-catalogo-c-palabras-clave.html). Las palabras salen YA normalizadas (minúsculas, sin tildes). --}}
+    <h2 style="margin:2rem 0 .3rem">Palabras clave del correo entrante</h2>
+    <p class="sub" style="margin:0 0 1rem">Deciden el producto de los tickets que llegan por correo y si un correo parece una incidencia. Se busca en asunto y cuerpo, sin distinguir mayúsculas ni tildes.</p>
+    @error('palabra')<div class="alerta error" role="alert">{{ $message }}</div>@enderror
+    <div class="dos">
+        <section aria-label="Palabras clave por producto" class="apilado">
+            @foreach ($products->where('active', true) as $product)
+                <div class="tarjeta">
+                    <h3 style="margin:0 0 .2rem">{{ $product->name }}</h3>
+                    <div class="palabras">
+                        @forelse ($product->keywords as $keyword)
+                            <span class="palabra">{{ $keyword->keyword }}<form action="{{ route('admin.inbound.keywords.destroy', $keyword) }}" method="post">@csrf<button type="submit" aria-label="Quitar la palabra {{ $keyword->keyword }}">×</button></form></span>
+                        @empty
+                            <span class="secundario">Sin palabras: este producto nunca se asigna solo.</span>
+                        @endforelse
+                    </div>
+                    <form class="fila-add" action="{{ route('admin.inbound.keywords.store', $product) }}" method="post">@csrf
+                        <label for="kw-{{ $product->id }}" class="sr-only">Nueva palabra para {{ $product->name }}</label>
+                        <input type="text" id="kw-{{ $product->id }}" name="palabra" placeholder="Añadir palabra o frase" maxlength="100" required>
+                        <button class="boton secundario pequeno" type="submit">Añadir</button>
+                    </form>
+                </div>
+            @endforeach
+        </section>
+        <aside>
+            <section class="tarjeta" aria-label="Palabras de incidencia">
+                <h2>Palabras de incidencia</h2>
+                <p class="sub">Un correo nuevo de un cliente solo crea ticket si parece una incidencia: si lleva alguna de estas palabras o una de un producto. Si no encaja, va a «Correo entrante › Pendientes».</p>
+                <div class="palabras">
+                    @foreach ($incidentWords as $word)
+                        <span class="palabra">{{ $word->word }}<form action="{{ route('admin.inbound.words.destroy', $word) }}" method="post">@csrf<button type="submit" aria-label="Quitar la palabra {{ $word->word }}">×</button></form></span>
+                    @endforeach
+                </div>
+                <form class="fila-add" action="{{ route('admin.inbound.words.store') }}" method="post">@csrf
+                    <label for="iw" class="sr-only">Nueva palabra de incidencia</label>
+                    <input type="text" id="iw" name="palabra" placeholder="Añadir palabra" maxlength="100" required>
+                    <button class="boton secundario pequeno" type="submit">Añadir</button>
+                </form>
+            </section>
+        </aside>
+    </div>
+
     <h2 style="margin:2rem 0 .3rem">Categorías por departamento</h2>
     <p class="sub" style="color:var(--texto-suave);margin:0 0 1rem">Los cuatro departamentos son fijos. Lo que editas son las categorías de cada uno.</p>
     <div class="cols2" style="gap:1.25rem">

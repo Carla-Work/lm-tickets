@@ -59,6 +59,22 @@ class TicketActionsTest extends TestCase
         }
     }
 
+    // ---------- Crear a nombre de un cliente (habilidad de clase) ----------
+
+    #[TestDox('Crear un ticket a nombre de un cliente: los tres equipos y el administrador; ningún cliente (P1, decidido 2026-11-12)')]
+    public function test_create_for_customer(): void
+    {
+        $permitido = ['agSup', 'agApp', 'agCon', 'admin'];
+
+        foreach ($this->a as $clave => $actor) {
+            $this->assertSame(
+                in_array($clave, $permitido, true),
+                $actor->can('createForCustomer', Ticket::class),
+                (in_array($clave, $permitido, true) ? 'DEBERÍA poder' : 'NO debería poder')." $clave «createForCustomer»",
+            );
+        }
+    }
+
     // ---------- Aplicaciones, abierto ----------
 
     #[TestDox('Abierto y SIN asignar: ningún agente puede responder ni cambiar el estado; antes debe asignárselo (R11)')]

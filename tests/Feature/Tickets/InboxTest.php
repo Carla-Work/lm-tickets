@@ -185,11 +185,15 @@ class InboxTest extends TestCase
             ->assertSee('NOTA-SOLO-EQUIPO')->assertDontSee('NOTA-SECRETA-123')->assertDontSee('Nota interna');
     }
 
-    #[TestDox('El menú del equipo no ofrece «Nuevo ticket» (solo el cliente abre tickets, R16) ni enlaces a pantallas que no existen')]
+    #[TestDox('El menú del equipo ofrece SU «Nuevo ticket» (para un cliente, P1 2026-11-12) pero no el del cliente ni enlaces a pantallas que no existen')]
     public function test_staff_menu_has_no_client_actions(): void
     {
+        // Revisada el 2026-11-12: antes decía «el equipo no ofrece Nuevo ticket (solo el cliente abre tickets)». La usuaria decidió que
+        // agentes y administrador creen tickets a nombre de un cliente; lo que sigue prohibido es la entrada del CLIENTE (/tickets/nuevo).
         $this->actingAs($this->a['admin'])->get(route('inbox'))->assertOk()
-            ->assertSee('Panel interno')->assertDontSee('Nuevo ticket')
+            ->assertSee('Panel interno')
+            ->assertSee('href="'.route('tickets.staff.create').'"', false)
+            ->assertDontSee('href="'.route('tickets.create').'"', false)
             // «Mis tickets» ya puede aparecer como VISTA RÁPIDA de la bandeja (mockup P1 validado); lo que el equipo no
             // debe tener es la entrada de menú del cliente, que lleva a /tickets (excepción documentada en la bitácora).
             ->assertDontSee('href="'.route('tickets.index').'"', false);

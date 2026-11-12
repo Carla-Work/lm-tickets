@@ -33,6 +33,7 @@ use App\Enums\TicketStatus;
 use App\Models\Attachment;
 use App\Models\AuditLog;
 use App\Models\EmailLog;
+use App\Models\InboundEmail;
 use App\Models\Ticket;
 use App\Models\TicketMessage;
 use App\Models\User;
@@ -74,8 +75,9 @@ class RunRetention extends Command
         $oldNotices = DB::table('notifications')->where('created_at', '<', $logsCutoff);
         $oldFailedJobs = DB::table('failed_jobs')->where('failed_at', '<', now()->subDays((int) config('retention.failed_jobs_days')));
         $usersDue = $this->dueUsers(now()->subYears((int) config('retention.deactivated_users_years')));
+        $inboundDue = $this->dueInbound();
 
-        $totals = ['tickets' => 0, 'attachments' => 0, 'notices' => 0, 'email_logs' => 0, 'audit_logs' => 0, 'reset_tokens' => 0, 'old_notices' => 0, 'failed_jobs' => 0, 'users' => 0];
+        $totals = ['tickets' => 0, 'attachments' => 0, 'notices' => 0, 'email_logs' => 0, 'audit_logs' => 0, 'reset_tokens' => 0, 'old_notices' => 0, 'failed_jobs' => 0, 'users' => 0, 'inbound' => 0];
 
         if ($dry) {
             $totals['tickets'] = (clone $due)->count();
@@ -86,6 +88,7 @@ class RunRetention extends Command
             $totals['old_notices'] = (clone $oldNotices)->count();
             $totals['failed_jobs'] = (clone $oldFailedJobs)->count();
             $totals['users'] = (clone $usersDue)->count();
+            $totals['inbound'] = (clone $inboundDue)->count();
         } else {
             (clone $due)->chunkById(100, function ($tickets) use (&$totals): void {
                 foreach ($tickets as $ticket) {
@@ -100,6 +103,7 @@ class RunRetention extends Command
             $totals['reset_tokens'] = $tokens->delete();
             $totals['old_notices'] = $oldNotices->delete();
             $totals['failed_jobs'] = $oldFailedJobs->delete();
+            $totals['inbound'] = $this->purgeInbound($inboundDue);
             (clone $usersDue)->each(function (User $user) use (&$totals): void {
                 $this->anonymizeUser($user);
                 $totals['users']++;
@@ -116,14 +120,50 @@ class RunRetention extends Command
             ['Avisos antiguos borrados', $totals['old_notices']],
             ['Trabajos fallidos antiguos borrados', $totals['failed_jobs']],
             ['Usuarios de baja anonimizados', $totals['users']],
+            ['Correos entrantes purgados (y sus adjuntos)', $totals['inbound']],
         ]);
 
         if (! $dry) {
             // Después de purgar la auditoría, para que esta fila (sin datos personales) no se borre a sí misma.
-            Audit::record('retention_run', "Purga por plazo: {$totals['tickets']} tickets anonimizados, {$totals['attachments']} adjuntos, {$totals['email_logs']} correos y {$totals['audit_logs']} filas de auditoría y {$totals['reset_tokens']} enlaces caducados, {$totals['old_notices']} avisos y {$totals['failed_jobs']} trabajos fallidos borrados; {$totals['users']} usuarios de baja anonimizados.", null, null, null, $totals);
+            Audit::record('retention_run', "Purga por plazo: {$totals['tickets']} tickets anonimizados, {$totals['attachments']} adjuntos, {$totals['email_logs']} correos y {$totals['audit_logs']} filas de auditoría y {$totals['reset_tokens']} enlaces caducados, {$totals['old_notices']} avisos y {$totals['failed_jobs']} trabajos fallidos borrados; {$totals['users']} usuarios de baja anonimizados, {$totals['inbound']} correos entrantes purgados.", null, null, null, $totals);
         }
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Correo entrante que ya pasó su plazo (P1): spam a los 30 días, pendientes y ya procesados a los 90 (config/inbound.php), contados desde que llegó.
+     *
+     * @return Builder<InboundEmail>
+     */
+    private function dueInbound()
+    {
+        $spam = now()->subDays((int) config('inbound.spam_days'));
+        $rest = now()->subDays((int) config('inbound.pending_days'));
+
+        return InboundEmail::query()->where(fn ($q) => $q
+            ->where(fn ($s) => $s->where('status', InboundEmail::SPAM)->where('received_at', '<', $spam))
+            ->orWhere(fn ($s) => $s->where('status', '!=', InboundEmail::SPAM)->where('received_at', '<', $rest)));
+    }
+
+    /**
+     * Borra los correos entrantes vencidos y los ficheros de sus adjuntos. IRREVERSIBLE (como el resto de esta orden).
+     *
+     * @param  Builder<InboundEmail>  $due
+     */
+    private function purgeInbound($due): int
+    {
+        $count = 0;
+        (clone $due)->with('attachments')->chunkById(100, function ($emails) use (&$count): void {
+            foreach ($emails as $email) {
+                Storage::disk(Attachment::DISK)->delete($email->attachments->pluck('path')->all());
+                $email->attachments()->delete();
+                $email->delete();
+                $count++;
+            }
+        });
+
+        return $count;
     }
 
     /**

@@ -524,3 +524,42 @@ body.panel .boton.pequeno { padding: .3rem .8rem; font-size: .85rem; white-space
 /* Cifras de los informes: como `td.num` (no se parten, cifras tabulares) pero SIN ocultar su rótulo en móvil, donde cada fila pasa
    a tarjeta y una cifra suelta («9», «20 h») no dice qué es. */
 td.cifra { white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+/* ---------- «Nuevo ticket para un cliente» (equipo; mockups ticket-nuevo-interno-a/b/c, validados 2026-11-12) ----------
+   Fila «Ticket a nombre de…», canales en forma de píldora (radio + CSS, sin JavaScript), marca «interno», casilla de aviso
+   y nota ámbar para lo que solo ve el equipo. */
+.para { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; background: #f6f0fd; border: 1px solid #e0cff5; border-radius: 10px; padding: .75rem 1rem; margin: 1rem 0 0; }
+.para strong { color: var(--titulo); }
+.canales { display: flex; flex-wrap: wrap; gap: .5rem; }
+.canal { position: relative; }
+.canal input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
+.canal span { display: block; padding: .5rem 1rem; border: 2px solid var(--gris); border-radius: 999px; background: var(--blanco); }
+.canal input:checked + span { border-color: var(--principal); background: #f6f0fd; font-weight: 600; }
+.canal input:checked + span::before { content: "✓ "; }
+.canal input:focus-visible + span { outline: 3px solid var(--principal-claro); outline-offset: 2px; }
+.marca-interna { display: inline-block; background: #fff8e6; color: #7b4a05; border: 1px solid #e8c77a; border-radius: 6px; font-size: .72rem; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; padding: 0 .4rem; margin-left: .4rem; vertical-align: middle; }
+.casilla-aviso { display: flex; gap: .6rem; align-items: flex-start; padding: .85rem 1rem; border: 1px solid #b8bcc6; border-radius: 8px; background: #fafafa; }
+.casilla-aviso input { margin-top: .3rem; width: 1.1rem; height: 1.1rem; }
+.casilla-aviso label { margin: 0; font-weight: 600; }
+.aviso.interna { background: #fff8e6; border-left-color: #b7791f; }
+
+/* ---------- Correo entrante (administración; mockups correo-cuarentena-a/b y admin-catalogo-c, validados 2026-11-12) ----------
+   Pistas (chips del porqué de un correo), resumen, texto plano del correo y tarjetas de palabras clave. Nunca se enseña HTML del remitente. */
+.pista { display: inline-block; border-radius: 999px; padding: .1rem .65rem; font-size: .8rem; margin: 0 .25rem .25rem 0; background: #f6f0fd; border: 1px solid #e0cff5; color: var(--titulo); }
+.pista.alerta { background: #fdecec; border-color: #f0b4b4; color: #8a1c1c; }
+.pista.ok { background: #f1f8e4; border-color: #c9e19a; color: #33521a; }
+.rotulo { display: inline-block; font-size: .72rem; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; border-radius: 6px; padding: 0 .4rem; background: var(--gris); color: #2d3748; margin-left: .4rem; vertical-align: middle; }
+.resumen .tarjeta-mini { background: var(--blanco); border: 1px solid var(--gris); border-radius: 10px; padding: .6rem 1rem; }
+.resumen .tarjeta-mini strong { display: block; font-size: 1.4rem; color: var(--titulo); }
+details.plegable { margin-top: 1.5rem; }
+details.plegable > summary { cursor: pointer; font-weight: 700; color: var(--titulo); padding: .5rem 0; }
+.cuerpo-correo-plano { background: #fafafa; border: 1px solid var(--gris); border-radius: 8px; padding: 1rem; white-space: pre-wrap; overflow-wrap: anywhere; font-family: ui-monospace, Menlo, monospace; font-size: .88rem; line-height: 1.5; }
+.adjunto-ico { display: inline-block; border: 1px solid #d5d5d5; border-radius: 6px; padding: .2rem .6rem; margin: .2rem .3rem 0 0; font-size: .85rem; background: #fafafa; }
+.grupo-accion { border-top: 1px solid var(--gris); padding-top: 1rem; margin-top: 1rem; }
+.grupo-accion h3 { font-size: 1rem; margin-bottom: .5rem; }
+.palabras { display: flex; flex-wrap: wrap; gap: .35rem; margin: .4rem 0 .6rem; }
+.palabra { display: inline-flex; align-items: center; gap: .1rem; background: #f6f0fd; border: 1px solid #e0cff5; border-radius: 999px; padding: .1rem .3rem .1rem .7rem; font-size: .88rem; }
+.palabra form { display: inline; margin: 0; }
+.palabra button { border: 0; background: transparent; cursor: pointer; color: #6b2e9e; font-size: 1rem; line-height: 1; padding: .1rem .35rem; }
+.fila-add { display: flex; gap: .5rem; }
+.fila-add input { flex: 1; }

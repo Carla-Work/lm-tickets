@@ -28,7 +28,7 @@ class TicketMessage extends Model
     // Larastan lee el cuerpo de este método gracias a `parseModelCastsMethod: true` en phpstan.neon.
     protected function casts(): array
     {
-        return ['kind' => MessageKind::class];
+        return ['kind' => MessageKind::class, 'via_email' => 'boolean', 'emailed_at' => 'datetime'];
     }
 
     /**

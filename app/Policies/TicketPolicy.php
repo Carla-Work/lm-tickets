@@ -54,6 +54,18 @@ class TicketPolicy
         return $user->hasRole(UserRole::CompanyUser, UserRole::CompanyAdmin);
     }
 
+    /**
+     * Crear un ticket A NOMBRE DE UN CLIENTE (P1, decidido 2026-11-12): cualquier agente y el administrador (que es el gerente
+     * y puede recibir la llamada de un cliente). No decide a quién ni en qué departamento: eso lo comprueba CreateTicket con
+     * `User::canWorkOn` (un agente de Contabilidad solo crea de Contabilidad; uno de Soporte o Desarrollo y Diseño, nunca de
+     * Contabilidad, R13) y que la persona asignada pueda atenderlo. El administrador crea y asigna, pero sigue sin atender ni
+     * cambiar estados (R10). Es una habilidad de CLASE (aún no hay ticket), como `create`.
+     */
+    public function createForCustomer(User $user): bool
+    {
+        return $user->hasRole(UserRole::Agent, UserRole::Admin);
+    }
+
     /** Mensaje PÚBLICO (lo ve el cliente). */
     public function reply(User $user, Ticket $ticket): bool
     {

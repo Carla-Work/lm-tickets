@@ -31,6 +31,9 @@ class MailLogger
     /** Cabecera con la que el mensaje lleva el id de su fila (el Message-Id lo pone el transporte, más tarde). */
     private const HEADER = 'X-App-Log';
 
+    /** Los correos con esta cabecera llevan el texto de un ticket (dato de cliente): el registro NO guarda su cuerpo. */
+    public const NO_BODY_HEADER = 'X-App-No-Body';
+
     /** Correos cuyo cuerpo NO se guarda (llevan un enlace de un solo uso). */
     public const WITHOUT_BODY = [InvitationNotification::class, ResetPasswordNotification::class];
 
@@ -49,7 +52,8 @@ class MailLogger
                 'from_email' => $this->addresses($message->getFrom()),
                 'to_emails' => $this->addresses($message->getTo()),
                 'kind' => $kind,
-                'body' => in_array($kind, self::WITHOUT_BODY, true) ? null : $message->getHtmlBody(),
+                // Sin cuerpo: los correos con enlace de un solo uso y los que llevan el TEXTO de un ticket (cabecera NO_BODY_HEADER, ver TicketMailer).
+                'body' => in_array($kind, self::WITHOUT_BODY, true) || $message->getHeaders()->has(self::NO_BODY_HEADER) ? null : $message->getHtmlBody(),
             ]);
 
             $this->inFlight[$log->id] = $log->id;

@@ -23,5 +23,11 @@ Schedule::call(fn () => (new CreateBackup)->handle())
 // Rotación de copias, tras la copia.
 Schedule::command('backup:prune')->dailyAt('03:30')->withoutOverlapping();
 
+// Correo entrante (P1): solo si se activa. Cada minuto, sin solaparse. Necesita el cron de `schedule:run` y que el trabajador de colas esté vivo
+// (los avisos y los correos salientes van por la cola). Ver docs/plan/produccion.md.
+if (config('inbound.enabled')) {
+    Schedule::command('inbound:fetch')->everyMinute()->withoutOverlapping(10);
+}
+
 // `retention:run` NO está programado, A PROPÓSITO: es irreversible y el plazo de conservación (2 años) está pendiente de validar
 // con la asesoría. Cuando se dé el visto bueno: Schedule::command('retention:run')->dailyAt('04:00')->withoutOverlapping();
